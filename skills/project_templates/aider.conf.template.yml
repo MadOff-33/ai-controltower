@@ -1,4 +1,4 @@
-﻿model: ollama_chat/ornith:9b
+model: ollama_chat/ornith:9b
 auto-commits: false
 dirty-commits: false
 chat-language: fr
