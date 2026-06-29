@@ -1,4 +1,4 @@
-﻿param(
+param(
   [Parameter(Mandatory=$true)]
   [string]$ProjectPath,
 
@@ -102,7 +102,7 @@ Initialisation agentique effectuée depuis :
 
 C:\AI_ControlTower
 
-Date : $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+Date : initialisation agentique
 
 Fichiers clés :
 - AGENTS.md
