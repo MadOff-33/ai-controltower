@@ -1,0 +1,6 @@
+﻿model: ollama_chat/ornith:9b
+auto-commits: false
+dirty-commits: false
+chat-language: fr
+commit-language: fr
+map-tokens: 4096
