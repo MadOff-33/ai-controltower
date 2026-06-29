@@ -15,7 +15,7 @@ if (!(Test-Path $ProjectPath)) {
 }
 
 if (!(Test-Path "$ProjectPath\.git")) {
-  Write-Error "Le dossier n'est pas un dépôt Git : $ProjectPath"
+  Write-Error "Le dossier n'est pas un depot Git : $ProjectPath"
   exit 1
 }
 
@@ -98,13 +98,13 @@ $loader = @'
 $readme = @"
 # Projet : $ProjectName
 
-Initialisation agentique effectuée depuis :
+Initialisation agentique effectuee depuis :
 
 C:\AI_ControlTower
 
 Date : initialisation agentique
 
-Fichiers clés :
+Fichiers cles :
 - AGENTS.md
 - .aider.conf.yml
 - .agent/PROJECT_CONTEXT.md
@@ -113,7 +113,7 @@ Fichiers clés :
 - .agent/selected-skills/
 - .agent/load_core_skills.aider
 
-Commande Aider après lancement :
+Commande Aider apres lancement :
 
 /load .agent/load_core_skills.aider
 "@
@@ -121,8 +121,8 @@ Commande Aider après lancement :
 [System.IO.File]::WriteAllText("$ProjectPath\.agent\README.md", $readme, $utf8NoBom)
 
 Write-Host ""
-Write-Host "Kit agent projet installé / mis à jour."
+Write-Host "Kit agent projet installe / mis a jour."
 Write-Host ""
-Write-Host "Prochaine vérification :"
+Write-Host "Prochaine verification :"
 Write-Host "cd `"$ProjectPath`""
 Write-Host "git status"
