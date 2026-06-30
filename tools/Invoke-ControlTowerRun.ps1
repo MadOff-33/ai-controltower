@@ -39,6 +39,16 @@ function Get-NewestDirectory {
   return $dir.FullName
 }
 
+function Get-PipelineStatus {
+  param([string]$Workspace, [string]$ResultFileName)
+  $resultPath = Join-Path $Workspace ("validation\" + $ResultFileName)
+  if (-not (Test-Path -LiteralPath $resultPath)) { return "passed" }
+  $pipelineResult = Get-Content -LiteralPath $resultPath -Raw | ConvertFrom-Json
+  $validation = [string]$pipelineResult.validation
+  if ([string]::IsNullOrWhiteSpace($validation) -or $validation -eq "skipped") { return "prepared" }
+  return $validation
+}
+
 function New-RunLog {
   param(
     [string]$Mode,
@@ -101,6 +111,7 @@ try {
       workspace_path = $workspace
       pipeline = "audit"
     }
+    $status = Get-PipelineStatus -Workspace $workspace -ResultFileName "pipeline_result.json"
   } elseif ($Mode -eq "Fix") {
     if ([string]::IsNullOrWhiteSpace($WorkspacePath)) { throw "WorkspacePath est obligatoire en mode Fix." }
     if ([string]::IsNullOrWhiteSpace($TicketPath)) { throw "TicketPath est obligatoire en mode Fix." }
@@ -120,11 +131,12 @@ try {
       ticket_path = $ticket
       pipeline = "fix"
     }
+    $ticketId = [System.IO.Path]::GetFileNameWithoutExtension($ticket)
+    $status = Get-PipelineStatus -Workspace $workspace -ResultFileName ($ticketId + "_pipeline_result.json")
   } else {
     throw "AuditThenFix automatique est reserve a une version ulterieure. Utiliser Audit puis Fix avec un ticket explicite."
   }
 
-  $status = "passed"
   $logPath = New-RunLog -Mode $Mode -Status $status -Data $result
 } catch {
   $status = "failed"

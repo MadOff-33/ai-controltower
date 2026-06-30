@@ -26,6 +26,14 @@ powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\Invoke-AiderA
 
 Cette commande cree le workspace, le snapshot, l'inventaire, le pack contexte, le rapport, puis valide la sortie en mode sec. Pour lancer Aider reellement, ajoutez `-RunAider`.
 
+Statuts importants:
+
+- `structure-passed`: le dry-run a prepare le workspace, le pack, la commande Aider et les garde-fous. Aider n'a pas produit de rapport d'audit.
+- `passed`: Aider a ete lance et la sortie a passe les validations ControlTower.
+- `failed`: une validation a bloque le run.
+
+Un rapport squelette genere en dry-run est autorise uniquement pour la validation structurelle. Une validation normale le refuse.
+
 Commande pas-a-pas:
 
 ```powershell

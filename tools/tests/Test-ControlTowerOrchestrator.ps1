@@ -81,6 +81,8 @@ Assert-PathExists -Path (Join-Path $logRoot "controltower_runs")
 Assert-PathExists -Path (Join-Path $hermesRoot "central\guidance_cache.md")
 $firstLog = Get-ChildItem -LiteralPath (Join-Path $logRoot "controltower_runs") -File | Select-Object -First 1
 Assert-True -Condition ($null -ne $firstLog) -Message "No orchestrator log created for audit mode."
+$firstRun = Get-Content -LiteralPath $firstLog.FullName -Raw | ConvertFrom-Json
+Assert-True -Condition ($firstRun.status -eq "structure-passed") -Message ("Dry-run audit should be logged as structure-passed, got: " + $firstRun.status)
 
 & $FixTicketScript `
   -WorkspacePath $workspace `

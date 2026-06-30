@@ -48,6 +48,8 @@ Contraintes:
 ## Securite
 
 - Le mode par defaut est dry-run.
+- Un dry-run valide remonte `structure-passed`, pas `passed`.
+- `passed` est reserve aux runs ou Aider a produit une sortie validee.
 - Aucun commit automatique.
 - Aucun push.
 - Le projet cible n'est jamais modifie.

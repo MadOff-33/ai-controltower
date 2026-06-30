@@ -6,7 +6,9 @@ param(
   [string]$ReportPath,
 
   [Parameter(Mandatory = $true)]
-  [string]$ContextPackPath
+  [string]$ContextPackPath,
+
+  [switch]$AllowDraftReport
 )
 
 $ErrorActionPreference = "Stop"
@@ -80,6 +82,8 @@ foreach ($change in $changes) {
 
 $reportText = Get-Content -LiteralPath $report -Raw
 $contextText = Get-Content -LiteralPath $contextPack -Raw
+$normalizedReport = ($reportText -replace "\s+", " ").Trim()
+$draftReport = ($normalizedReport -match "^# Rapport [A-Za-z0-9_.-]+$")
 $ghostMarkers = @("main()", "app.run()", "sys.exit(app.exec_())")
 $ghostFindings = @()
 foreach ($marker in $ghostMarkers) {
@@ -117,7 +121,9 @@ $result = [ordered]@{
   unauthorized_changes = $unauthorized
   ghost_findings = $ghostFindings
   factual_warnings = $factualWarnings
-  passed = (($unauthorized.Count -eq 0) -and ($ghostFindings.Count -eq 0))
+  draft_report = $draftReport
+  allow_draft_report = [bool]$AllowDraftReport
+  passed = (($unauthorized.Count -eq 0) -and ($ghostFindings.Count -eq 0) -and ((-not $draftReport) -or $AllowDraftReport))
 }
 Write-Utf8NoBom -Path (Join-Path $validationDir "last_result.json") -Content ($result | ConvertTo-Json -Depth 8)
 
@@ -126,6 +132,7 @@ Write-Host ("Changes:              " + $changes.Count)
 Write-Host ("Unauthorized changes: " + $unauthorized.Count)
 Write-Host ("Ghost findings:       " + $ghostFindings.Count)
 Write-Host ("Factual warnings:     " + $factualWarnings.Count)
+Write-Host ("Draft report:         " + $draftReport)
 
 if ($unauthorized.Count -gt 0) {
   Write-Host ""
@@ -141,6 +148,10 @@ if ($factualWarnings.Count -gt 0) {
   Write-Host ""
   Write-Host "Factual warnings to review:"
   $factualWarnings | Select-Object -First 10 | ForEach-Object { Write-Host ("- line " + $_.line + ": " + $_.text) }
+}
+if ($draftReport -and -not $AllowDraftReport) {
+  Write-Host ""
+  Write-Host "Draft report detected: Aider has not produced audit content yet."
 }
 
 Write-Host ""

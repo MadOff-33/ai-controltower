@@ -24,6 +24,8 @@ if ([string]::IsNullOrWhiteSpace($mode)) { $mode = "Unknown" }
 
 if ($status -eq "passed") {
   & $addScript -MemoryRoot $MemoryRoot -Kind "success" -Category "run_outcome" -Summary ("Run " + $mode + " valide par ControlTower.") -Source "post_run" -Confidence "medium" -Status "active" -Evidence @("Run result status: passed") -RunLog $runPath | Out-Null
+} elseif ($status -eq "structure-passed" -or $status -eq "prepared") {
+  & $addScript -MemoryRoot $MemoryRoot -Kind "experience" -Category "run_preparation" -Summary ("Run " + $mode + " prepare et valide structurellement, sans preuve de sortie modele.") -Source "post_run" -Confidence "medium" -Status "active" -Evidence @("Run result status: " + $status) -Lesson "Un dry-run valide la structure ControlTower, pas la qualite d'un audit Aider." -RunLog $runPath | Out-Null
 } else {
   & $addScript -MemoryRoot $MemoryRoot -Kind "failure" -Category "run_outcome" -Summary ("Run " + $mode + " non valide ou en echec.") -Source "post_run" -Confidence "medium" -Status "active" -Evidence @("Run result status: " + $status) -RunLog $runPath | Out-Null
 }

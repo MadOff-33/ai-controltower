@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 .venv/
 apps/controltower-ui/.venv/
+apps/controltower-ui/state.json
+audits/
+logs/controltower_runs/
+hermes_lab/

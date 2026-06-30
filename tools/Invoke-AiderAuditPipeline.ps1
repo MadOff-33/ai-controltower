@@ -111,9 +111,15 @@ Invoke-PipelineStep -Name "Start Aider audit" -Command {
 $validationStatus = "skipped"
 if ($RunAider -or $ValidateAfterDryRun) {
   Invoke-PipelineStep -Name "Validate Aider output" -Command {
-    & $validateScript -WorkspacePath $workspace -ReportPath $reportPath -ContextPackPath $contextPack
+    $validateArgs = @{
+      WorkspacePath = $workspace
+      ReportPath = $reportPath
+      ContextPackPath = $contextPack
+    }
+    if ((-not $RunAider) -and $ValidateAfterDryRun) { $validateArgs["AllowDraftReport"] = $true }
+    & $validateScript @validateArgs
   }
-  $validationStatus = "passed"
+  $validationStatus = $(if ($RunAider) { "passed" } else { "structure-passed" })
 }
 
 $validationDir = Join-Path $workspace "validation"

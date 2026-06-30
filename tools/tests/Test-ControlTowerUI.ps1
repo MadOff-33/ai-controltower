@@ -24,7 +24,7 @@ $required = @(
   "apps\controltower-ui\ControlTower.cmd",
   "apps\controltower-ui\requirements.txt",
   "apps\controltower-ui\README.md",
-  "apps\controltower-ui\state.json",
+  "apps\controltower-ui\state.example.json",
   "apps\controltower-ui\templates\index.html",
   "apps\controltower-ui\static\app.js",
   "apps\controltower-ui\static\styles.css"

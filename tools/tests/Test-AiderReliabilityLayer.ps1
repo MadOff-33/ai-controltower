@@ -128,10 +128,15 @@ Assert-PathNotExists -Path (Join-Path $snapshot "__pycache__\core.pyc")
 
 $pack = Join-Path $workspace "context_packs\lot1_config_pack.md"
 $report = Join-Path $workspace "reports\lot1_config_report.md"
+$packText = Get-Content -LiteralPath $pack -Raw
+Assert-True -Condition ($packText.Length -le 12000) -Message ("Context pack exceeds configured MaxChars: " + $packText.Length)
+Invoke-ExpectFailure -Name "draft report rejected in normal validation" -Command {
+  & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $report -ContextPackPath $pack
+}
 $outsideReport = Join-Path $workspace "not_reports.md"
 [System.IO.File]::WriteAllText($outsideReport, "# Outside`n", (New-Object System.Text.UTF8Encoding($false)))
 Invoke-ExpectFailure -Name "report outside reports" -Command {
-  & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $outsideReport -ContextPackPath $pack
+  & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $outsideReport -ContextPackPath $pack -AllowDraftReport
 }
 Remove-Item -LiteralPath $outsideReport -Force
 
@@ -139,7 +144,7 @@ Remove-Item -LiteralPath $outsideReport -Force
 $badOutput = Join-Path $workspace "context_packs\unexpected.md"
 [System.IO.File]::WriteAllText($badOutput, "not allowed`n", (New-Object System.Text.UTF8Encoding($false)))
 Invoke-ExpectFailure -Name "unauthorized output" -Command {
-  & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $report -ContextPackPath $pack
+  & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $report -ContextPackPath $pack -AllowDraftReport
 }
 Remove-Item -LiteralPath $badOutput -Force
 

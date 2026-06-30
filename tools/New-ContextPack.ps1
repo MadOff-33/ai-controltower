@@ -135,19 +135,40 @@ Get-ChildItem -LiteralPath $snapshot -Recurse -File -Force | Sort-Object FullNam
   $included += [ordered]@{ path = $relative; size_bytes = $_.Length; chars = $block.Length }
 }
 
-$footer = @(
-  "",
-  "## Fichiers omis",
-  "",
-  (($omitted | ForEach-Object { "- {0} ({1})" -f $_.path, $_.reason }) -join [Environment]::NewLine)
-) -join [Environment]::NewLine
+$body = $sections -join [Environment]::NewLine
+$footerLines = New-Object System.Collections.Generic.List[string]
+$footerLines.Add("") | Out-Null
+$footerLines.Add("## Fichiers omis") | Out-Null
+$footerLines.Add("") | Out-Null
+$omittedCount = $omitted.Count
+$omittedWritten = 0
+foreach ($item in $omitted) {
+  $line = "- {0} ({1})" -f $item.path, $item.reason
+  $candidateFooter = (($footerLines + @($line)) -join [Environment]::NewLine)
+  $candidatePack = $header + $body + $candidateFooter
+  if ($candidatePack.Length -gt $MaxChars) { break }
+  $footerLines.Add($line) | Out-Null
+  $omittedWritten++
+}
+if ($omittedWritten -lt $omittedCount) {
+  $remaining = $omittedCount - $omittedWritten
+  $summary = "- ... $remaining fichier(s) omis supplementaires dans le manifeste JSON."
+  $candidateFooter = (($footerLines + @($summary)) -join [Environment]::NewLine)
+  if (($header + $body + $candidateFooter).Length -le $MaxChars) {
+    $footerLines.Add($summary) | Out-Null
+  }
+}
 
-$pack = $header + ($sections -join [Environment]::NewLine) + $footer
+$pack = $header + $body + ($footerLines -join [Environment]::NewLine)
+if ($pack.Length -gt $MaxChars) {
+  throw "Le pack depasse la limite apres assemblage: $($pack.Length) / $MaxChars"
+}
 Write-Utf8NoBom -Path $packPath -Content $pack
 Write-Utf8NoBom -Path (Join-Path $contextDir ($safeLot + "_manifest.json")) -Content ([ordered]@{
   lot = $safeLot
   max_chars = $MaxChars
   actual_chars = $pack.Length
+  omitted_written_in_pack = $omittedWritten
   included = $included
   omitted = $omitted
 } | ConvertTo-Json -Depth 8)
