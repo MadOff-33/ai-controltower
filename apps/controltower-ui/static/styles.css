@@ -25,7 +25,7 @@ body {
 }
 
 .shell {
-  width: min(1420px, calc(100vw - 32px));
+  width: min(1560px, calc(100vw - 32px));
   margin: 0 auto;
   padding: 20px 0 28px;
 }
@@ -144,7 +144,7 @@ input {
 
 .grid {
   display: grid;
-  grid-template-columns: 280px minmax(360px, 1fr) minmax(360px, 1fr);
+  grid-template-columns: 260px minmax(300px, 0.75fr) minmax(560px, 1.65fr);
   gap: 14px;
   align-items: start;
 }
@@ -191,24 +191,36 @@ input {
 .command-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .command-card {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 10px;
+  padding: 8px;
+}
+
+.command-card strong {
+  font-size: 13px;
+  line-height: 1.25;
 }
 
 .command-card span {
   color: var(--muted);
+  font-size: 11px;
+}
+
+.command-card button {
+  min-height: 30px;
+  padding: 5px 8px;
   font-size: 12px;
 }
 
 .log-panel {
-  height: 470px;
+  height: min(68vh, 720px);
+  min-height: 560px;
   overflow: auto;
   display: grid;
   align-content: start;
@@ -250,7 +262,8 @@ input {
   }
 
   .log-panel {
-    height: 360px;
+    height: 520px;
+    min-height: 420px;
   }
 }
 

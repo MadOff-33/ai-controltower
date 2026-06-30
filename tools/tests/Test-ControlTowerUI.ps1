@@ -61,6 +61,11 @@ Assert-True -Condition ($appText.Contains("@app.route(""/api/state""")) -Message
 Assert-True -Condition ($appText.Contains("@app.route(""/api/run""")) -Message "Run API route missing."
 Assert-True -Condition ($appText.Contains("ALLOWED_COMMANDS")) -Message "Command allowlist missing."
 
+$styleText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\styles.css") -Raw
+Assert-True -Condition ($styleText.Contains("minmax(560px, 1.65fr)")) -Message "Chat column should be wider than command catalog."
+Assert-True -Condition ($styleText.Contains(".command-card button")) -Message "Command buttons should have compact styling."
+Assert-True -Condition ($styleText.Contains("min-height: 560px")) -Message "Chat log should have a larger minimum height."
+
 $python = Get-Command py -ErrorAction SilentlyContinue
 $pythonArgs = @("-3")
 if ($null -eq $python) {
