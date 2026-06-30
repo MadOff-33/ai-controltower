@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hermes Central Memory Entry",
+  "type": "object",
+  "required": ["id", "kind", "category", "summary", "source", "confidence", "status", "created_at"],
+  "additionalProperties": true,
+  "properties": {
+    "id": { "type": "string" },
+    "kind": { "type": "string" },
+    "category": { "type": "string" },
+    "summary": { "type": "string" },
+    "source": { "type": "string" },
+    "confidence": { "type": "string" },
+    "status": { "type": "string" },
+    "created_at": { "type": "string" }
+  }
+}

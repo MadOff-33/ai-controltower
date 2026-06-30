@@ -1,0 +1,14 @@
+id: fix_sample
+title: Short fix title
+goal: Describe one precise correction.
+editable_files:
+  - path/to/file.py
+readonly_files:
+  - README.md
+verification_commands:
+  - python -m pytest
+acceptance_criteria:
+  - The targeted behavior is corrected.
+forbidden:
+  - Do not edit files outside editable_files.
+  - Do not invent files, functions, routes, commands or APIs absent from the context.

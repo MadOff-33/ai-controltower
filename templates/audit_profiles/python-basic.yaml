@@ -1,0 +1,41 @@
+name: python-basic
+default_max_chars: 45000
+allowed_extensions:
+  - .py
+  - .pyw
+  - .toml
+  - .ini
+  - .cfg
+  - .yaml
+  - .yml
+  - .json
+  - .md
+  - .txt
+  - .rst
+  - .ps1
+  - .bat
+  - .cmd
+exclude_dirs:
+  - .tox
+  - .nox
+  - htmlcov
+  - site-packages
+exclude_files:
+  - .coverage
+  - coverage.xml
+  - *.log
+ghost_markers:
+  - main()
+  - app.run()
+  - sys.exit(app.exec_())
+factual_risk_markers:
+  - always
+  - never
+  - aucun
+  - tous
+  - impossible
+  - n'existe pas
+  - does not exist
+lots:
+  - lot1_config
+  - lot2_architecture
