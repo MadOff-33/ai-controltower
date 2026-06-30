@@ -1,24 +1,37 @@
-﻿# AI Control Tower
+# AI Control Tower
 
-Centre de contrôle local pour le développement assisté par IA.
+Centre local de fiabilisation pour developpement assiste par IA avec Aider, Ollama et `ornith:9b`.
 
-## Rôle
+## Commandes principales
 
-- Centraliser les règles globales.
-- Centraliser les skills BMAD et Superpowers.
-- Centraliser les scripts de test, audit, sécurité et Git.
-- Fournir les launchers Aider/Ollama.
-- Préparer les projets locaux sans dupliquer toute la méthode.
+Installer ou reparer l'environnement:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\Install-ControlTower.ps1"
+```
+
+Lancer un audit fiable:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\Invoke-ControlTowerRun.ps1" -Mode Audit -ProjectPath "C:\chemin avec espaces\Projet" -ValidateAfterDryRun
+```
+
+Lancer toute la verification:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\tests\Invoke-ControlTowerTestSuite.ps1"
+```
 
 ## Architecture
 
-- skills/ : méthodes et workflows.
-- tools/ : scripts exécutables contrôlés.
-- launchers/ : scripts de démarrage.
-- policies/ : règles de sécurité et d’usage.
-- logs/ : journaux locaux.
-- hermes_lab/ : zone expérimentale uniquement.
+- `tools/`: scripts d'audit, correction, validation, orchestration et Hermes.
+- `docs/`: specifications, manuel, architecture et cloture.
+- `prompts/`: prompts bornes pour audits.
+- `templates/`: profils, tickets et schemas.
+- `hermes_memory/`: memoire centrale d'experience.
+- `policies/`: regles de securite et Git.
+- `hermes_lab/`: zone temporaire de tests, nettoyee par les suites.
 
-## Règle principale
+## Regle principale
 
-Aucun outil IA ne pousse en production, ne modifie les secrets, ni n’exécute d’action serveur sans validation humaine explicite.
+ControlTower ne modifie pas le projet cible pendant un audit, ne commit pas automatiquement, ne pousse rien sans demande explicite et rejette les sorties hors perimetre.

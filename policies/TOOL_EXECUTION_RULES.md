@@ -1,4 +1,4 @@
-﻿# TOOL EXECUTION RULES
+# TOOL EXECUTION RULES
 
 Les scripts du dossier tools/ sont des outils contrôlés.
 

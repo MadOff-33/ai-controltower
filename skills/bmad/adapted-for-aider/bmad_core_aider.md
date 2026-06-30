@@ -1,4 +1,4 @@
-﻿# BMAD Core — Adaptation Aider / Ornith
+# BMAD Core — Adaptation Aider / Ornith
 
 ## Objectif
 

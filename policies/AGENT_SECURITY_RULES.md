@@ -1,4 +1,4 @@
-﻿# AGENT SECURITY RULES
+# AGENT SECURITY RULES
 
 Règles de sécurité pour agents IA :
 

@@ -1,4 +1,4 @@
-﻿# skills.lock.md
+# skills.lock.md
 
 Snapshot des skills et règles utilisés par ce projet.
 

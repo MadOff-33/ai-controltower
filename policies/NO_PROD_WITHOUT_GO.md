@@ -1,4 +1,4 @@
-﻿# NO PROD WITHOUT GO
+# NO PROD WITHOUT GO
 
 Règle absolue : aucune action production sans GO explicite.
 

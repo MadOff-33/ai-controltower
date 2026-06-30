@@ -1,4 +1,4 @@
-﻿# BMAD Dev Workflow — Adaptation Aider / Ornith
+# BMAD Dev Workflow — Adaptation Aider / Ornith
 
 ## Objectif
 

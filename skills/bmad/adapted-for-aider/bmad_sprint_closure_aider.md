@@ -1,4 +1,4 @@
-﻿# BMAD Sprint Closure — Adaptation Aider / Ornith
+# BMAD Sprint Closure — Adaptation Aider / Ornith
 
 ## Objectif
 

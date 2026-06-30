@@ -1,4 +1,4 @@
-﻿# BMAD Web / SEO / Content — Adaptation Aider / Ornith
+# BMAD Web / SEO / Content — Adaptation Aider / Ornith
 
 ## Objectif
 

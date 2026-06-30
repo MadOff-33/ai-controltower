@@ -1,4 +1,4 @@
-﻿# NO SECRETS
+# NO SECRETS
 
 Règle absolue : aucun secret dans le contexte LLM.
 

@@ -1,4 +1,4 @@
-﻿# Superpowers Core — Adaptation Aider / Ornith
+# Superpowers Core — Adaptation Aider / Ornith
 
 ## Objectif
 

@@ -1,4 +1,4 @@
-﻿# GIT RULES
+# GIT RULES
 
 Règles Git globales :
 

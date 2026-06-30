@@ -1,4 +1,4 @@
-﻿# PROJECT_RULES.md
+# PROJECT_RULES.md
 
 ## Règles spécifiques du projet
 

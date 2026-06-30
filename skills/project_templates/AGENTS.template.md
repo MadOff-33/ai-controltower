@@ -1,4 +1,4 @@
-﻿# AGENTS.md — Règles agent projet
+# AGENTS.md — Règles agent projet
 
 Ce fichier définit les règles applicables aux agents IA dans ce dépôt.
 

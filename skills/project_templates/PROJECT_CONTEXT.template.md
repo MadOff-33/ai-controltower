@@ -1,4 +1,4 @@
-﻿# PROJECT_CONTEXT.md
+# PROJECT_CONTEXT.md
 
 ## Identité du projet
 
