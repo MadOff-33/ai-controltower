@@ -32,9 +32,19 @@ C:\AI_ControlTower\apps\controltower-ui\ControlTower.cmd
 powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\tests\Invoke-ControlTowerTestSuite.ps1"
 ```
 
+## Cloture produit
+
+La cloture definitive doit suivre la recette et la roadmap:
+
+```text
+docs\ux_ui_audit_and_final_roadmap.md
+```
+
 ## Decision de cloture
 
-Le projet peut etre ferme sur cette base. Les evolutions futures doivent etre traitees comme de nouvelles versions:
+Le projet est techniquement cloturable sur cette base. La cloture produit definitive doit encore passer les criteres de `docs\ux_ui_audit_and_final_roadmap.md`.
+
+Les evolutions futures doivent etre traitees comme de nouvelles versions:
 
 - V3.1: injection Hermes dans les packs audit/fix.
 - V4: generation assistee de tickets depuis rapports.

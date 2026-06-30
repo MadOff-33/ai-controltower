@@ -42,3 +42,11 @@ powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\tests\Invoke-
 ## Regle principale
 
 ControlTower ne modifie pas le projet cible pendant un audit, ne commit pas automatiquement, ne pousse rien sans demande explicite et rejette les sorties hors perimetre.
+
+## Cloture produit
+
+La feuille de route finale UX/UI, recette bout en bout et criteres de fermeture sont dans:
+
+```text
+docs\ux_ui_audit_and_final_roadmap.md
+```
