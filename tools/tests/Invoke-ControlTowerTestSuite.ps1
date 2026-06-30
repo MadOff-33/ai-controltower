@@ -11,6 +11,7 @@ $Suites = @(
   "Test-AiderFixReliability.ps1",
   "Test-ControlTowerOrchestrator.ps1",
   "Test-HermesMemory.ps1",
+  "Test-ControlTowerUI.ps1",
   "Test-ControlTowerRelease.ps1"
 )
 

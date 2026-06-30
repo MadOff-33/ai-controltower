@@ -6,6 +6,12 @@ Ne lancez pas Aider directement dans le projet cible pour un audit. Lancez-le da
 
 ## Demarrage rapide
 
+Interface Flask locale:
+
+```cmd
+C:\AI_ControlTower\apps\controltower-ui\ControlTower.cmd
+```
+
 Entree globale recommandee:
 
 ```powershell

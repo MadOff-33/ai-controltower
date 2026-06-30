@@ -10,6 +10,7 @@ AI ControlTower est livrable en version locale fiable pour audits et corrections
 - Couche correction par ticket.
 - Orchestrateur global.
 - Hermes central memory.
+- Cockpit Flask local Windows.
 - Suite de tests globale.
 - Documentation d'installation, usage, architecture et cloture.
 
@@ -17,6 +18,12 @@ AI ControlTower est livrable en version locale fiable pour audits et corrections
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\Invoke-ControlTowerRun.ps1" -Mode Audit -ProjectPath "C:\chemin avec espaces\Projet" -ValidateAfterDryRun
+```
+
+## Interface
+
+```cmd
+C:\AI_ControlTower\apps\controltower-ui\ControlTower.cmd
 ```
 
 ## Verification finale

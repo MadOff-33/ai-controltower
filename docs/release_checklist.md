@@ -4,6 +4,7 @@
 
 - [x] Hermes central memory initialisable.
 - [x] Entree globale `Invoke-ControlTowerRun.ps1`.
+- [x] Cockpit Flask local `apps/controltower-ui/ControlTower.cmd`.
 - [x] Suite de tests globale.
 - [x] Documentation d'usage.
 
@@ -23,6 +24,7 @@
 - [x] Marqueurs fantomes detectes.
 - [x] Hermes apprend depuis les runs.
 - [x] Categories Hermes ouvertes.
+- [x] GitHub remote detecte dans l'interface.
 
 ## Commandes finales
 

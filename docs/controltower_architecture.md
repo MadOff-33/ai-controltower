@@ -10,7 +10,7 @@ ControlTower n'est pas un modele. C'est une couche d'orchestration, de contexte,
 
 ```text
 Utilisateur
-  -> Invoke-ControlTowerRun.ps1
+  -> ControlTower Flask UI ou Invoke-ControlTowerRun.ps1
     -> Audit pipeline
     -> Fix pipeline
     -> Validators
@@ -31,6 +31,7 @@ Utilisateur
 ## Entrees principales
 
 - `tools/Install-ControlTower.ps1`: installation locale et Hermes.
+- `apps/controltower-ui/ControlTower.cmd`: cockpit Flask local Windows.
 - `tools/Invoke-ControlTowerRun.ps1`: entree globale.
 - `tools/tests/Invoke-ControlTowerTestSuite.ps1`: verification complete.
 

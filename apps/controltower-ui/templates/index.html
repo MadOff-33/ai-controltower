@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI ControlTower</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="topbar">
+      <div>
+        <h1>AI ControlTower</h1>
+        <p>Aider/Ollama pilote par contexte, memoire Hermes et validations.</p>
+      </div>
+      <button id="refreshButton" class="icon-button" title="Rafraichir">Rafraichir</button>
+    </section>
+
+    <section class="project-band">
+      <label for="projectPath">Projet cible</label>
+      <div class="path-row">
+        <input id="projectPath" type="text" spellcheck="false" autocomplete="off">
+        <button id="setProjectButton">Utiliser ce projet</button>
+      </div>
+      <div class="project-meta">
+        <span id="branchState">Branche: -</span>
+        <a id="githubLink" href="#" target="_blank" rel="noreferrer">GitHub</a>
+        <span id="gitState">Git: -</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <aside class="panel dependencies">
+        <h2>Dependances</h2>
+        <div id="dependencyList" class="status-list"></div>
+      </aside>
+
+      <section class="panel commands">
+        <h2>Catalogue</h2>
+        <div id="commandCatalog" class="command-grid"></div>
+      </section>
+
+      <section class="panel chat">
+        <h2>Chat de pilotage</h2>
+        <div id="logPanel" class="log-panel"></div>
+        <form id="chatForm" class="chat-form">
+          <input id="chatInput" type="text" placeholder="audit, tests, git, diff, hermes, aider..." autocomplete="off">
+          <button type="submit">Envoyer</button>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

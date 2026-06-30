@@ -4,6 +4,12 @@ Centre local de fiabilisation pour developpement assiste par IA avec Aider, Olla
 
 ## Commandes principales
 
+Lancer le cockpit Flask local:
+
+```cmd
+C:\AI_ControlTower\apps\controltower-ui\ControlTower.cmd
+```
+
 Installer ou reparer l'environnement:
 
 ```powershell
@@ -25,6 +31,7 @@ powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\tests\Invoke-
 ## Architecture
 
 - `tools/`: scripts d'audit, correction, validation, orchestration et Hermes.
+- `apps/controltower-ui/`: cockpit Flask local avec lanceur Windows.
 - `docs/`: specifications, manuel, architecture et cloture.
 - `prompts/`: prompts bornes pour audits.
 - `templates/`: profils, tickets et schemas.
