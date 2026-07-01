@@ -109,11 +109,32 @@ def build_new_project_command(payload, run_aider=False, persist_brief=False):
         + " -WorkspaceRoot "
         + quote_arg("C:\\AI_ControlTower\\creation_workspaces")
     )
+    args = [
+        "powershell",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        str(ROOT / "tools" / "Invoke-ControlTowerRun.ps1"),
+        "-Mode",
+        "Creation",
+        "-ProjectName",
+        data["project_name"],
+        "-ParentPath",
+        data["parent_path"],
+        "-ProjectType",
+        data["project_type"],
+        "-BriefPath",
+        brief_path,
+        "-WorkspaceRoot",
+        str(ROOT / "creation_workspaces"),
+    ]
     if run_aider:
         command += " -RunAider"
+        args.append("-RunAider")
     else:
         command += " -ValidateAfterDryRun"
-    return data, command
+        args.append("-ValidateAfterDryRun")
+    return data, command, args
 
 
 def read_json_process(command):
@@ -198,6 +219,7 @@ def build_commands(project_path):
     project = quote_arg(project_path)
     latest_workspace = newest_workspace() if "newest_workspace" in globals() else ""
     latest_workspace_arg = quote_arg(latest_workspace) if latest_workspace else '"<LATEST_WORKSPACE>"'
+    latest_workspace_value = latest_workspace or "<LATEST_WORKSPACE>"
     workspace = '"<WORKSPACE_PATH>"'
     ticket = '"<TICKET_PATH>"'
     return {
@@ -208,6 +230,7 @@ def build_commands(project_path):
             "template": False,
             "description": "Verifie et remet en place les dossiers, scripts, memoire Hermes et prerequis ControlTower.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Install-ControlTower.ps1"',
+            "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Install-ControlTower.ps1")],
         },
         "audit_dry_run": {
             "label": "Audit dry-run",
@@ -218,6 +241,8 @@ def build_commands(project_path):
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Audit -ProjectPath '
             + project
             + " -ValidateAfterDryRun",
+            "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Invoke-ControlTowerRun.ps1"),
+                      "-Mode", "Audit", "-ProjectPath", str(project_path), "-ValidateAfterDryRun"],
         },
         "audit_real": {
             "label": "Audit reel avec Aider",
@@ -228,6 +253,8 @@ def build_commands(project_path):
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Audit -ProjectPath '
             + project
             + " -RunAider",
+            "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Invoke-ControlTowerRun.ps1"),
+                      "-Mode", "Audit", "-ProjectPath", str(project_path), "-RunAider"],
         },
         "continue_audit": {
             "label": "Continuer audit",
@@ -238,6 +265,8 @@ def build_commands(project_path):
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-AiderAuditContinuation.ps1" -WorkspacePath '
             + latest_workspace_arg
             + " -RunAider",
+            "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Invoke-AiderAuditContinuation.ps1"),
+                      "-WorkspacePath", latest_workspace_value, "-RunAider"],
         },
         "consolidate_audit": {
             "label": "Consolider audit",
@@ -247,6 +276,8 @@ def build_commands(project_path):
             "description": "Assemble les rapports de lots en un rapport global nomme avec le projet et la date, puis affiche la couverture totale.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\New-AuditConsolidatedReport.ps1" -WorkspacePath '
             + latest_workspace_arg,
+            "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "New-AuditConsolidatedReport.ps1"),
+                      "-WorkspacePath", latest_workspace_value],
         },
         "new_project": {
             "label": "Nouveau projet",
@@ -287,6 +318,7 @@ def build_commands(project_path):
             "template": False,
             "description": "Execute la suite de tests ControlTower pour verifier scripts, UI, encodage et validateurs.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\tests\\Invoke-ControlTowerTestSuite.ps1"',
+            "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "tests" / "Invoke-ControlTowerTestSuite.ps1")],
         },
         "final_recipe": {
             "label": "Recette finale projet",
@@ -297,6 +329,8 @@ def build_commands(project_path):
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Test-ControlTowerFinalRecipe.ps1" -ProjectPath '
             + project
             + " -SkipFullSuite",
+            "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Test-ControlTowerFinalRecipe.ps1"),
+                      "-ProjectPath", str(project_path), "-SkipFullSuite"],
         },
         "hermes_guidance": {
             "label": "Guidance Hermes",
@@ -305,6 +339,7 @@ def build_commands(project_path):
             "template": False,
             "description": "Genere ou affiche la guidance issue de la memoire centrale Hermes pour reutiliser l'experience des runs.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Get-HermesGuidance.ps1"',
+            "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Get-HermesGuidance.ps1")],
         },
         "git_status": {
             "label": "Git status",
@@ -313,6 +348,7 @@ def build_commands(project_path):
             "template": False,
             "description": "Affiche l'etat Git du projet cible afin de voir les fichiers modifies, ajoutes ou non suivis.",
             "command": "git -C " + project + " status",
+            "args": ["git", "-C", str(project_path), "status"],
         },
         "git_diff": {
             "label": "Git diff",
@@ -321,6 +357,7 @@ def build_commands(project_path):
             "template": False,
             "description": "Affiche les changements locaux du projet cible avant une correction ou une revue.",
             "command": "git -C " + project + " diff",
+            "args": ["git", "-C", str(project_path), "diff"],
         },
         "aider_manual": {
             "label": "Aider manuel cadre",
@@ -329,6 +366,7 @@ def build_commands(project_path):
             "template": False,
             "description": "Ouvre une commande Aider cadree sur Ornith pour usage manuel avance, hors pipeline automatise.",
             "command": "aider --model ollama_chat/ornith:9b --no-auto-commits --no-dirty-commits",
+            "args": ["aider", "--model", "ollama_chat/ornith:9b", "--no-auto-commits", "--no-dirty-commits"],
         },
     }
 
@@ -644,12 +682,12 @@ def run_job(job_id, command_key, project_path, confirmed=False):
         else:
             add_log("run", item["label"], item["command"])
             process = subprocess.Popen(
-                item["command"],
+                item["args"],
                 cwd=str(ROOT),
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                shell=True,
+                shell=False,
                 bufsize=1,
             )
             with JOBS_LOCK:
@@ -737,7 +775,7 @@ def create_new_project_job(payload, confirmed=False):
     run_aider = bool(payload.get("run_aider"))
     if run_aider and not confirmed:
         raise PermissionError("Confirmation requise pour cette action.")
-    data, command = build_new_project_command(payload, run_aider=run_aider, persist_brief=True)
+    data, command, args = build_new_project_command(payload, run_aider=run_aider, persist_brief=True)
     job_id = "job_" + uuid.uuid4().hex[:12]
     job = {
         "id": job_id,
@@ -758,12 +796,12 @@ def create_new_project_job(payload, confirmed=False):
     }
     with JOBS_LOCK:
         JOBS[job_id] = job
-    thread = threading.Thread(target=run_dynamic_job, args=(job_id, job["label"], command), daemon=True)
+    thread = threading.Thread(target=run_dynamic_job, args=(job_id, job["label"], command, args), daemon=True)
     thread.start()
     return job
 
 
-def run_dynamic_job(job_id, label, command):
+def run_dynamic_job(job_id, label, command, args):
     with JOBS_LOCK:
         job = JOBS[job_id]
         job["status"] = "running"
@@ -775,14 +813,14 @@ def run_dynamic_job(job_id, label, command):
     try:
         add_log("run", label, command)
         process = subprocess.Popen(
-            command,
+            args,
             cwd=str(ROOT),
             text=True,
             encoding="utf-8",
             errors="replace",
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            shell=True,
+            shell=False,
             bufsize=1,
         )
         with JOBS_LOCK:
@@ -877,14 +915,14 @@ def run_shell_command(command_key, project_path, confirmed=False):
 
     add_log("run", item["label"], item["command"])
     completed = subprocess.run(
-        item["command"],
+        item["args"],
         cwd=str(ROOT),
         text=True,
         encoding="utf-8",
         errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        shell=True,
+        shell=False,
     )
     level = "ok" if completed.returncode == 0 else "error"
     return add_log(level, item["label"], completed.stdout)
@@ -1039,7 +1077,7 @@ def create_app(default_project=None):
         if payload is None:
             return jsonify({"error": "JSON invalide."}), 400
         try:
-            data, command = build_new_project_command(payload, run_aider=False)
+            data, command, _args = build_new_project_command(payload, run_aider=False)
             return jsonify({"ok": True, "project": data, "command_preview": command})
         except Exception as exc:
             return jsonify({"error": str(exc)}), 400

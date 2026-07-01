@@ -251,7 +251,7 @@ try:
     assert preview_payload["project"]["target_project_path"].endswith("Fresh_UI_Project"), preview_payload
     assert not (parent / "Fresh_UI_Project").exists(), "preview must not create project directory"
 
-    _, real_command = module.build_new_project_command({
+    _, real_command, _ = module.build_new_project_command({
         "project_name": "Fresh UI Project",
         "parent_path": str(parent),
         "project_type": "python-cli",
