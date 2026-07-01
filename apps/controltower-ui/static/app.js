@@ -312,6 +312,8 @@ function renderCreationJobs(jobs) {
   const cancelButton = (job.status === "queued" || job.status === "running")
     ? `<button class="secondary job-cancel" data-job-cancel="${job.id}" type="button">Arreter</button>`
     : "";
+  const openOutputIds = new Set(Array.from(els.creationJobPanel.querySelectorAll("details[data-job-output][open]")).map((detail) => detail.dataset.jobOutput));
+  const outputOpen = openOutputIds.has(String(job.id)) ? " open" : "";
   setHtml(els.creationJobPanel, `
     <div class="job-entry creation-current ${stalled ? "stalled" : ""}">
       <div class="job-main">
@@ -321,7 +323,7 @@ function renderCreationJobs(jobs) {
         ${job.last_activity_at ? `<small>Derniere activite: ${escapeHtml(job.last_activity_at)}</small>` : ""}
         ${job.finished_at ? `<small>Fin: ${escapeHtml(job.finished_at)}</small>` : ""}
         ${job.log_path ? `<small>Log: ${escapeHtml(job.log_path)}</small>` : ""}
-        ${output ? `<details class="job-output"><summary>Voir les dernieres lignes</summary><pre>${escapeHtml(output)}</pre></details>` : ""}
+        ${output ? `<details class="job-output" data-job-output="${escapeHtml(job.id)}"${outputOpen}><summary>Voir les dernieres lignes</summary><pre>${escapeHtml(output)}</pre></details>` : ""}
       </div>
       ${cancelButton}
     </div>
@@ -360,8 +362,9 @@ function renderCreationLogs(logs) {
   const latest = creationLogs[creationLogs.length - 1];
   const olderCount = Math.max(0, creationLogs.length - 1);
   const older = creationLogs.slice(0, -1).slice(-5).reverse();
+  const olderWasOpen = Boolean(els.creationLogPanel.querySelector("details.older-logs[open]"));
   renderLogPanel(els.creationLogPanel, `
-    ${olderCount ? `<details class="older-logs"><summary>${olderCount} ancien(s) evenement(s) creation</summary>${older.map((entry) => `
+    ${olderCount ? `<details class="older-logs"${olderWasOpen ? " open" : ""}><summary>${olderCount} ancien(s) evenement(s) creation</summary>${older.map((entry) => `
       <div class="log-entry compact">
         <strong>${escapeHtml(entry.time)} - ${escapeHtml(entry.message)}</strong>
       </div>
@@ -412,10 +415,11 @@ function render(nextState) {
   renderLogs(state.logs || []);
 }
 
-async function refresh() {
+async function refresh(options = {}) {
   if (refreshInFlight) return;
+  const manual = Boolean(options.manual);
   refreshInFlight = true;
-  if (els.refreshButton) {
+  if (manual && els.refreshButton) {
     els.refreshButton.disabled = true;
     els.refreshButton.textContent = "Rafraichissement...";
   }
@@ -425,7 +429,7 @@ async function refresh() {
     showError("Etat indisponible", "Impossible de charger l'etat ControlTower. Verifiez que le serveur local tourne.", error.message);
   } finally {
     refreshInFlight = false;
-    if (els.refreshButton) {
+    if (manual && els.refreshButton) {
       els.refreshButton.disabled = false;
       els.refreshButton.textContent = "Rafraichir";
     }
@@ -634,7 +638,7 @@ if (els.setProjectButton) els.setProjectButton.addEventListener("click", async (
 if (els.browseProjectButton) els.browseProjectButton.addEventListener("click", browseProject);
 if (els.tabAuditCorrection) els.tabAuditCorrection.addEventListener("click", () => switchTab("audit"));
 if (els.tabCreation) els.tabCreation.addEventListener("click", () => switchTab("creation"));
-if (els.refreshButton) els.refreshButton.addEventListener("click", refresh);
+if (els.refreshButton) els.refreshButton.addEventListener("click", () => refresh({ manual: true }));
 if (els.dismissErrorButton) els.dismissErrorButton.addEventListener("click", clearError);
 if (els.modalCancelButton) els.modalCancelButton.addEventListener("click", () => resolveConfirm(false));
 if (els.modalConfirmButton) els.modalConfirmButton.addEventListener("click", () => resolveConfirm(true));
