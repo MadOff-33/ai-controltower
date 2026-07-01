@@ -292,6 +292,43 @@ def latest_artifacts():
     }
 
 
+def read_audit_coverage():
+    workspace = newest_workspace()
+    if not workspace:
+        return {"status": "none", "label": "Aucun audit lance"}
+    workspace_path = Path(workspace)
+    manifests_dir = workspace_path / "context_packs"
+    manifests = sorted(manifests_dir.glob("*_manifest.json"), key=lambda p: p.stat().st_mtime, reverse=True) if manifests_dir.exists() else []
+    if not manifests:
+        return {"status": "none", "label": "Aucun pack de contexte recent", "workspace": workspace}
+    try:
+        manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
+    except Exception as exc:
+        return {"status": "error", "label": "Couverture illisible", "error": str(exc), "workspace": workspace}
+    coverage = manifest.get("coverage") or {}
+    included = int(coverage.get("included_files") or len(manifest.get("included") or []))
+    omitted = int(coverage.get("omitted_files") or len(manifest.get("omitted") or []))
+    total = int(coverage.get("total_files") or (included + omitted))
+    percent = coverage.get("percent")
+    if percent is None:
+        percent = round((included * 100.0 / total), 1) if total else 100
+    status = coverage.get("status") or ("complete" if omitted == 0 else "partial")
+    label = "Audit projet complet" if status == "complete" else "Audit projet incomplet"
+    return {
+        "status": status,
+        "label": label,
+        "workspace": workspace,
+        "manifest": str(manifests[0]),
+        "lot": manifest.get("lot", ""),
+        "included_files": included,
+        "omitted_files": omitted,
+        "total_files": total,
+        "percent": percent,
+        "is_project_complete": status == "complete",
+        "omitted": (manifest.get("omitted") or [])[:10],
+    }
+
+
 def status_label(status):
     mapping = {
         "structure-passed": "Preparation OK - audit reel requis",
@@ -540,6 +577,7 @@ def create_app(default_project=None):
                 "commands": commands,
                 "workflow_steps": WORKFLOW_STEPS,
                 "last_run": read_last_run_status(),
+                "audit_coverage": read_audit_coverage(),
                 "jobs": [public_job(job) for job in list(JOBS.values())[-20:]],
                 "logs": LOGS[-80:],
             }
@@ -658,6 +696,7 @@ def self_test(project_path):
         "jobs_supported": True,
         "workflow_steps": WORKFLOW_STEPS,
         "last_run": read_last_run_status(),
+        "audit_coverage": read_audit_coverage(),
         "commands": build_commands(project_path),
     }
 

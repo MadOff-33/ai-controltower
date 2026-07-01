@@ -150,6 +150,29 @@ input {
   margin-bottom: 14px;
 }
 
+.coverage-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.55fr) minmax(0, 1fr);
+  gap: 14px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.coverage-details {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.coverage-details ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
 .eyebrow {
   display: block;
   color: var(--muted);
@@ -419,6 +442,7 @@ input {
 
   .topbar,
   .status-band,
+  .coverage-panel,
   .path-row,
   .chat-form {
     grid-template-columns: 1fr;

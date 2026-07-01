@@ -164,11 +164,27 @@ if ($pack.Length -gt $MaxChars) {
   throw "Le pack depasse la limite apres assemblage: $($pack.Length) / $MaxChars"
 }
 Write-Utf8NoBom -Path $packPath -Content $pack
+$totalFiles = $included.Count + $omitted.Count
+if ($totalFiles -gt 0) {
+  $coveragePercent = [math]::Round(($included.Count * 100.0) / $totalFiles, 1)
+} else {
+  $coveragePercent = 100
+}
+$coverageStatus = "complete"
+if ($omitted.Count -gt 0) { $coverageStatus = "partial" }
 Write-Utf8NoBom -Path (Join-Path $contextDir ($safeLot + "_manifest.json")) -Content ([ordered]@{
   lot = $safeLot
   max_chars = $MaxChars
   actual_chars = $pack.Length
   omitted_written_in_pack = $omittedWritten
+  coverage = [ordered]@{
+    status = $coverageStatus
+    included_files = $included.Count
+    omitted_files = $omitted.Count
+    total_files = $totalFiles
+    percent = $coveragePercent
+    is_project_complete = ($omitted.Count -eq 0)
+  }
   included = $included
   omitted = $omitted
 } | ConvertTo-Json -Depth 8)

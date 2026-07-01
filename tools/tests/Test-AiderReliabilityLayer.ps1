@@ -130,6 +130,9 @@ $pack = Join-Path $workspace "context_packs\lot1_config_pack.md"
 $report = Join-Path $workspace "reports\lot1_config_report.md"
 $packText = Get-Content -LiteralPath $pack -Raw
 Assert-True -Condition ($packText.Length -le 12000) -Message ("Context pack exceeds configured MaxChars: " + $packText.Length)
+$manifest = Get-Content -LiteralPath (Join-Path $workspace "context_packs\lot1_config_manifest.json") -Raw | ConvertFrom-Json
+Assert-True -Condition ($null -ne $manifest.coverage) -Message "Context pack manifest should expose coverage summary."
+Assert-True -Condition ($manifest.coverage.status -match "complete|partial") -Message "Context pack manifest should expose explicit coverage status."
 Invoke-ExpectFailure -Name "draft report rejected in normal validation" -Command {
   & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $report -ContextPackPath $pack
 }
@@ -158,6 +161,37 @@ Remove-Item -LiteralPath $badOutput -Force
 & (Join-Path $Root "tools\Start-AiderAudit.ps1") -WorkspacePath $workspace -LotName "lot1_config" -ContextPackPath $pack -DryRun | Out-Null
 Add-Content -LiteralPath $report -Encoding UTF8 -Value "`nLe point d'entree est main()."
 Invoke-ExpectFailure -Name "ghost marker" -Command {
+  & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $report -ContextPackPath $pack
+}
+
+& (Join-Path $Root "tools\Start-AiderAudit.ps1") -WorkspacePath $workspace -LotName "lot1_config" -ContextPackPath $pack -DryRun | Out-Null
+[System.IO.File]::WriteAllText($report, @"
+# Rapport lot1_config
+
+## Constats
+
+| Severite | Chemin | Constat | Preuve |
+| --- | --- | --- | --- |
+| CRITIQUE | pyproject.toml | Le champ `smtp_password` existe dans la configuration. | `pyproject.toml` |
+| MOYEN | pkg/core.py | La fonction `add` est absente du fichier. | `pkg/core.py` |
+
+RÃ©sumÃ© corrompu.
+"@, (New-Object System.Text.UTF8Encoding($false)))
+Invoke-ExpectFailure -Name "factual validator rejects missing fields, false absence and mojibake" -Command {
+  & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $report -ContextPackPath $pack
+}
+
+$omittedReport = @"
+# Rapport lot1_config
+
+## Constats
+
+| Severite | Chemin | Constat | Preuve |
+| --- | --- | --- | --- |
+| HAUT | missing/file.py | Ce fichier omis contient une anomalie critique. | `missing/file.py` |
+"@
+[System.IO.File]::WriteAllText($report, $omittedReport, (New-Object System.Text.UTF8Encoding($false)))
+Invoke-ExpectFailure -Name "factual validator rejects findings about files outside context" -Command {
   & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $report -ContextPackPath $pack
 }
 

@@ -83,10 +83,14 @@ $messagePath = Join-Path $promptsDir ($safeLot + "_aider_message.md")
 $message = @(
   "Tu dois utiliser uniquement le fichier fourni avec --read comme source factuelle.",
   "Le seul fichier editable est le rapport ouvert par Aider.",
-  "Ecris dans le rapport une section: Synthese, Constats, Incertitudes, Prochaines actions.",
+  "Ecris dans le rapport une section: Couverture, Synthese, Constats, Incertitudes, Prochaines actions.",
   "N'invente pas de fichiers, de fonctions ou de comportements absents du contexte.",
   "Chaque constat factuel doit citer un chemin relatif present dans le contexte.",
+  "Chaque constat doit fournir une preuve courte sous forme: chemin relatif + extrait exact entre backticks present dans le contexte.",
+  "Ne conclus jamais sur un fichier liste comme omis ou non inclus; place-le seulement dans Incertitudes.",
+  "N'ecris pas qu'un champ, port, fonction ou fichier est absent sans verifier que l'extrait n'apparait pas dans le contexte.",
   "Si le contexte ne permet pas de conclure, ecris explicitement l'incertitude.",
+  "N'utilise pas de caracteres corrompus ou mojibake dans le rapport.",
   "Mets a jour le rapport maintenant."
 ) -join [Environment]::NewLine
 Write-Utf8NoBom -Path $messagePath -Content $message

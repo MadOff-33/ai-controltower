@@ -11,6 +11,9 @@ const els = {
   dismissErrorButton: document.getElementById("dismissErrorButton"),
   lastRunStatus: document.getElementById("lastRunStatus"),
   artifactLinks: document.getElementById("artifactLinks"),
+  coveragePanel: document.getElementById("coveragePanel"),
+  coverageStatus: document.getElementById("coverageStatus"),
+  coverageDetails: document.getElementById("coverageDetails"),
   dependencyList: document.getElementById("dependencyList"),
   workflowPanel: document.getElementById("workflowPanel"),
   commandCatalog: document.getElementById("commandCatalog"),
@@ -145,6 +148,33 @@ function renderLastRun(lastRun) {
   );
 }
 
+function renderAuditCoverage(coverage) {
+  if (!els.coveragePanel) return;
+  const info = coverage || {};
+  if (!info.total_files) {
+    setText(els.coverageStatus, "Aucun audit lance");
+    setHtml(els.coverageDetails, `<span>Aucun pack de contexte recent</span>`);
+    return;
+  }
+  const complete = info.status === "complete" || info.is_project_complete;
+  const title = complete ? "Audit projet complet" : "Audit projet incomplet";
+  setText(els.coverageStatus, title);
+  const omitted = info.omitted_files || 0;
+  const included = info.included_files || 0;
+  const total = info.total_files || 0;
+  const percent = info.percent || 0;
+  const omittedItems = (info.omitted || []).slice(0, 5).map((item) => {
+    const path = item.path || item;
+    const reason = item.reason ? ` - ${item.reason}` : "";
+    return `<li>${path}${reason}</li>`;
+  }).join("");
+  setHtml(els.coverageDetails, `
+    <span>${included}/${total} fichiers couverts (${percent}%).</span>
+    <span>${omitted} fichier(s) hors contexte.</span>
+    ${omittedItems ? `<ul>${omittedItems}</ul>` : ""}
+  `);
+}
+
 function renderJobs(jobs) {
   if (!els.jobPanel) return;
   const visibleJobs = (jobs || []).slice(-4).reverse();
@@ -219,6 +249,7 @@ function render(nextState) {
   }
   renderDependencies(state.dependencies || {});
   renderLastRun(state.last_run || {});
+  renderAuditCoverage(state.audit_coverage || {});
   renderWorkflow(state.workflow_steps || []);
   renderCommands(state.commands || {});
   renderJobs(state.jobs || []);

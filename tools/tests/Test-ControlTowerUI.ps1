@@ -74,10 +74,13 @@ Assert-True -Condition ($appText.Contains("subprocess.Popen")) -Message "Jobs sh
 Assert-True -Condition ($appText.Contains("last_activity_at")) -Message "Jobs should expose last activity time."
 Assert-True -Condition ($appText.Contains("stalled")) -Message "Jobs should expose stalled state when no activity is detected."
 Assert-True -Condition ($appText.Contains("taskkill")) -Message "Windows job cancellation should stop the process tree."
+Assert-True -Condition ($appText.Contains("read_audit_coverage")) -Message "UI API should expose audit coverage."
+Assert-True -Condition ($appText.Contains('"audit_coverage"')) -Message "State API should include audit coverage."
 
 $templateText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\templates\index.html") -Raw
 Assert-True -Condition ($templateText.Contains("/static/app.js?v=")) -Message "UI script should use cache-busting query string."
 Assert-True -Condition ($templateText.Contains("errorPanel")) -Message "UI should include an inline error panel."
+Assert-True -Condition ($templateText.Contains("coveragePanel")) -Message "UI should include an audit coverage panel."
 
 $jsText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\app.js") -Raw
 Assert-True -Condition ($jsText.Contains("function setText")) -Message "UI JS should guard optional text targets."
@@ -90,11 +93,14 @@ Assert-True -Condition ($jsText.Contains("Aucune activite recente")) -Message "U
 Assert-True -Condition ($jsText.Contains("renderLogPanel")) -Message "UI JS should render logs through a scroll-aware helper."
 Assert-True -Condition ($jsText.Contains("shouldStickToBottom")) -Message "UI JS should keep logs at the bottom only when the user is already near the bottom."
 Assert-True -Condition ($jsText.Contains("scrollTop = panel.scrollHeight")) -Message "UI JS should auto-scroll live logs to the bottom."
+Assert-True -Condition ($jsText.Contains("renderAuditCoverage")) -Message "UI JS should render audit coverage."
+Assert-True -Condition ($jsText.Contains("Audit projet incomplet")) -Message "UI JS should explicitly distinguish incomplete project audits."
 
 $styleText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\styles.css") -Raw
 Assert-True -Condition ($styleText.Contains("minmax(560px, 1.65fr)")) -Message "Chat column should be wider than command catalog."
 Assert-True -Condition ($styleText.Contains(".command-card button")) -Message "Command buttons should have compact styling."
 Assert-True -Condition ($styleText.Contains("min-height: 560px")) -Message "Chat log should have a larger minimum height."
+Assert-True -Condition ($styleText.Contains(".coverage-panel")) -Message "UI should style audit coverage clearly."
 
 $python = Get-Command py -ErrorAction SilentlyContinue
 $pythonArgs = @("-3")
