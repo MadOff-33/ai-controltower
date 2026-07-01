@@ -13,10 +13,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function Quote-Arg {
-  param([string]$Value)
-  return '"' + ($Value -replace '"', '\"') + '"'
-}
+. (Join-Path $PSScriptRoot "lib\ControlTowerCommon.ps1")
 
 function ConvertTo-RelativeSafePath {
   param([string]$PathValue)

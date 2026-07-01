@@ -21,16 +21,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function Write-Utf8NoBom {
-  param([string]$Path, [string]$Content)
-  $encoding = New-Object System.Text.UTF8Encoding($false)
-  [System.IO.File]::WriteAllText($Path, $Content, $encoding)
-}
-
-function Quote-Arg {
-  param([string]$Value)
-  return '"' + ($Value -replace '"', '\"') + '"'
-}
+. (Join-Path $PSScriptRoot "lib\ControlTowerCommon.ps1")
 
 function ConvertTo-RelativeSafePath {
   param([string]$PathValue)

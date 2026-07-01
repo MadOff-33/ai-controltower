@@ -19,16 +19,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function Write-Utf8NoBom {
-  param([string]$Path, [string]$Content)
-  $encoding = New-Object System.Text.UTF8Encoding($false)
-  [System.IO.File]::WriteAllText($Path, $Content, $encoding)
-}
-
-function Quote-Arg {
-  param([string]$Value)
-  return '"' + ($Value -replace '"', '\"') + '"'
-}
+. (Join-Path $PSScriptRoot "lib\ControlTowerCommon.ps1")
 
 function Invoke-PipelineStep {
   param([string]$Name, [scriptblock]$Command)
@@ -39,13 +30,6 @@ function Invoke-PipelineStep {
   if ($LASTEXITCODE -ne 0) {
     throw ("Etape echouee: " + $Name + " (exit " + $LASTEXITCODE + ")")
   }
-}
-
-function Get-NewestDirectory {
-  param([string]$Path)
-  $dir = Get-ChildItem -LiteralPath $Path -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-  if ($null -eq $dir) { throw "Aucun workspace trouve dans: $Path" }
-  return $dir.FullName
 }
 
 $root = "C:\AI_ControlTower"

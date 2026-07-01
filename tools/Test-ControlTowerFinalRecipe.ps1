@@ -6,11 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function Write-Utf8NoBom {
-  param([string]$Path, [string]$Content)
-  $encoding = New-Object System.Text.UTF8Encoding($false)
-  [System.IO.File]::WriteAllText($Path, $Content, $encoding)
-}
+. (Join-Path $PSScriptRoot "lib\ControlTowerCommon.ps1")
 
 function Add-Line {
   param([System.Collections.Generic.List[string]]$Lines, [string]$Text = "")

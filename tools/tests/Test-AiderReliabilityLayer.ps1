@@ -148,7 +148,8 @@ Remove-Item -LiteralPath $outsideReport -Force
 $auditMessage = Get-Content -LiteralPath (Join-Path $workspace "prompts\lot1_config_aider_message.md") -Raw -Encoding UTF8
 Assert-True -Condition ($auditMessage.Contains("ControlTower Aider guidance")) -Message "Audit message should include shared ControlTower guidance."
 Assert-True -Condition ($auditMessage.Contains("Hermes central guidance")) -Message "Audit message should include Hermes guidance."
-$startAuditText = Get-Content -LiteralPath (Join-Path $Root "tools\Start-AiderAudit.ps1") -Raw
+$startAuditText = (Get-Content -LiteralPath (Join-Path $Root "tools\Start-AiderAudit.ps1") -Raw) `
+  + (Get-Content -LiteralPath (Join-Path $Root "tools\lib\ControlTowerCommon.ps1") -Raw)
 Assert-True -Condition ($startAuditText.Contains('"--no-git"')) -Message "Aider audit must not attach to the ControlTower git repo."
 Assert-True -Condition ($startAuditText.Contains('"--read"')) -Message "Aider audit must pass the context pack as CLI read-only file."
 Assert-True -Condition ($startAuditText.Contains('"--no-pretty"')) -Message "Aider audit must use non-interactive friendly output."
