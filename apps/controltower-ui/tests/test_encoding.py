@@ -66,7 +66,7 @@ def test_new_project_recipe_utf8_end_to_end(client, app_module):
     report_text = "# Rapport UI\n\nCréer une CLI de démonstration.\né è à ç œ\n"
     report_dir.mkdir(parents=True, exist_ok=True)
     report_path = report_dir / "utf8_recipe_report.md"
-    report_path.write_text(report_text, encoding="utf-8")
+    report_path.write_text(report_text, encoding="utf-8", newline="")
     try:
         response = client.get("/api/report")
         assert response.status_code == 200
@@ -78,9 +78,8 @@ def test_new_project_recipe_utf8_end_to_end(client, app_module):
 
         download = client.get("/api/report/download")
         assert download.status_code == 200
+        assert download.data.decode("utf-8") == report_text
         download_text = download.data.decode("utf-8")
-        # Normalize line endings for comparison (Flask on Windows may use \r\n)
-        assert download_text.replace("\r\n", "\n") == report_text
         assert "Créer" in download_text
         assert not any(marker in download_text for marker in app_module.MOJIBAKE_MARKERS)
         download.close()
