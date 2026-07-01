@@ -330,8 +330,8 @@ input {
 }
 
 .job-entry {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -339,8 +339,41 @@ input {
   font-size: 13px;
 }
 
+.job-entry.stalled {
+  border-color: #f0b35d;
+  background: #fff8ed;
+}
+
+.job-main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
 .job-entry span {
   color: var(--muted);
+}
+
+.job-entry small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.job-entry pre {
+  max-height: 110px;
+  overflow: auto;
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #344054;
+  font-size: 11px;
+}
+
+.job-entry button {
+  align-self: start;
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 12px;
 }
 
 .log-entry {

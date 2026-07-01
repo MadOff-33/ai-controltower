@@ -66,9 +66,14 @@ Assert-True -Condition ($appText.Contains("@app.route(""/api/state""")) -Message
 Assert-True -Condition ($appText.Contains("@app.route(""/api/run""")) -Message "Run API route missing."
 Assert-True -Condition ($appText.Contains("@app.route(""/api/jobs""")) -Message "Jobs API route missing."
 Assert-True -Condition ($appText.Contains("@app.route(""/api/jobs/<job_id>""")) -Message "Job detail API route missing."
+Assert-True -Condition ($appText.Contains("@app.route(""/api/jobs/<job_id>/cancel""")) -Message "Job cancel API route missing."
 Assert-True -Condition ($appText.Contains("@app.route(""/api/tickets/from-report""")) -Message "Ticket-from-report API route missing."
 Assert-True -Condition ($appText.Contains("WORKFLOW_STEPS")) -Message "Guided workflow missing."
 Assert-True -Condition ($appText.Contains("ALLOWED_COMMANDS")) -Message "Command allowlist missing."
+Assert-True -Condition ($appText.Contains("subprocess.Popen")) -Message "Jobs should stream live output with Popen."
+Assert-True -Condition ($appText.Contains("last_activity_at")) -Message "Jobs should expose last activity time."
+Assert-True -Condition ($appText.Contains("stalled")) -Message "Jobs should expose stalled state when no activity is detected."
+Assert-True -Condition ($appText.Contains("taskkill")) -Message "Windows job cancellation should stop the process tree."
 
 $templateText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\templates\index.html") -Raw
 Assert-True -Condition ($templateText.Contains("/static/app.js?v=")) -Message "UI script should use cache-busting query string."
@@ -80,6 +85,8 @@ Assert-True -Condition ($jsText.Contains("if (!els.lastRunStatus && !els.artifac
 Assert-True -Condition ($jsText.Contains("if (els.commandCatalog)")) -Message "UI JS should tolerate missing command catalog events."
 Assert-True -Condition ($jsText.Contains("function showError")) -Message "UI JS should render friendly inline errors."
 Assert-True -Condition (-not $jsText.Contains("window.alert")) -Message "UI JS should not use raw browser alert boxes."
+Assert-True -Condition ($jsText.Contains("cancelJob")) -Message "UI JS should support cancelling a running job."
+Assert-True -Condition ($jsText.Contains("Aucune activite recente")) -Message "UI JS should explain stalled jobs clearly."
 
 $styleText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\styles.css") -Raw
 Assert-True -Condition ($styleText.Contains("minmax(560px, 1.65fr)")) -Message "Chat column should be wider than command catalog."

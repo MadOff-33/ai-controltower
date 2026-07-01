@@ -14,10 +14,14 @@ ROOT = Path("C:/AI_ControlTower")
 APP_DIR = ROOT / "apps" / "controltower-ui"
 STATE_PATH = APP_DIR / "state.json"
 LOG_LIMIT = 300
+JOB_OUTPUT_LIMIT = 60000
+JOB_STALL_SECONDS = 300
 LOGS = []
 LOG_LOCK = threading.Lock()
 JOBS = {}
+JOB_PROCESSES = {}
 JOBS_LOCK = threading.Lock()
+JOB_LOG_DIR = ROOT / "logs" / "ui_jobs"
 
 WORKFLOW_STEPS = [
     {"id": "project", "label": "Selectionner projet", "command": None},
@@ -213,6 +217,52 @@ def add_log(level, message, output=""):
     return entry
 
 
+def now_iso():
+    return time.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def append_job_output(job_id, text):
+    if not text:
+        return
+    JOB_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    log_path = JOB_LOG_DIR / (job_id + ".log")
+    with log_path.open("a", encoding="utf-8") as handle:
+        handle.write(text)
+    with JOBS_LOCK:
+        job = JOBS.get(job_id)
+        if not job:
+            return
+        job["output"] = (job.get("output", "") + text)[-JOB_OUTPUT_LIMIT:]
+        job["last_activity_at"] = now_iso()
+        job["last_activity_ts"] = time.time()
+        job["log_path"] = str(log_path)
+        job["stalled"] = False
+        job["health"] = "active"
+
+
+def refresh_job_health(job):
+    status = job.get("status")
+    if status in ("queued", "running"):
+        last_activity_ts = job.get("last_activity_ts") or 0
+        silence_seconds = int(max(0, time.time() - last_activity_ts)) if last_activity_ts else 0
+        job["silence_seconds"] = silence_seconds
+        if status == "running" and silence_seconds >= JOB_STALL_SECONDS:
+            job["stalled"] = True
+            job["health"] = "stalled"
+            job["status_label"] = "Aucune activite recente"
+        else:
+            job["stalled"] = False
+            job["health"] = "active" if status == "running" else "queued"
+            job["status_label"] = "En cours" if status == "running" else "En attente"
+    return job
+
+
+def public_job(job):
+    public = dict(job)
+    public.pop("last_activity_ts", None)
+    return refresh_job_health(public)
+
+
 def newest_workspace():
     audits = ROOT / "audits"
     if not audits.exists():
@@ -271,7 +321,11 @@ def run_job(job_id, command_key, project_path, confirmed=False):
     with JOBS_LOCK:
         job = JOBS[job_id]
         job["status"] = "running"
-        job["started_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+        job["started_at"] = now_iso()
+        job["last_activity_at"] = job["started_at"]
+        job["last_activity_ts"] = time.time()
+        job["health"] = "active"
+        job["stalled"] = False
     try:
         if command_key not in ALLOWED_COMMANDS:
             raise ValueError("Commande non autorisee.")
@@ -284,31 +338,60 @@ def run_job(job_id, command_key, project_path, confirmed=False):
             return_code = 0
         else:
             add_log("run", item["label"], item["command"])
-            completed = subprocess.run(
+            process = subprocess.Popen(
                 item["command"],
                 cwd=str(ROOT),
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 shell=True,
+                bufsize=1,
             )
-            output = completed.stdout
-            return_code = completed.returncode
+            with JOBS_LOCK:
+                JOB_PROCESSES[job_id] = process
+                job = JOBS[job_id]
+                job["pid"] = process.pid
+            output_parts = []
+            while True:
+                line = process.stdout.readline() if process.stdout else ""
+                if line:
+                    output_parts.append(line)
+                    append_job_output(job_id, line)
+                    continue
+                if process.poll() is not None:
+                    break
+                time.sleep(0.25)
+            if process.stdout:
+                remaining = process.stdout.read()
+                if remaining:
+                    output_parts.append(remaining)
+                    append_job_output(job_id, remaining)
+            return_code = process.wait()
+            output = "".join(output_parts)
             level = "ok" if return_code == 0 else "error"
+            with JOBS_LOCK:
+                JOB_PROCESSES.pop(job_id, None)
         entry = add_log(level, item["label"], output)
         with JOBS_LOCK:
             job = JOBS[job_id]
-            job["status"] = "succeeded" if return_code == 0 else "failed"
-            job["finished_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+            if job.get("cancel_requested"):
+                job["status"] = "canceled"
+                job["health"] = "canceled"
+            else:
+                job["status"] = "succeeded" if return_code == 0 else "failed"
+                job["health"] = "done" if return_code == 0 else "failed"
+            job["finished_at"] = now_iso()
             job["return_code"] = return_code
             job["output"] = output
             job["log_entry"] = entry
     except Exception as exc:
         entry = add_log("error", "Job echoue", str(exc))
         with JOBS_LOCK:
+            JOB_PROCESSES.pop(job_id, None)
             job = JOBS[job_id]
             job["status"] = "failed"
-            job["finished_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+            job["health"] = "failed"
+            job["finished_at"] = now_iso()
             job["return_code"] = 1
             job["output"] = str(exc)
             job["log_entry"] = entry
@@ -327,9 +410,14 @@ def create_job(command_key, project_path, confirmed=False):
         "command": command_key,
         "label": item["label"],
         "status": "queued",
-        "created_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "created_at": now_iso(),
         "started_at": "",
         "finished_at": "",
+        "last_activity_at": "",
+        "health": "queued",
+        "stalled": False,
+        "silence_seconds": 0,
+        "pid": None,
         "return_code": None,
         "output": "",
     }
@@ -338,6 +426,37 @@ def create_job(command_key, project_path, confirmed=False):
     thread = threading.Thread(target=run_job, args=(job_id, command_key, project_path, confirmed), daemon=True)
     thread.start()
     return job
+
+
+def cancel_job(job_id):
+    with JOBS_LOCK:
+        job = JOBS.get(job_id)
+        process = JOB_PROCESSES.get(job_id)
+        if job is None:
+            raise KeyError("Job introuvable.")
+        if job.get("status") not in ("queued", "running"):
+            return public_job(job)
+        job["cancel_requested"] = True
+        job["health"] = "canceling"
+        pid = job.get("pid")
+    if process is not None and pid:
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            cwd=str(ROOT),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=False,
+        )
+    with JOBS_LOCK:
+        job = JOBS.get(job_id)
+        if job and job.get("status") == "queued":
+            job["status"] = "canceled"
+            job["finished_at"] = now_iso()
+            job["return_code"] = -1
+    add_log("state", "Job annule", job_id)
+    with JOBS_LOCK:
+        return public_job(JOBS[job_id])
 
 
 def run_shell_command(command_key, project_path, confirmed=False):
@@ -421,7 +540,7 @@ def create_app(default_project=None):
                 "commands": commands,
                 "workflow_steps": WORKFLOW_STEPS,
                 "last_run": read_last_run_status(),
-                "jobs": list(JOBS.values())[-20:],
+                "jobs": [public_job(job) for job in list(JOBS.values())[-20:]],
                 "logs": LOGS[-80:],
             }
         )
@@ -460,7 +579,7 @@ def create_app(default_project=None):
     def api_jobs():
         if request.method == "GET":
             with JOBS_LOCK:
-                jobs = list(JOBS.values())[-50:]
+                jobs = [public_job(job) for job in list(JOBS.values())[-50:]]
             return jsonify({"jobs": jobs})
         payload = request.get_json(force=True)
         command_key = payload.get("command")
@@ -479,7 +598,16 @@ def create_app(default_project=None):
             job = JOBS.get(job_id)
         if job is None:
             return jsonify({"error": "Job introuvable."}), 404
-        return jsonify({"job": job})
+        return jsonify({"job": public_job(job)})
+
+    @app.route("/api/jobs/<job_id>/cancel", methods=["POST"])
+    def api_job_cancel(job_id):
+        try:
+            return jsonify({"ok": True, "job": cancel_job(job_id)})
+        except KeyError:
+            return jsonify({"error": "Job introuvable."}), 404
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
 
     @app.route("/api/tickets/from-report", methods=["POST"])
     def api_ticket_from_report():

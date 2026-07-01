@@ -153,7 +153,25 @@ function renderJobs(jobs) {
     return;
   }
   setHtml(els.jobPanel, visibleJobs.map((job) => {
-    return `<div class="job-entry"><strong>${job.label}</strong><span>${job.status}</span></div>`;
+    const stalled = job.stalled || job.health === "stalled";
+    const statusText = stalled
+      ? `Aucune activite recente (${job.silence_seconds || 0}s)`
+      : (job.status_label || job.status);
+    const output = (job.output || "").slice(-700);
+    const cancelButton = (job.status === "queued" || job.status === "running")
+      ? `<button class="secondary job-cancel" data-job-cancel="${job.id}" type="button">Arreter</button>`
+      : "";
+    return `
+      <div class="job-entry ${stalled ? "stalled" : ""}">
+        <div class="job-main">
+          <strong>${job.label}</strong>
+          <span>${statusText}</span>
+          ${job.last_activity_at ? `<small>Derniere activite: ${job.last_activity_at}</small>` : ""}
+          ${output ? `<pre>${output}</pre>` : ""}
+        </div>
+        ${cancelButton}
+      </div>
+    `;
   }).join(""));
 }
 
@@ -243,6 +261,18 @@ function startJobPolling() {
   }, 1500);
 }
 
+async function cancelJob(jobId) {
+  try {
+    await requestJson(`/api/jobs/${jobId}/cancel`, {
+      method: "POST",
+      body: JSON.stringify({})
+    });
+    await refresh();
+  } catch (error) {
+    showError("Arret impossible", friendlyError(error), error.message);
+  }
+}
+
 if (els.setProjectButton) els.setProjectButton.addEventListener("click", async () => {
   try {
     await requestJson("/api/project", {
@@ -268,6 +298,12 @@ if (els.workflowPanel) els.workflowPanel.addEventListener("click", async (event)
   const button = event.target.closest("button[data-command]");
   if (!button) return;
   await runCommand(button.dataset.command);
+});
+
+if (els.jobPanel) els.jobPanel.addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-job-cancel]");
+  if (!button) return;
+  await cancelJob(button.dataset.jobCancel);
 });
 
 if (els.chatForm) els.chatForm.addEventListener("submit", async (event) => {
