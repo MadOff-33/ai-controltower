@@ -1,5 +1,6 @@
 const els = {
   projectPath: document.getElementById("projectPath"),
+  browseProjectButton: document.getElementById("browseProjectButton"),
   setProjectButton: document.getElementById("setProjectButton"),
   refreshButton: document.getElementById("refreshButton"),
   branchState: document.getElementById("branchState"),
@@ -11,6 +12,9 @@ const els = {
   dismissErrorButton: document.getElementById("dismissErrorButton"),
   lastRunStatus: document.getElementById("lastRunStatus"),
   artifactLinks: document.getElementById("artifactLinks"),
+  reportActions: document.getElementById("reportActions"),
+  readReportButton: document.getElementById("readReportButton"),
+  downloadReportButton: document.getElementById("downloadReportButton"),
   coveragePanel: document.getElementById("coveragePanel"),
   coverageStatus: document.getElementById("coverageStatus"),
   coverageDetails: document.getElementById("coverageDetails"),
@@ -20,10 +24,37 @@ const els = {
   jobPanel: document.getElementById("jobPanel"),
   logPanel: document.getElementById("logPanel"),
   chatForm: document.getElementById("chatForm"),
-  chatInput: document.getElementById("chatInput")
+  chatInput: document.getElementById("chatInput"),
+  modalPanel: document.getElementById("modalPanel"),
+  modalTitle: document.getElementById("modalTitle"),
+  modalMessage: document.getElementById("modalMessage"),
+  modalCancelButton: document.getElementById("modalCancelButton"),
+  modalConfirmButton: document.getElementById("modalConfirmButton"),
+  helpModal: document.getElementById("helpModal"),
+  helpTitle: document.getElementById("helpTitle"),
+  helpMessage: document.getElementById("helpMessage"),
+  helpCommand: document.getElementById("helpCommand"),
+  helpCloseButton: document.getElementById("helpCloseButton"),
+  reportModal: document.getElementById("reportModal"),
+  reportPath: document.getElementById("reportPath"),
+  reportWarnings: document.getElementById("reportWarnings"),
+  reportContent: document.getElementById("reportContent"),
+  reportCloseButton: document.getElementById("reportCloseButton")
 };
 
 let state = null;
+let confirmResolver = null;
+const REPORT_READER_LABEL = "Lire le rapport";
+const NEW_PROJECT_LABEL = "Nouveau projet";
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function setText(element, value) {
   if (element) element.textContent = value;
@@ -49,6 +80,23 @@ function showError(title, message, detail = "") {
 
 function clearError() {
   if (els.errorPanel) els.errorPanel.hidden = true;
+}
+
+function showConfirm(title, message) {
+  setText(els.modalTitle, title || "Confirmation");
+  setText(els.modalMessage, message || "Confirmer cette action ?");
+  if (els.modalPanel) els.modalPanel.hidden = false;
+  return new Promise((resolve) => {
+    confirmResolver = resolve;
+  });
+}
+
+function resolveConfirm(value) {
+  if (els.modalPanel) els.modalPanel.hidden = true;
+  if (confirmResolver) {
+    confirmResolver(Boolean(value));
+    confirmResolver = null;
+  }
 }
 
 function friendlyError(error) {
@@ -102,11 +150,15 @@ function renderCommands(commands) {
   if (!els.commandCatalog) return;
   setHtml(els.commandCatalog, Object.entries(commands).map(([key, command]) => {
     const className = command.template ? "template" : (command.dangerous ? "danger" : "secondary");
+    const description = command.description || "Commande ControlTower.";
     return `
-      <div class="command-card">
-        <strong>${command.label}</strong>
-        <span>${command.group}</span>
-        <button class="${className}" data-command="${key}">${command.template ? "Afficher" : "Lancer"}</button>
+      <div class="command-card" title="${escapeHtml(description)}">
+        <div class="command-title">
+          <strong>${escapeHtml(command.label)}</strong>
+          <button class="help-button" data-command-help="${escapeHtml(key)}" type="button" title="Aide">?</button>
+        </div>
+        <span>${escapeHtml(command.group)}</span>
+        <button class="${className}" data-command="${escapeHtml(key)}">${command.template ? "Afficher" : "Lancer"}</button>
       </div>
     `;
   }).join(""));
@@ -146,6 +198,9 @@ function renderLastRun(lastRun) {
       ? links.map(([label, value]) => `<span title="${value}">${label}</span>`).join("")
       : `<span>Aucun artefact recent</span>`
   );
+  if (els.reportActions) {
+    els.reportActions.hidden = !artifacts.report;
+  }
 }
 
 function renderAuditCoverage(coverage) {
@@ -282,7 +337,11 @@ async function runCommand(commandKey, confirmed = false) {
     startJobPolling();
   } catch (error) {
     if (error.payload && error.payload.requires_confirmation) {
-      if (window.confirm("Cette action lance une commande reelle. Continuer ?")) {
+      const accepted = await showConfirm(
+        "Confirmer le lancement",
+        "Cette action lance une commande reelle avec Aider ou le systeme local. ControlTower gardera les sorties et validera le resultat."
+      );
+      if (accepted) {
         return runCommand(commandKey, true);
       }
     } else {
@@ -291,6 +350,53 @@ async function runCommand(commandKey, confirmed = false) {
   } finally {
     await refresh();
   }
+}
+
+async function browseProject() {
+  try {
+    const payload = await requestJson("/api/project/browse", {
+      method: "POST",
+      body: JSON.stringify({})
+    });
+    if (payload.canceled) return;
+    if (els.projectPath && payload.project_path) els.projectPath.value = payload.project_path;
+    await refresh();
+  } catch (error) {
+    showError("Selection dossier impossible", friendlyError(error), error.message);
+  }
+}
+
+function openCommandHelp(commandKey) {
+  const command = state && state.commands ? state.commands[commandKey] : null;
+  if (!command) return;
+  setText(els.helpTitle, command.label || "Commande");
+  setText(els.helpMessage, command.description || "Commande ControlTower.");
+  setText(els.helpCommand, command.command || "");
+  if (els.helpModal) els.helpModal.hidden = false;
+}
+
+function closeCommandHelp() {
+  if (els.helpModal) els.helpModal.hidden = true;
+}
+
+async function readReport() {
+  try {
+    const payload = await requestJson("/api/report");
+    setText(els.reportPath, payload.path || "");
+    setHtml(els.reportWarnings, (payload.warnings || []).map((item) => `<div>${escapeHtml(item)}</div>`).join(""));
+    setHtml(els.reportContent, payload.html || "<p>Rapport vide.</p>");
+    if (els.reportModal) els.reportModal.hidden = false;
+  } catch (error) {
+    showError("Rapport indisponible", friendlyError(error), error.message);
+  }
+}
+
+function closeReport() {
+  if (els.reportModal) els.reportModal.hidden = true;
+}
+
+function downloadReport() {
+  window.location.href = "/api/report/download";
 }
 
 let pollTimer = null;
@@ -331,10 +437,22 @@ if (els.setProjectButton) els.setProjectButton.addEventListener("click", async (
   }
 });
 
+if (els.browseProjectButton) els.browseProjectButton.addEventListener("click", browseProject);
 if (els.refreshButton) els.refreshButton.addEventListener("click", refresh);
 if (els.dismissErrorButton) els.dismissErrorButton.addEventListener("click", clearError);
+if (els.modalCancelButton) els.modalCancelButton.addEventListener("click", () => resolveConfirm(false));
+if (els.modalConfirmButton) els.modalConfirmButton.addEventListener("click", () => resolveConfirm(true));
+if (els.helpCloseButton) els.helpCloseButton.addEventListener("click", closeCommandHelp);
+if (els.reportCloseButton) els.reportCloseButton.addEventListener("click", closeReport);
+if (els.readReportButton) els.readReportButton.addEventListener("click", readReport);
+if (els.downloadReportButton) els.downloadReportButton.addEventListener("click", downloadReport);
 
 if (els.commandCatalog) els.commandCatalog.addEventListener("click", async (event) => {
+  const helpButton = event.target.closest("button[data-command-help]");
+  if (helpButton) {
+    openCommandHelp(helpButton.dataset.commandHelp);
+    return;
+  }
   const button = event.target.closest("button[data-command]");
   if (!button) return;
   await runCommand(button.dataset.command);

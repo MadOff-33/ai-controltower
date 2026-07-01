@@ -1,6 +1,8 @@
 import argparse
+import html
 import json
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -22,9 +24,11 @@ JOBS = {}
 JOB_PROCESSES = {}
 JOBS_LOCK = threading.Lock()
 JOB_LOG_DIR = ROOT / "logs" / "ui_jobs"
+MOJIBAKE_MARKERS = ["Ã", "Â", "â–º", "âœ", "â", "�"]
 
 WORKFLOW_STEPS = [
     {"id": "project", "label": "Selectionner projet", "command": None},
+    {"id": "new_project", "label": "Nouveau projet", "command": "new_project"},
     {"id": "deps", "label": "Verifier dependances", "command": None},
     {"id": "audit_dry_run", "label": "Audit dry-run", "command": "audit_dry_run"},
     {"id": "audit_real", "label": "Audit reel", "command": "audit_real"},
@@ -115,6 +119,7 @@ def build_commands(project_path):
             "group": "Systeme",
             "dangerous": False,
             "template": False,
+            "description": "Verifie et remet en place les dossiers, scripts, memoire Hermes et prerequis ControlTower.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Install-ControlTower.ps1"',
         },
         "audit_dry_run": {
@@ -122,6 +127,7 @@ def build_commands(project_path):
             "group": "Audit",
             "dangerous": False,
             "template": False,
+            "description": "Prepare un workspace d'audit, cree le snapshot, inventorie le projet et valide la structure sans lancer Aider.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Audit -ProjectPath '
             + project
             + " -ValidateAfterDryRun",
@@ -131,6 +137,7 @@ def build_commands(project_path):
             "group": "Audit",
             "dangerous": True,
             "template": False,
+            "description": "Lance Aider avec Ornith sur un pack de contexte cadre et produit un rapport valide dans reports.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Audit -ProjectPath '
             + project
             + " -RunAider",
@@ -140,15 +147,25 @@ def build_commands(project_path):
             "group": "Audit",
             "dangerous": True,
             "template": False,
+            "description": "Reprend le dernier audit avec les fichiers omis du pack precedent pour tendre vers une couverture complete.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-AiderAuditContinuation.ps1" -WorkspacePath '
             + latest_workspace_arg
             + " -RunAider",
+        },
+        "new_project": {
+            "label": "Nouveau projet",
+            "group": "Creation",
+            "dangerous": False,
+            "template": True,
+            "description": "Socle vibe coding: preparer un dossier neuf, cadrer l'intention, puis faire generer par Aider dans un workspace isole. Le pipeline complet arrive dans le sprint creation.",
+            "command": "Mode creation a venir: choisir un dossier vide, decrire le produit, generer un plan, puis lancer Aider sur un workspace de creation isole.",
         },
         "fix_dry_run": {
             "label": "Fix dry-run depuis ticket",
             "group": "Correction",
             "dangerous": False,
             "template": True,
+            "description": "Affiche la commande de correction a partir d'un ticket sans lancer Aider ni modifier le snapshot.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Fix -WorkspacePath '
             + workspace
             + " -TicketPath "
@@ -160,6 +177,7 @@ def build_commands(project_path):
             "group": "Correction",
             "dangerous": True,
             "template": True,
+            "description": "Lance une correction cadree par ticket dans le snapshot d'audit, puis valide les fichiers autorises.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Fix -WorkspacePath '
             + workspace
             + " -TicketPath "
@@ -171,6 +189,7 @@ def build_commands(project_path):
             "group": "Qualite",
             "dangerous": False,
             "template": False,
+            "description": "Execute la suite de tests ControlTower pour verifier scripts, UI, encodage et validateurs.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\tests\\Invoke-ControlTowerTestSuite.ps1"',
         },
         "final_recipe": {
@@ -178,6 +197,7 @@ def build_commands(project_path):
             "group": "Qualite",
             "dangerous": False,
             "template": False,
+            "description": "Deroule la recette finale sur le projet cible pour confirmer que le cockpit et le pipeline restent utilisables.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Test-ControlTowerFinalRecipe.ps1" -ProjectPath '
             + project
             + " -SkipFullSuite",
@@ -187,6 +207,7 @@ def build_commands(project_path):
             "group": "Memoire",
             "dangerous": False,
             "template": False,
+            "description": "Genere ou affiche la guidance issue de la memoire centrale Hermes pour reutiliser l'experience des runs.",
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Get-HermesGuidance.ps1"',
         },
         "git_status": {
@@ -194,6 +215,7 @@ def build_commands(project_path):
             "group": "Git",
             "dangerous": False,
             "template": False,
+            "description": "Affiche l'etat Git du projet cible afin de voir les fichiers modifies, ajoutes ou non suivis.",
             "command": "git -C " + project + " status",
         },
         "git_diff": {
@@ -201,6 +223,7 @@ def build_commands(project_path):
             "group": "Git",
             "dangerous": False,
             "template": False,
+            "description": "Affiche les changements locaux du projet cible avant une correction ou une revue.",
             "command": "git -C " + project + " diff",
         },
         "aider_manual": {
@@ -208,6 +231,7 @@ def build_commands(project_path):
             "group": "Aider",
             "dangerous": True,
             "template": False,
+            "description": "Ouvre une commande Aider cadree sur Ornith pour usage manuel avance, hors pipeline automatise.",
             "command": "aider --model ollama_chat/ornith:9b --no-auto-commits --no-dirty-commits",
         },
     }
@@ -302,6 +326,97 @@ def latest_artifacts():
         "run_log": str(logs[0]) if logs else "",
         "summary": str(summaries[0]) if summaries else "",
     }
+
+
+def is_path_inside(child, parent):
+    try:
+        Path(child).resolve().relative_to(Path(parent).resolve())
+        return True
+    except Exception:
+        return False
+
+
+def find_report_path(requested_path=""):
+    artifacts = latest_artifacts()
+    workspace = artifacts.get("workspace")
+    if requested_path:
+        candidate = Path(requested_path)
+        if candidate.exists() and candidate.suffix.lower() == ".md" and workspace and is_path_inside(candidate, workspace):
+            return candidate
+        return None
+    report = artifacts.get("report")
+    return Path(report) if report else None
+
+
+def report_warnings(text):
+    markers = [marker for marker in MOJIBAKE_MARKERS if marker in text]
+    warnings = []
+    if markers:
+        warnings.append("Caracteres suspects detectes: " + ", ".join(sorted(set(markers))))
+    return warnings
+
+
+def render_inline(text):
+    escaped = html.escape(text)
+    return re.sub(r"`([^`]+)`", r"<code>\1</code>", escaped)
+
+
+def flush_table(lines):
+    rows = []
+    for line in lines:
+        cells = [render_inline(cell.strip()) for cell in line.strip().strip("|").split("|")]
+        rows.append(cells)
+    if not rows:
+        return ""
+    header = rows[0]
+    body = rows[2:] if len(rows) > 1 and all(set(cell) <= set("-: ") for cell in rows[1]) else rows[1:]
+    head_html = "".join("<th>{0}</th>".format(cell) for cell in header)
+    body_html = "".join("<tr>{0}</tr>".format("".join("<td>{0}</td>".format(cell) for cell in row)) for row in body)
+    return "<table><thead><tr>{0}</tr></thead><tbody>{1}</tbody></table>".format(head_html, body_html)
+
+
+def render_markdown_report(text):
+    parts = []
+    table_lines = []
+    in_code = False
+    code_lines = []
+    for raw_line in text.splitlines():
+        line = raw_line.rstrip()
+        if line.startswith("```"):
+            if in_code:
+                parts.append("<pre><code>{0}</code></pre>".format(html.escape("\n".join(code_lines))))
+                code_lines = []
+                in_code = False
+            else:
+                if table_lines:
+                    parts.append(flush_table(table_lines))
+                    table_lines = []
+                in_code = True
+            continue
+        if in_code:
+            code_lines.append(line)
+            continue
+        if line.startswith("|") and line.endswith("|"):
+            table_lines.append(line)
+            continue
+        if table_lines:
+            parts.append(flush_table(table_lines))
+            table_lines = []
+        if not line.strip():
+            continue
+        heading = re.match(r"^(#{1,4})\s+(.*)$", line)
+        if heading:
+            level = len(heading.group(1))
+            parts.append("<h{0}>{1}</h{0}>".format(level, render_inline(heading.group(2))))
+        elif line.lstrip().startswith(("- ", "* ")):
+            parts.append("<p class=\"list-line\">{0}</p>".format(render_inline(line.lstrip()[2:])))
+        else:
+            parts.append("<p>{0}</p>".format(render_inline(line)))
+    if table_lines:
+        parts.append(flush_table(table_lines))
+    if code_lines:
+        parts.append("<pre><code>{0}</code></pre>".format(html.escape("\n".join(code_lines))))
+    return "\n".join(parts)
 
 
 def read_audit_coverage():
@@ -558,7 +673,7 @@ def create_ticket_from_report(workspace_path, report_path=""):
 
 
 def create_app(default_project=None):
-    from flask import Flask, jsonify, render_template, request
+    from flask import Flask, jsonify, render_template, request, send_file
 
     app = Flask(__name__)
 
@@ -606,6 +721,53 @@ def create_app(default_project=None):
         save_state(project_path)
         add_log("state", "Projet actif", project_path)
         return jsonify({"ok": True, "project_path": project_path})
+
+    @app.route("/api/project/browse", methods=["POST"])
+    def api_project_browse():
+        try:
+            import tkinter
+            from tkinter import filedialog
+
+            root = tkinter.Tk()
+            root.withdraw()
+            root.attributes("-topmost", True)
+            selected = filedialog.askdirectory(initialdir=current_project(), title="Choisir le projet cible")
+            root.destroy()
+            if not selected:
+                return jsonify({"ok": False, "canceled": True})
+            save_state(selected)
+            add_log("state", "Projet actif", selected)
+            return jsonify({"ok": True, "project_path": selected})
+        except Exception as exc:
+            return jsonify({"error": "Selection dossier indisponible: " + str(exc)}), 400
+
+    @app.route("/api/report")
+    def api_report():
+        report_path = find_report_path(request.args.get("path", ""))
+        if not report_path or not report_path.exists():
+            return jsonify({"error": "Aucun rapport disponible."}), 404
+        text = report_path.read_text(encoding="utf-8", errors="replace")
+        return jsonify(
+            {
+                "ok": True,
+                "path": str(report_path),
+                "raw": text,
+                "html": render_markdown_report(text),
+                "warnings": report_warnings(text),
+            }
+        )
+
+    @app.route("/api/report/download")
+    def api_report_download():
+        report_path = find_report_path(request.args.get("path", ""))
+        if not report_path or not report_path.exists():
+            return jsonify({"error": "Aucun rapport disponible."}), 404
+        return send_file(
+            str(report_path),
+            as_attachment=True,
+            download_name=report_path.name,
+            mimetype="text/markdown; charset=utf-8",
+        )
 
     @app.route("/api/run", methods=["POST"])
     def api_run():

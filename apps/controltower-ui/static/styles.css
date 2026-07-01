@@ -150,6 +150,23 @@ input {
   margin-bottom: 14px;
 }
 
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.report-actions[hidden] {
+  display: none;
+}
+
+.report-actions button {
+  min-height: 30px;
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
 .coverage-panel {
   display: grid;
   grid-template-columns: minmax(0, 0.55fr) minmax(0, 1fr);
@@ -208,7 +225,7 @@ input {
 
 .path-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 10px;
 }
 
@@ -324,6 +341,13 @@ input {
   padding: 8px;
 }
 
+.command-title {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 26px;
+  align-items: start;
+  gap: 6px;
+}
+
 .command-card strong {
   font-size: 13px;
   line-height: 1.25;
@@ -338,6 +362,19 @@ input {
   min-height: 30px;
   padding: 5px 8px;
   font-size: 12px;
+}
+
+.command-card .help-button {
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+  background: #eef5fb;
+  color: var(--accent);
+  border-color: #c7dced;
 }
 
 .log-panel {
@@ -429,6 +466,129 @@ input {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   margin-top: 10px;
+}
+
+.modal-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(29, 37, 44, 0.42);
+}
+
+.modal-panel[hidden] {
+  display: none;
+}
+
+.modal-card {
+  width: min(640px, calc(100vw - 32px));
+  max-height: min(86vh, 900px);
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 18px 60px rgba(29, 37, 44, 0.24);
+  padding: 18px;
+}
+
+.modal-card p {
+  margin-top: 8px;
+}
+
+.modal-card pre {
+  margin: 12px 0 0;
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #f7f9fb;
+  color: #344054;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.report-card {
+  width: min(1180px, calc(100vw - 32px));
+}
+
+.report-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.report-header p {
+  max-width: 820px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.report-warnings {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: var(--bad);
+  font-size: 13px;
+}
+
+.report-content {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  line-height: 1.5;
+}
+
+.report-content h1,
+.report-content h2,
+.report-content h3,
+.report-content h4 {
+  margin: 16px 0 8px;
+}
+
+.report-content p {
+  margin: 8px 0;
+  color: var(--text);
+}
+
+.report-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.report-content th,
+.report-content td {
+  border: 1px solid var(--line);
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.report-content th {
+  background: #eef5fb;
+}
+
+.report-content code {
+  background: #eef2f6;
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+.report-content pre {
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 @media (max-width: 1050px) {

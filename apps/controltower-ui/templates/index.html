@@ -20,6 +20,7 @@
       <label for="projectPath">Projet cible</label>
       <div class="path-row">
         <input id="projectPath" type="text" spellcheck="false" autocomplete="off">
+        <button id="browseProjectButton" class="secondary" type="button">Parcourir</button>
         <button id="setProjectButton">Utiliser ce projet</button>
       </div>
       <div class="project-meta">
@@ -43,6 +44,10 @@
         <strong id="lastRunStatus">En attente</strong>
       </div>
       <div id="artifactLinks" class="artifact-links"></div>
+      <div id="reportActions" class="report-actions">
+        <button id="readReportButton" class="secondary" type="button">Lire le rapport</button>
+        <button id="downloadReportButton" class="secondary" type="button">Telecharger</button>
+      </div>
     </section>
 
     <section id="coveragePanel" class="coverage-panel">
@@ -78,6 +83,42 @@
     </section>
   </main>
 
-  <script src="/static/app.js?v=20260701_continue_audit"></script>
+  <section id="modalPanel" class="modal-panel" hidden>
+    <div class="modal-card">
+      <h2 id="modalTitle">Confirmation</h2>
+      <p id="modalMessage"></p>
+      <div class="modal-actions">
+        <button id="modalCancelButton" class="secondary" type="button">Annuler</button>
+        <button id="modalConfirmButton" type="button">Continuer</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="helpModal" class="modal-panel" hidden>
+    <div class="modal-card">
+      <h2 id="helpTitle">Commande</h2>
+      <p id="helpMessage"></p>
+      <pre id="helpCommand"></pre>
+      <div class="modal-actions">
+        <button id="helpCloseButton" type="button">Fermer</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="reportModal" class="modal-panel" hidden>
+    <div class="modal-card report-card">
+      <div class="report-header">
+        <div>
+          <h2>Rapport d'audit</h2>
+          <p id="reportPath"></p>
+        </div>
+        <button id="reportCloseButton" class="secondary" type="button">Fermer</button>
+      </div>
+      <div id="reportWarnings" class="report-warnings"></div>
+      <article id="reportContent" class="report-content"></article>
+    </div>
+  </section>
+
+  <script src="/static/app.js?v=20260701_report_ux"></script>
 </body>
 </html>
