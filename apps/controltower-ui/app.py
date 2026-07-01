@@ -29,7 +29,6 @@ PROJECT_TYPES = ["python-cli", "python-app", "webapp", "api", "desktop", "librar
 
 WORKFLOW_STEPS = [
     {"id": "project", "label": "Selectionner projet", "command": None},
-    {"id": "new_project", "label": "Nouveau projet", "command": "new_project"},
     {"id": "deps", "label": "Verifier dependances", "command": None},
     {"id": "audit_dry_run", "label": "Audit dry-run", "command": "audit_dry_run"},
     {"id": "audit_real", "label": "Audit reel", "command": "audit_real"},
@@ -117,22 +116,37 @@ def read_json_process(command):
 
 
 def load_state(default_project=None):
-    state = {"last_project_path": str(default_project or ROOT)}
+    state = {
+        "audit_project_path": str(default_project or ROOT),
+        "creation_parent_path": "D:\\Dev",
+    }
     if STATE_PATH.exists():
         try:
             loaded = json.loads(STATE_PATH.read_text(encoding="utf-8"))
-            if loaded.get("last_project_path"):
-                state["last_project_path"] = loaded["last_project_path"]
+            if loaded.get("audit_project_path"):
+                state["audit_project_path"] = loaded["audit_project_path"]
+            elif loaded.get("last_project_path"):
+                state["audit_project_path"] = loaded["last_project_path"]
+            if loaded.get("creation_parent_path"):
+                state["creation_parent_path"] = loaded["creation_parent_path"]
         except Exception:
             pass
     return state
 
 
+def save_state_value(key, value, default_project=None):
+    state = load_state(default_project)
+    state[key] = str(value)
+    state["last_project_path"] = state.get("audit_project_path", str(default_project or ROOT))
+    STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
+
+
 def save_state(project_path):
-    STATE_PATH.write_text(
-        json.dumps({"last_project_path": str(project_path)}, indent=2),
-        encoding="utf-8",
-    )
+    save_state_value("audit_project_path", project_path)
+
+
+def save_creation_parent(parent_path):
+    save_state_value("creation_parent_path", parent_path)
 
 
 def get_git_info(project_path):
@@ -833,7 +847,10 @@ def create_app(default_project=None):
     app = Flask(__name__)
 
     def current_project():
-        return load_state(default_project).get("last_project_path", str(ROOT))
+        return load_state(default_project).get("audit_project_path", str(ROOT))
+
+    def current_creation_parent():
+        return load_state(default_project).get("creation_parent_path", "D:\\Dev")
 
     @app.route("/")
     def index():
@@ -854,6 +871,8 @@ def create_app(default_project=None):
         return jsonify(
             {
                 "project_path": project_path,
+                "audit_project_path": project_path,
+                "creation_parent_path": current_creation_parent(),
                 "git": git_info,
                 "dependencies": dependencies,
                 "commands": commands,
@@ -896,6 +915,18 @@ def create_app(default_project=None):
         except Exception as exc:
             return jsonify({"error": "Selection dossier indisponible: " + str(exc)}), 400
 
+    @app.route("/api/creation-parent", methods=["POST"])
+    def api_creation_parent():
+        payload = request.get_json(force=True)
+        parent_path = payload.get("creation_parent_path", "").strip()
+        if not parent_path:
+            return jsonify({"error": "Dossier parent manquant."}), 400
+        if not Path(parent_path).exists():
+            return jsonify({"error": "Le dossier parent n'existe pas."}), 400
+        save_creation_parent(parent_path)
+        add_log("state", "Parent creation actif", parent_path)
+        return jsonify({"ok": True, "creation_parent_path": parent_path})
+
     @app.route("/api/new-project/browse-parent", methods=["POST"])
     def api_new_project_browse_parent():
         try:
@@ -905,10 +936,11 @@ def create_app(default_project=None):
             root = tkinter.Tk()
             root.withdraw()
             root.attributes("-topmost", True)
-            selected = filedialog.askdirectory(initialdir=str(ROOT), title="Choisir le dossier parent")
+            selected = filedialog.askdirectory(initialdir=current_creation_parent(), title="Choisir le dossier parent")
             root.destroy()
             if not selected:
                 return jsonify({"ok": False, "canceled": True})
+            save_creation_parent(selected)
             return jsonify({"ok": True, "parent_path": selected})
         except Exception as exc:
             return jsonify({"error": "Selection dossier indisponible: " + str(exc)}), 400

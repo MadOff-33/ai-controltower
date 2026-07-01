@@ -16,19 +16,10 @@
       <button id="refreshButton" class="icon-button" title="Rafraichir">Rafraichir</button>
     </section>
 
-    <section class="project-band">
-      <label for="projectPath">Projet cible</label>
-      <div class="path-row">
-        <input id="projectPath" type="text" spellcheck="false" autocomplete="off">
-        <button id="browseProjectButton" class="secondary" type="button">Parcourir</button>
-        <button id="setProjectButton">Utiliser ce projet</button>
-      </div>
-      <div class="project-meta">
-        <span id="branchState">Branche: -</span>
-        <a id="githubLink" href="#" target="_blank" rel="noreferrer">GitHub</a>
-        <span id="gitState">Git: -</span>
-      </div>
-    </section>
+    <nav class="tabs" aria-label="Parcours ControlTower">
+      <button id="tabAuditCorrection" class="tab-button active" data-tab="audit" type="button">Audit & Correction</button>
+      <button id="tabCreation" class="tab-button" data-tab="creation" type="button">Creation</button>
+    </nav>
 
     <section id="errorPanel" class="error-panel" hidden>
       <div>
@@ -38,47 +29,114 @@
       <button id="dismissErrorButton" class="secondary" type="button">Fermer</button>
     </section>
 
-    <section class="status-band">
-      <div>
-        <span class="eyebrow">Dernier run</span>
-        <strong id="lastRunStatus">En attente</strong>
-      </div>
-      <div id="artifactLinks" class="artifact-links"></div>
-      <div id="reportActions" class="report-actions">
-        <button id="readReportButton" class="secondary" type="button">Lire le rapport</button>
-        <button id="downloadReportButton" class="secondary" type="button">Telecharger</button>
-      </div>
-    </section>
-
-    <section id="coveragePanel" class="coverage-panel">
-      <div>
-        <span class="eyebrow">Couverture audit</span>
-        <strong id="coverageStatus">Aucun audit lance</strong>
-      </div>
-      <div id="coverageDetails" class="coverage-details"></div>
-    </section>
-
-    <section class="grid">
-      <aside class="panel dependencies">
-        <h2>Dependances</h2>
-        <div id="dependencyList" class="status-list"></div>
-      </aside>
-
-      <section class="panel commands">
-        <h2>Parcours recommande</h2>
-        <div id="workflowPanel" class="workflow-panel"></div>
-        <h2 class="catalog-title">Catalogue</h2>
-        <div id="commandCatalog" class="command-grid"></div>
+    <section id="auditCorrectionView" class="tab-view active" data-tab-view="audit">
+      <section class="project-band">
+        <label for="projectPath">Projet audit / correction</label>
+        <div class="path-row">
+          <input id="projectPath" type="text" spellcheck="false" autocomplete="off">
+          <button id="browseProjectButton" class="secondary" type="button">Parcourir</button>
+          <button id="setProjectButton">Utiliser ce projet</button>
+        </div>
+        <div class="project-meta">
+          <span id="branchState">Branche: -</span>
+          <a id="githubLink" href="#" target="_blank" rel="noreferrer">GitHub</a>
+          <span id="gitState">Git: -</span>
+        </div>
       </section>
 
-      <section class="panel chat">
-        <h2>Chat de pilotage</h2>
-        <div id="jobPanel" class="job-panel"></div>
-        <div id="logPanel" class="log-panel"></div>
-        <form id="chatForm" class="chat-form">
-          <input id="chatInput" type="text" placeholder="audit, tests, git, diff, hermes, aider..." autocomplete="off">
-          <button type="submit">Envoyer</button>
-        </form>
+      <section class="status-band">
+        <div>
+          <span class="eyebrow">Dernier run audit</span>
+          <strong id="lastRunStatus">En attente</strong>
+        </div>
+        <div id="artifactLinks" class="artifact-links"></div>
+        <div id="reportActions" class="report-actions">
+          <button id="readReportButton" class="secondary" type="button">Lire le rapport</button>
+          <button id="downloadReportButton" class="secondary" type="button">Telecharger</button>
+        </div>
+      </section>
+
+      <section id="coveragePanel" class="coverage-panel">
+        <div>
+          <span class="eyebrow">Couverture audit</span>
+          <strong id="coverageStatus">Aucun audit lance</strong>
+        </div>
+        <div id="coverageDetails" class="coverage-details"></div>
+      </section>
+
+      <section class="grid">
+        <aside class="panel dependencies">
+          <h2>Dependances</h2>
+          <div id="dependencyList" class="status-list"></div>
+        </aside>
+
+        <section class="panel commands">
+          <h2>Parcours audit / correction</h2>
+          <div id="workflowPanel" class="workflow-panel"></div>
+          <h2 class="catalog-title">Catalogue</h2>
+          <div id="commandCatalog" class="command-grid"></div>
+        </section>
+
+        <section class="panel chat">
+          <h2>Journal audit / correction</h2>
+          <div id="jobPanel" class="job-panel"></div>
+          <div id="logPanel" class="log-panel"></div>
+          <form id="chatForm" class="chat-form">
+            <input id="chatInput" type="text" placeholder="audit, tests, git, diff, hermes, aider..." autocomplete="off">
+            <button type="submit">Envoyer</button>
+          </form>
+        </section>
+      </section>
+    </section>
+
+    <section id="creationView" class="tab-view" data-tab-view="creation">
+      <section class="creation-layout">
+        <section class="panel creation-panel">
+          <h2>Nouveau projet</h2>
+          <div class="new-project-form">
+            <div class="form-grid">
+              <label>
+                Nom
+                <input id="newProjectName" type="text" autocomplete="off" placeholder="mon-projet">
+              </label>
+              <label>
+                Type
+                <select id="newProjectType">
+                  <option value="python-cli">Python CLI</option>
+                  <option value="python-app">Python app</option>
+                  <option value="webapp">Web app</option>
+                  <option value="api">API</option>
+                  <option value="desktop">Desktop</option>
+                  <option value="library">Library</option>
+                  <option value="other">Autre</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              Dossier parent
+              <div class="path-row">
+                <input id="newProjectParent" type="text" spellcheck="false" autocomplete="off" placeholder="D:\Dev">
+                <button id="newProjectBrowseParentButton" class="secondary" type="button">Parcourir</button>
+                <button id="saveCreationParentButton" class="secondary" type="button">Memoriser</button>
+              </div>
+            </label>
+            <label>
+              Brief
+              <textarea id="newProjectBrief" rows="10" placeholder="Decris ce que le projet doit faire, le public cible, les contraintes, les technos souhaitees et le niveau de finition attendu."></textarea>
+            </label>
+            <div id="newProjectPreview" class="preview-block"></div>
+            <div class="modal-actions">
+              <button id="newProjectPreviewButton" class="secondary" type="button">Dry-run</button>
+              <button id="newProjectRunButton" class="danger" type="button">Lancer Aider</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel creation-status">
+          <h2>Journal creation</h2>
+          <div id="creationJobPanel" class="job-panel"></div>
+          <div id="creationLogPanel" class="log-panel creation-log"></div>
+        </section>
       </section>
     </section>
   </main>
@@ -119,54 +177,6 @@
     </div>
   </section>
 
-  <section id="newProjectModal" class="modal-panel" hidden>
-    <div class="modal-card new-project-card">
-      <div class="report-header">
-        <div>
-          <h2>Nouveau projet</h2>
-          <p>Creation cadree par ControlTower, Aider et Ornith dans un dossier neuf.</p>
-        </div>
-        <button id="newProjectCloseButton" class="secondary" type="button">Fermer</button>
-      </div>
-      <div class="new-project-form">
-        <div class="form-grid">
-          <label>
-            Nom
-            <input id="newProjectName" type="text" autocomplete="off" placeholder="mon-projet">
-          </label>
-          <label>
-            Type
-            <select id="newProjectType">
-              <option value="python-cli">Python CLI</option>
-              <option value="python-app">Python app</option>
-              <option value="webapp">Web app</option>
-              <option value="api">API</option>
-              <option value="desktop">Desktop</option>
-              <option value="library">Library</option>
-              <option value="other">Autre</option>
-            </select>
-          </label>
-        </div>
-        <label>
-          Dossier parent
-          <div class="path-row">
-            <input id="newProjectParent" type="text" spellcheck="false" autocomplete="off" placeholder="D:\Dev">
-            <button id="newProjectBrowseParentButton" class="secondary" type="button">Parcourir</button>
-          </div>
-        </label>
-        <label>
-          Brief
-          <textarea id="newProjectBrief" rows="8" placeholder="Decris ce que le projet doit faire, le public cible, les contraintes, les technos souhaitees et le niveau de finition attendu."></textarea>
-        </label>
-        <div id="newProjectPreview" class="preview-block"></div>
-        <div class="modal-actions">
-          <button id="newProjectPreviewButton" class="secondary" type="button">Dry-run</button>
-          <button id="newProjectRunButton" class="danger" type="button">Lancer Aider</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <script src="/static/app.js?v=20260701_creation"></script>
+  <script src="/static/app.js?v=20260701_tabs"></script>
 </body>
 </html>

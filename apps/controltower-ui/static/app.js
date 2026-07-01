@@ -3,6 +3,10 @@ const els = {
   browseProjectButton: document.getElementById("browseProjectButton"),
   setProjectButton: document.getElementById("setProjectButton"),
   refreshButton: document.getElementById("refreshButton"),
+  tabAuditCorrection: document.getElementById("tabAuditCorrection"),
+  tabCreation: document.getElementById("tabCreation"),
+  auditCorrectionView: document.getElementById("auditCorrectionView"),
+  creationView: document.getElementById("creationView"),
   branchState: document.getElementById("branchState"),
   githubLink: document.getElementById("githubLink"),
   gitState: document.getElementById("gitState"),
@@ -23,6 +27,8 @@ const els = {
   commandCatalog: document.getElementById("commandCatalog"),
   jobPanel: document.getElementById("jobPanel"),
   logPanel: document.getElementById("logPanel"),
+  creationJobPanel: document.getElementById("creationJobPanel"),
+  creationLogPanel: document.getElementById("creationLogPanel"),
   chatForm: document.getElementById("chatForm"),
   chatInput: document.getElementById("chatInput"),
   modalPanel: document.getElementById("modalPanel"),
@@ -40,13 +46,12 @@ const els = {
   reportWarnings: document.getElementById("reportWarnings"),
   reportContent: document.getElementById("reportContent"),
   reportCloseButton: document.getElementById("reportCloseButton"),
-  newProjectModal: document.getElementById("newProjectModal"),
-  newProjectCloseButton: document.getElementById("newProjectCloseButton"),
   newProjectName: document.getElementById("newProjectName"),
   newProjectParent: document.getElementById("newProjectParent"),
   newProjectType: document.getElementById("newProjectType"),
   newProjectBrief: document.getElementById("newProjectBrief"),
   newProjectBrowseParentButton: document.getElementById("newProjectBrowseParentButton"),
+  saveCreationParentButton: document.getElementById("saveCreationParentButton"),
   newProjectPreviewButton: document.getElementById("newProjectPreviewButton"),
   newProjectRunButton: document.getElementById("newProjectRunButton"),
   newProjectPreview: document.getElementById("newProjectPreview")
@@ -56,6 +61,7 @@ let state = null;
 let confirmResolver = null;
 const REPORT_READER_LABEL = "Lire le rapport";
 const NEW_PROJECT_LABEL = "Nouveau projet";
+let activeTab = "audit";
 
 function escapeHtml(value) {
   return String(value || "")
@@ -158,7 +164,8 @@ function renderDependencies(deps) {
 
 function renderCommands(commands) {
   if (!els.commandCatalog) return;
-  setHtml(els.commandCatalog, Object.entries(commands).map(([key, command]) => {
+  const auditCommands = Object.entries(commands).filter(([, command]) => command.group !== "Creation");
+  setHtml(els.commandCatalog, auditCommands.map(([key, command]) => {
     const className = command.template ? "template" : (command.dangerous ? "danger" : "secondary");
     const description = command.description || "Commande ControlTower.";
     return `
@@ -176,7 +183,8 @@ function renderCommands(commands) {
 
 function renderWorkflow(steps) {
   if (!els.workflowPanel) return;
-  setHtml(els.workflowPanel, (steps || []).map((step, index) => {
+  const auditSteps = (steps || []).filter((step) => step.command !== "new_project");
+  setHtml(els.workflowPanel, auditSteps.map((step, index) => {
     const button = step.command
       ? `<button class="secondary" data-command="${step.command}">Faire</button>`
       : `<span class="badge ok">OK</span>`;
@@ -242,8 +250,13 @@ function renderAuditCoverage(coverage) {
 }
 
 function renderJobs(jobs) {
+  renderAuditJobs(jobs);
+  renderCreationJobs(jobs);
+}
+
+function renderAuditJobs(jobs) {
   if (!els.jobPanel) return;
-  const visibleJobs = (jobs || []).slice(-4).reverse();
+  const visibleJobs = (jobs || []).filter((job) => job.command !== "new_project").slice(-4).reverse();
   if (visibleJobs.length === 0) {
     setHtml(els.jobPanel, "");
     return;
@@ -271,13 +284,66 @@ function renderJobs(jobs) {
   }).join(""));
 }
 
+function renderCreationJobs(jobs) {
+  if (!els.creationJobPanel) return;
+  const visibleJobs = (jobs || []).filter((job) => job.command === "new_project").slice(-4).reverse();
+  if (visibleJobs.length === 0) {
+    setHtml(els.creationJobPanel, "");
+    return;
+  }
+  setHtml(els.creationJobPanel, visibleJobs.map((job) => {
+    const stalled = job.stalled || job.health === "stalled";
+    const statusText = stalled
+      ? `Aucune activite recente (${job.silence_seconds || 0}s)`
+      : (job.status_label || job.status);
+    const output = (job.output || "").slice(-700);
+    const cancelButton = (job.status === "queued" || job.status === "running")
+      ? `<button class="secondary job-cancel" data-job-cancel="${job.id}" type="button">Arreter</button>`
+      : "";
+    return `
+      <div class="job-entry ${stalled ? "stalled" : ""}">
+        <div class="job-main">
+          <strong>${escapeHtml(job.label)}</strong>
+          <span>${escapeHtml(statusText)}</span>
+          ${job.target_project_path ? `<small>${escapeHtml(job.target_project_path)}</small>` : ""}
+          ${output ? `<pre>${escapeHtml(output)}</pre>` : ""}
+        </div>
+        ${cancelButton}
+      </div>
+    `;
+  }).join(""));
+}
+
 function renderLogs(logs) {
+  renderAuditLogs(logs);
+  renderCreationLogs(logs);
+}
+
+function renderAuditLogs(logs) {
   if (!els.logPanel) return;
-  if (!logs || logs.length === 0) {
+  const auditLogs = (logs || []).filter((entry) => !String(entry.message || "").startsWith("Nouveau projet"));
+  if (!auditLogs || auditLogs.length === 0) {
     renderLogPanel(els.logPanel, `<div class="log-entry"><strong>En attente</strong><pre>Choisissez un projet ou lancez une commande.</pre></div>`);
     return;
   }
-  renderLogPanel(els.logPanel, logs.map((entry) => {
+  renderLogPanel(els.logPanel, auditLogs.map((entry) => {
+    return `
+      <div class="log-entry">
+        <strong>${entry.time} - ${entry.message}</strong>
+        <pre>${entry.output || entry.level}</pre>
+      </div>
+    `;
+  }).join(""));
+}
+
+function renderCreationLogs(logs) {
+  if (!els.creationLogPanel) return;
+  const creationLogs = (logs || []).filter((entry) => String(entry.message || "").startsWith("Nouveau projet") || String(entry.output || "").includes("-Mode Creation"));
+  if (creationLogs.length === 0) {
+    renderLogPanel(els.creationLogPanel, `<div class="log-entry"><strong>En attente</strong><pre>Renseignez un brief puis lancez un dry-run ou Aider.</pre></div>`);
+    return;
+  }
+  renderLogPanel(els.creationLogPanel, creationLogs.map((entry) => {
     return `
       <div class="log-entry">
         <strong>${entry.time} - ${entry.message}</strong>
@@ -303,7 +369,8 @@ function renderLogPanel(panel, html) {
 
 function render(nextState) {
   state = nextState;
-  if (els.projectPath) els.projectPath.value = state.project_path || "";
+  if (els.projectPath) els.projectPath.value = state.audit_project_path || state.project_path || "";
+  if (els.newProjectParent) els.newProjectParent.value = state.creation_parent_path || "";
   setText(els.branchState, `Branche: ${(state.git && state.git.branch) || "-"}`);
   setText(els.gitState, `Git: ${(state.git && state.git.status) || "-"}`);
   if (els.githubLink && state.git && state.git.github_url) {
@@ -331,10 +398,6 @@ async function refresh() {
 }
 
 async function runCommand(commandKey, confirmed = false) {
-  if (commandKey === "new_project") {
-    openNewProjectForm();
-    return;
-  }
   try {
     if (commandKey === "ticket_from_report") {
       await requestJson("/api/tickets/from-report", {
@@ -413,15 +476,13 @@ function downloadReport() {
   window.location.href = "/api/report/download";
 }
 
-function openNewProjectForm() {
-  if (els.newProjectParent && !els.newProjectParent.value) {
-    els.newProjectParent.value = "D:\\Dev";
-  }
-  if (els.newProjectModal) els.newProjectModal.hidden = false;
-}
-
-function closeNewProjectForm() {
-  if (els.newProjectModal) els.newProjectModal.hidden = true;
+function switchTab(tabName) {
+  activeTab = tabName === "creation" ? "creation" : "audit";
+  const creationActive = activeTab === "creation";
+  if (els.tabAuditCorrection) els.tabAuditCorrection.classList.toggle("active", !creationActive);
+  if (els.tabCreation) els.tabCreation.classList.toggle("active", creationActive);
+  if (els.auditCorrectionView) els.auditCorrectionView.classList.toggle("active", !creationActive);
+  if (els.creationView) els.creationView.classList.toggle("active", creationActive);
 }
 
 function collectNewProjectPayload(runAider = false) {
@@ -442,8 +503,21 @@ async function browseNewProjectParent() {
     });
     if (payload.canceled) return;
     if (els.newProjectParent && payload.parent_path) els.newProjectParent.value = payload.parent_path;
+    await refresh();
   } catch (error) {
     showError("Selection dossier impossible", friendlyError(error), error.message);
+  }
+}
+
+async function saveCreationParent() {
+  try {
+    await requestJson("/api/creation-parent", {
+      method: "POST",
+      body: JSON.stringify({ creation_parent_path: els.newProjectParent ? els.newProjectParent.value.trim() : "" })
+    });
+    await refresh();
+  } catch (error) {
+    showError("Parent creation non memorise", friendlyError(error), error.message);
   }
 }
 
@@ -477,7 +551,6 @@ async function submitNewProject(runAider) {
       method: "POST",
       body: JSON.stringify({ ...payload, confirmed: runAider })
     });
-    closeNewProjectForm();
     startJobPolling();
     await refresh();
   } catch (error) {
@@ -524,6 +597,8 @@ if (els.setProjectButton) els.setProjectButton.addEventListener("click", async (
 });
 
 if (els.browseProjectButton) els.browseProjectButton.addEventListener("click", browseProject);
+if (els.tabAuditCorrection) els.tabAuditCorrection.addEventListener("click", () => switchTab("audit"));
+if (els.tabCreation) els.tabCreation.addEventListener("click", () => switchTab("creation"));
 if (els.refreshButton) els.refreshButton.addEventListener("click", refresh);
 if (els.dismissErrorButton) els.dismissErrorButton.addEventListener("click", clearError);
 if (els.modalCancelButton) els.modalCancelButton.addEventListener("click", () => resolveConfirm(false));
@@ -532,8 +607,8 @@ if (els.helpCloseButton) els.helpCloseButton.addEventListener("click", closeComm
 if (els.reportCloseButton) els.reportCloseButton.addEventListener("click", closeReport);
 if (els.readReportButton) els.readReportButton.addEventListener("click", readReport);
 if (els.downloadReportButton) els.downloadReportButton.addEventListener("click", downloadReport);
-if (els.newProjectCloseButton) els.newProjectCloseButton.addEventListener("click", closeNewProjectForm);
 if (els.newProjectBrowseParentButton) els.newProjectBrowseParentButton.addEventListener("click", browseNewProjectParent);
+if (els.saveCreationParentButton) els.saveCreationParentButton.addEventListener("click", saveCreationParent);
 if (els.newProjectPreviewButton) els.newProjectPreviewButton.addEventListener("click", previewNewProject);
 if (els.newProjectRunButton) els.newProjectRunButton.addEventListener("click", () => submitNewProject(true));
 

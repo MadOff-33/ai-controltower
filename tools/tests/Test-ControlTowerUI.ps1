@@ -74,10 +74,13 @@ Assert-True -Condition ($appText.Contains("@app.route(""/api/project/browse"""))
 Assert-True -Condition ($appText.Contains("@app.route(""/api/new-project/preview""")) -Message "New project preview API route missing."
 Assert-True -Condition ($appText.Contains("@app.route(""/api/new-project""")) -Message "New project API route missing."
 Assert-True -Condition ($appText.Contains("@app.route(""/api/new-project/browse-parent""")) -Message "New project parent browse API route missing."
+Assert-True -Condition ($appText.Contains("@app.route(""/api/creation-parent""")) -Message "Creation parent state API route missing."
 Assert-True -Condition ($appText.Contains("tkinter")) -Message "Project browse should use the native local folder picker."
 Assert-True -Condition ($appText.Contains("sanitize_project_name")) -Message "New project should sanitize project names."
 Assert-True -Condition ($appText.Contains("validate_new_project_payload")) -Message "New project payload validation missing."
 Assert-True -Condition ($appText.Contains("create_new_project_job")) -Message "New project job creation missing."
+Assert-True -Condition ($appText.Contains('"audit_project_path"')) -Message "State API should expose an audit project path."
+Assert-True -Condition ($appText.Contains('"creation_parent_path"')) -Message "State API should expose a creation parent path."
 Assert-True -Condition ($appText.Contains("WORKFLOW_STEPS")) -Message "Guided workflow missing."
 Assert-True -Condition ($appText.Contains("ALLOWED_COMMANDS")) -Message "Command allowlist missing."
 Assert-True -Condition ($appText.Contains("subprocess.Popen")) -Message "Jobs should stream live output with Popen."
@@ -100,11 +103,15 @@ Assert-True -Condition ($templateText.Contains("reportActions")) -Message "UI sh
 Assert-True -Condition ($templateText.Contains("modalPanel")) -Message "UI should include an in-app confirmation modal."
 Assert-True -Condition ($templateText.Contains("helpModal")) -Message "UI should include a command help modal."
 Assert-True -Condition ($templateText.Contains("reportModal")) -Message "UI should include a report reader modal."
-Assert-True -Condition ($templateText.Contains("newProjectModal")) -Message "UI should include a new project modal."
 Assert-True -Condition ($templateText.Contains("newProjectName")) -Message "UI should include new project name input."
 Assert-True -Condition ($templateText.Contains("newProjectParent")) -Message "UI should include new project parent input."
 Assert-True -Condition ($templateText.Contains("newProjectType")) -Message "UI should include new project type select."
 Assert-True -Condition ($templateText.Contains("newProjectBrief")) -Message "UI should include new project brief textarea."
+Assert-True -Condition ($templateText.Contains("tabAuditCorrection")) -Message "UI should include an Audit & Correction tab."
+Assert-True -Condition ($templateText.Contains("tabCreation")) -Message "UI should include a Creation tab."
+Assert-True -Condition ($templateText.Contains("auditCorrectionView")) -Message "UI should include a dedicated audit/correction view."
+Assert-True -Condition ($templateText.Contains("creationView")) -Message "UI should include a dedicated creation view."
+Assert-True -Condition (-not $templateText.Contains("newProjectModal")) -Message "Creation should be a dedicated tab, not a modal."
 
 $jsText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\app.js") -Raw
 Assert-True -Condition ($jsText.Contains("function setText")) -Message "UI JS should guard optional text targets."
@@ -116,10 +123,13 @@ Assert-True -Condition (-not $jsText.Contains("window.confirm")) -Message "UI JS
 Assert-True -Condition ($jsText.Contains("showConfirm")) -Message "UI JS should use an in-app confirmation modal."
 Assert-True -Condition ($jsText.Contains("browseProject")) -Message "UI JS should browse project folders."
 Assert-True -Condition ($jsText.Contains("openCommandHelp")) -Message "UI JS should show command help."
-Assert-True -Condition ($jsText.Contains("openNewProjectForm")) -Message "UI JS should open the new project form."
+Assert-True -Condition (-not $jsText.Contains("openNewProjectForm")) -Message "New project should no longer open as a modal."
 Assert-True -Condition ($jsText.Contains("previewNewProject")) -Message "UI JS should preview new project creation."
 Assert-True -Condition ($jsText.Contains("submitNewProject")) -Message "UI JS should submit new project creation."
-Assert-True -Condition ($jsText.Contains('commandKey === "new_project"')) -Message "UI JS should intercept new_project command."
+Assert-True -Condition ($jsText.Contains("switchTab")) -Message "UI JS should switch between main tabs."
+Assert-True -Condition ($jsText.Contains("renderCreationJobs")) -Message "UI JS should render creation jobs separately."
+Assert-True -Condition ($jsText.Contains("renderAuditJobs")) -Message "UI JS should render audit/correction jobs separately."
+Assert-True -Condition ($jsText.Contains("saveCreationParent")) -Message "UI JS should persist creation parent independently."
 Assert-True -Condition ($jsText.Contains("Lire le rapport")) -Message "UI JS should expose a report reader action."
 Assert-True -Condition ($jsText.Contains("Nouveau projet")) -Message "UI JS should expose the new project foundation."
 Assert-True -Condition ($jsText.Contains("cancelJob")) -Message "UI JS should support cancelling a running job."
@@ -141,6 +151,9 @@ Assert-True -Condition ($styleText.Contains(".report-actions")) -Message "UI sho
 Assert-True -Condition ($styleText.Contains(".help-button")) -Message "UI should style command help buttons."
 Assert-True -Condition ($styleText.Contains(".new-project-form")) -Message "UI should style the new project form."
 Assert-True -Condition ($styleText.Contains(".preview-block")) -Message "UI should style new project previews."
+Assert-True -Condition ($styleText.Contains(".tabs")) -Message "UI should style top-level tabs."
+Assert-True -Condition ($styleText.Contains(".tab-view")) -Message "UI should style tab views."
+Assert-True -Condition ($styleText.Contains(".creation-layout")) -Message "UI should style the dedicated creation layout."
 
 $python = Get-Command py -ErrorAction SilentlyContinue
 $pythonArgs = @("-3")
@@ -197,6 +210,11 @@ try:
     spec.loader.exec_module(module)
     app = module.create_app(str(root))
     client = app.test_client()
+    state = client.get("/api/state")
+    assert state.status_code == 200, state.status_code
+    state_payload = state.get_json()
+    assert "audit_project_path" in state_payload, state_payload
+    assert "creation_parent_path" in state_payload, state_payload
 
     response = client.get("/api/report")
     assert response.status_code == 200, response.data.decode("utf-8", "replace")
@@ -232,6 +250,11 @@ try:
         "brief": "bad"
     })
     assert invalid.status_code == 400, invalid.status_code
+
+    saved_parent = client.post("/api/creation-parent", json={"creation_parent_path": str(parent)})
+    assert saved_parent.status_code == 200, saved_parent.data.decode("utf-8", "replace")
+    state_after_parent = client.get("/api/state").get_json()
+    assert state_after_parent["creation_parent_path"] == str(parent), state_after_parent
 finally:
     for name in ("response", "download", "forbidden"):
         if name in locals():

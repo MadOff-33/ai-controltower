@@ -22,14 +22,34 @@ http://127.0.0.1:8765
 
 ## Ecran principal
 
+L'interface est organisee en deux onglets de premier niveau:
+
+- `Audit & Correction`;
+- `Creation`.
+
+### Onglet Audit & Correction
+
 Zones attendues:
 
-- Selection du projet par chemin local.
+- Selection du projet a auditer/corriger par chemin local.
 - Fiche projet: chemin, branche Git, remote, GitHub URL, dernier commit, etat Git.
 - Etat dependances: Git, PowerShell, Aider, Ollama, Ornith, Hermes.
 - Catalogue de commandes: installation, audit, correction, Hermes, Git, tests.
-- Creation de projet depuis zero: nom, dossier parent, type, brief, dry-run et run Aider.
 - Journal/chat de pilotage: sortie lisible, commande generee, sortie brute.
+
+### Onglet Creation
+
+Zones attendues:
+
+- nom du nouveau projet;
+- dossier parent memorise independamment du projet audit/correction;
+- type de projet;
+- brief;
+- dry-run;
+- run Aider;
+- journal de creation.
+
+L'onglet creation ne doit pas afficher la couverture audit ni les commandes de correction.
 
 ## Limite navigateur
 
@@ -52,7 +72,6 @@ Le catalogue doit inclure:
 - Git diff
 - Ouvrir GitHub via lien detecte
 - Ouvrir Aider manuel cadre
-- Nouveau projet
 
 Les actions reelles comme `-RunAider` doivent etre separees des dry-runs et demander confirmation.
 
@@ -64,7 +83,14 @@ Les lancements passent par une liste autorisee dans `app.py`.
 
 Les commandes de correction avec ticket restent des templates tant que le workspace et le ticket ne sont pas fournis.
 
-Le mode `Nouveau projet` appelle `/api/new-project`, valide le nom, le dossier parent et le brief, puis lance `Invoke-ControlTowerRun.ps1 -Mode Creation` via le systeme de jobs.
+Le mode `Creation` appelle `/api/new-project`, valide le nom, le dossier parent et le brief, puis lance `Invoke-ControlTowerRun.ps1 -Mode Creation` via le systeme de jobs.
+
+L'etat UI doit separer:
+
+- `audit_project_path`;
+- `creation_parent_path`.
+
+Changer le dossier parent de creation ne doit pas changer le projet actif de l'onglet Audit & Correction.
 
 ## Outils associes
 
