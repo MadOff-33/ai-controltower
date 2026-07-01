@@ -236,16 +236,26 @@ function renderAuditCoverage(coverage) {
   const included = info.included_files || 0;
   const total = info.total_files || 0;
   const percent = info.percent || 0;
+  const lotIncluded = info.lot_included_files || 0;
+  const lotOmitted = info.lot_omitted_files || 0;
+  const lotTotal = info.lot_total_files || 0;
+  const lotPercent = info.lot_percent || 0;
+  const lotName = info.lot || "dernier lot";
+  const manifestsCount = info.manifests_count || 0;
   const omittedItems = (info.omitted || []).slice(0, 5).map((item) => {
     const path = item.path || item;
     const reason = item.reason ? ` - ${item.reason}` : "";
     return `<li>${path}${reason}</li>`;
   }).join("");
   setHtml(els.coverageDetails, `
-    <span>${included}/${total} fichiers couverts (${percent}%).</span>
-    <span>${omitted} fichier(s) hors contexte.</span>
+    <span><strong>Couverture globale</strong>: ${included}/${total} fichiers couverts (${percent}%).</span>
+    <span><strong>Lot courant</strong>: ${lotName} - ${lotIncluded}/${lotTotal} fichiers (${lotPercent}%), ${lotOmitted} hors contexte dans ce lot.</span>
+    <span>${manifestsCount} lot(s) pris en compte.</span>
+    ${info.global_report ? `<span>Rapport global: ${escapeHtml(info.global_report.split(/[\\\\/]/).pop())}</span>` : ""}
+    <span>${omitted} fichier(s) hors contexte au global.</span>
     ${omittedItems ? `<ul>${omittedItems}</ul>` : ""}
     ${!complete && omitted > 0 ? `<button class="secondary coverage-action" data-command="continue_audit" type="button">Continuer audit</button>` : ""}
+    ${info.needs_consolidation ? `<button class="secondary coverage-action" data-command="consolidate_audit" type="button">Consolider audit</button>` : ""}
   `);
 }
 

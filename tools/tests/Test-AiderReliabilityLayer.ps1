@@ -177,6 +177,7 @@ Invoke-ExpectFailure -Name "ghost marker" -Command {
 
 RÃ©sumÃ© corrompu.
 "@, (New-Object System.Text.UTF8Encoding($false)))
+Add-Content -LiteralPath $report -Encoding UTF8 -Value (([string][char]0x00C3) + ([string][char]0x00A9) + " direct marker.")
 Invoke-ExpectFailure -Name "factual validator rejects missing fields, false absence and mojibake" -Command {
   & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $report -ContextPackPath $pack
 }

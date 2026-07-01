@@ -21,6 +21,7 @@ $required = @(
   "tools\Get-ProjectGitInfo.ps1",
   "tools\Test-ControlTowerDependencies.ps1",
   "tools\New-AiderFixTicketFromReport.ps1",
+  "tools\New-AuditConsolidatedReport.ps1",
   "tools\Test-ControlTowerFinalRecipe.ps1",
   "tools\Build-ControlTowerLauncher.ps1",
   "launchers\ControlTowerLauncher.cs",
@@ -90,7 +91,9 @@ Assert-True -Condition ($appText.Contains("taskkill")) -Message "Windows job can
 Assert-True -Condition ($appText.Contains("read_audit_coverage")) -Message "UI API should expose audit coverage."
 Assert-True -Condition ($appText.Contains('"audit_coverage"')) -Message "State API should include audit coverage."
 Assert-True -Condition ($appText.Contains('"continue_audit"')) -Message "UI should expose a continue audit command."
+Assert-True -Condition ($appText.Contains('"consolidate_audit"')) -Message "UI should expose a consolidated audit command."
 Assert-True -Condition ($appText.Contains("Invoke-AiderAuditContinuation.ps1")) -Message "Continue audit command should call the continuation script."
+Assert-True -Condition ($appText.Contains("New-AuditConsolidatedReport.ps1")) -Message "Consolidated audit command should call the consolidation script."
 Assert-True -Condition ($appText.Contains('"new_project"')) -Message "UI should expose a new project creation foundation."
 Assert-True -Condition ($appText.Contains('"description"')) -Message "Commands should expose user-facing descriptions."
 
@@ -138,6 +141,9 @@ Assert-True -Condition ($jsText.Contains("renderLogPanel")) -Message "UI JS shou
 Assert-True -Condition ($jsText.Contains("shouldStickToBottom")) -Message "UI JS should keep logs at the bottom only when the user is already near the bottom."
 Assert-True -Condition ($jsText.Contains("scrollTop = panel.scrollHeight")) -Message "UI JS should auto-scroll live logs to the bottom."
 Assert-True -Condition ($jsText.Contains("renderAuditCoverage")) -Message "UI JS should render audit coverage."
+Assert-True -Condition ($jsText.Contains("Couverture globale")) -Message "UI JS should render project-level coverage explicitly."
+Assert-True -Condition ($jsText.Contains("Lot courant")) -Message "UI JS should render current lot coverage separately."
+Assert-True -Condition ($jsText.Contains("Consolider audit")) -Message "UI JS should guide the user to consolidate complete multi-lot audits."
 Assert-True -Condition ($jsText.Contains("Audit projet incomplet")) -Message "UI JS should explicitly distinguish incomplete project audits."
 Assert-True -Condition ($jsText.Contains("Continuer audit")) -Message "UI JS should guide the user to continue incomplete audits."
 

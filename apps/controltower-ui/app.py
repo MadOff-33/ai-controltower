@@ -24,8 +24,8 @@ JOBS = {}
 JOB_PROCESSES = {}
 JOBS_LOCK = threading.Lock()
 JOB_LOG_DIR = ROOT / "logs" / "ui_jobs"
-MOJIBAKE_MARKERS = ["Ã", "Â", "â–º", "âœ", "â", "�"]
 PROJECT_TYPES = ["python-cli", "python-app", "webapp", "api", "desktop", "library", "other"]
+MOJIBAKE_MARKERS = ["\u00c3", "\u00c2", "\u00e2", "\ufffd"]
 
 WORKFLOW_STEPS = [
     {"id": "project", "label": "Selectionner projet", "command": None},
@@ -33,6 +33,7 @@ WORKFLOW_STEPS = [
     {"id": "audit_dry_run", "label": "Audit dry-run", "command": "audit_dry_run"},
     {"id": "audit_real", "label": "Audit reel", "command": "audit_real"},
     {"id": "continue_audit", "label": "Continuer audit", "command": "continue_audit"},
+    {"id": "consolidate_audit", "label": "Consolider audit", "command": "consolidate_audit"},
     {"id": "ticket_from_report", "label": "Creer ticket depuis rapport", "command": "ticket_from_report"},
     {"id": "fix_dry_run", "label": "Fix dry-run", "command": "fix_dry_run"},
     {"id": "fix_real", "label": "Fix reel", "command": "fix_real"},
@@ -223,6 +224,15 @@ def build_commands(project_path):
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-AiderAuditContinuation.ps1" -WorkspacePath '
             + latest_workspace_arg
             + " -RunAider",
+        },
+        "consolidate_audit": {
+            "label": "Consolider audit",
+            "group": "Audit",
+            "dangerous": False,
+            "template": False,
+            "description": "Assemble les rapports de lots en un rapport global nomme avec le projet et la date, puis affiche la couverture totale.",
+            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\New-AuditConsolidatedReport.ps1" -WorkspacePath '
+            + latest_workspace_arg,
         },
         "new_project": {
             "label": "Nouveau projet",
@@ -500,31 +510,76 @@ def read_audit_coverage():
     manifests = sorted(manifests_dir.glob("*_manifest.json"), key=lambda p: p.stat().st_mtime, reverse=True) if manifests_dir.exists() else []
     if not manifests:
         return {"status": "none", "label": "Aucun pack de contexte recent", "workspace": workspace}
+    included_paths = set()
+    known_paths = set()
+    lot_summaries = []
+    latest_manifest = None
     try:
-        manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
+        for manifest_path in manifests:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if latest_manifest is None:
+                latest_manifest = (manifest_path, manifest)
+            lot_included = []
+            lot_omitted = []
+            for item in manifest.get("included") or []:
+                path = str(item.get("path") if isinstance(item, dict) else item).replace("\\", "/").strip("/")
+                if path:
+                    included_paths.add(path)
+                    known_paths.add(path)
+                    lot_included.append(path)
+            for item in manifest.get("omitted") or []:
+                path = str(item.get("path") if isinstance(item, dict) else item).replace("\\", "/").strip("/")
+                if path:
+                    known_paths.add(path)
+                    lot_omitted.append(path)
+            lot_summaries.append({
+                "lot": manifest.get("lot", manifest_path.stem.replace("_manifest", "")),
+                "manifest": str(manifest_path),
+                "included_files": len(lot_included),
+                "omitted_files": len(lot_omitted),
+                "total_files": len(lot_included) + len(lot_omitted),
+            })
     except Exception as exc:
         return {"status": "error", "label": "Couverture illisible", "error": str(exc), "workspace": workspace}
-    coverage = manifest.get("coverage") or {}
-    included = int(coverage.get("included_files") or len(manifest.get("included") or []))
-    omitted = int(coverage.get("omitted_files") or len(manifest.get("omitted") or []))
-    total = int(coverage.get("total_files") or (included + omitted))
-    percent = coverage.get("percent")
-    if percent is None:
-        percent = round((included * 100.0 / total), 1) if total else 100
-    status = coverage.get("status") or ("complete" if omitted == 0 else "partial")
+
+    omitted_global = sorted(path for path in known_paths if path not in included_paths)
+    total = len(known_paths)
+    included = len(included_paths)
+    omitted = len(omitted_global)
+    percent = round((included * 100.0 / total), 1) if total else 100
+    status = "complete" if omitted == 0 else "partial"
+    reports_dir = workspace_path / "reports"
+    global_reports = sorted(reports_dir.glob("*_global_report.md"), key=lambda p: p.stat().st_mtime, reverse=True) if reports_dir.exists() else []
+    current_manifest_path, current_manifest = latest_manifest
+    current_coverage = current_manifest.get("coverage") or {}
+    lot_total = int(current_coverage.get("lot_total_files") or (len(current_manifest.get("included") or []) + len(current_manifest.get("omitted") or [])))
+    lot_included = int(current_coverage.get("lot_included_files") or len(current_manifest.get("included") or []))
+    lot_omitted = int(current_coverage.get("omitted_files") or len(current_manifest.get("omitted") or []))
+    lot_percent = round((lot_included * 100.0 / lot_total), 1) if lot_total else 100
+    has_global_report = len(global_reports) > 0
     label = "Audit projet complet" if status == "complete" else "Audit projet incomplet"
+    if status == "complete" and not has_global_report:
+        label = "Projet couvert, rapport global manquant"
     return {
         "status": status,
         "label": label,
         "workspace": workspace,
-        "manifest": str(manifests[0]),
-        "lot": manifest.get("lot", ""),
+        "manifest": str(current_manifest_path),
+        "lot": current_manifest.get("lot", ""),
+        "manifests_count": len(manifests),
         "included_files": included,
         "omitted_files": omitted,
         "total_files": total,
         "percent": percent,
         "is_project_complete": status == "complete",
-        "omitted": (manifest.get("omitted") or [])[:10],
+        "needs_consolidation": status == "complete" and not has_global_report,
+        "global_report": str(global_reports[0]) if has_global_report else "",
+        "lot_included_files": lot_included,
+        "lot_omitted_files": lot_omitted,
+        "lot_total_files": lot_total,
+        "lot_percent": lot_percent,
+        "lots": lot_summaries,
+        "omitted": [{"path": path, "reason": "non couvert dans les lots consolides"} for path in omitted_global[:10]],
     }
 
 

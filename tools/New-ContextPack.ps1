@@ -187,15 +187,21 @@ if ($totalFiles -gt 0) {
 }
 $coverageStatus = "complete"
 if ($omitted.Count -gt 0) { $coverageStatus = "partial" }
-if ($previousManifest -and $previousManifest.coverage) {
-  $previousOmittedFiles = [int]$previousManifest.coverage.omitted_files
-  $previousIncluded = [int]$previousManifest.coverage.included_files
-  $previousTotal = [int]$previousManifest.coverage.total_files
+if ($previousManifest) {
+  if ($previousManifest.coverage) {
+    $previousOmittedFiles = [int]$previousManifest.coverage.omitted_files
+    $previousIncluded = [int]$previousManifest.coverage.included_files
+    $previousTotal = [int]$previousManifest.coverage.total_files
+  } else {
+    $previousIncluded = @($previousManifest.included).Count
+    $previousOmittedFiles = @($previousManifest.omitted).Count
+    $previousTotal = $previousIncluded + $previousOmittedFiles
+  }
   $totalFiles = $previousTotal
   $cumulativeIncluded = $previousIncluded + $included.Count
   if ($cumulativeIncluded -gt $totalFiles) { $cumulativeIncluded = $totalFiles }
   $coveragePercent = if ($totalFiles -gt 0) { [math]::Round(($cumulativeIncluded * 100.0) / $totalFiles, 1) } else { 100 }
-  $coverageStatus = if ($omitted.Count -eq 0) { "complete" } else { "partial" }
+  $coverageStatus = if (($omitted.Count -eq 0) -and ($cumulativeIncluded -ge $totalFiles)) { "complete" } else { "partial" }
 } else {
   $cumulativeIncluded = $included.Count
 }

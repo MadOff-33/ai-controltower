@@ -6,6 +6,7 @@ $Root = "C:\AI_ControlTower"
 $Script = Join-Path $Root "tools\Invoke-ControlTowerRun.ps1"
 $AuditScript = Join-Path $Root "tools\Invoke-AiderAuditPipeline.ps1"
 $ContinueAuditScript = Join-Path $Root "tools\Invoke-AiderAuditContinuation.ps1"
+$ConsolidateAuditScript = Join-Path $Root "tools\New-AuditConsolidatedReport.ps1"
 $FixTicketScript = Join-Path $Root "tools\New-AiderFixTicket.ps1"
 $TestRoot = Join-Path $Root "hermes_lab\orchestrator test runs"
 
@@ -53,7 +54,7 @@ function Get-LatestWorkspace {
 Write-Host "=== Test ControlTower Orchestrator ==="
 
 Assert-PathExists -Path $Script
-foreach ($path in @($Script, $AuditScript, $ContinueAuditScript, $FixTicketScript)) {
+foreach ($path in @($Script, $AuditScript, $ContinueAuditScript, $ConsolidateAuditScript, $FixTicketScript)) {
   $tokens = $null
   $errors = $null
   [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
@@ -94,6 +95,15 @@ Assert-PathExists -Path (Join-Path $workspace "reports\lot2_continuation_report.
 $secondManifest = Get-Content -LiteralPath (Join-Path $workspace "context_packs\lot2_continuation_manifest.json") -Raw | ConvertFrom-Json
 Assert-True -Condition ($secondManifest.coverage.previous_omitted_files -gt 0) -Message "Continuation manifest should remember previous omissions."
 Assert-True -Condition ($secondManifest.coverage.included_files -gt 0) -Message "Continuation should include omitted files from previous lot."
+Assert-True -Condition ($secondManifest.coverage.total_files -eq $firstManifest.coverage.total_files) -Message "Continuation should keep the project-level total file count."
+Assert-True -Condition ($secondManifest.coverage.included_files -eq $secondManifest.coverage.total_files) -Message "Continuation should mark cumulative coverage complete when all files are covered."
+
+& $ConsolidateAuditScript -WorkspacePath $workspace | Out-Null
+$globalReport = Get-ChildItem -LiteralPath (Join-Path $workspace "reports") -File -Filter "Project_With_Spaces_audit_*_global_report.md" | Select-Object -First 1
+Assert-True -Condition ($null -ne $globalReport) -Message "Consolidated audit report should use explicit project and date naming."
+Assert-PathExists -Path (Join-Path $workspace "validation\consolidated_audit_result.json")
+$globalReportText = Get-Content -LiteralPath $globalReport.FullName -Raw
+Assert-True -Condition ($globalReportText.Contains("Couverture globale")) -Message "Consolidated report should expose global coverage."
 
 & $FixTicketScript `
   -WorkspacePath $workspace `

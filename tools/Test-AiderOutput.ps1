@@ -180,6 +180,7 @@ $outOfContextFindings = @()
 $missingEvidenceFindings = @()
 $falseAbsenceFindings = @()
 $mojibakeMarkers = @("Ã", "Â", "â", "�")
+$mojibakeMarkers = @([string][char]0x00C3, [string][char]0x00C2, [string][char]0x00E2, [string][char]0xFFFD)
 foreach ($marker in $mojibakeMarkers) {
   if ($reportText.Contains($marker)) {
     $mojibakeFindings += $marker
