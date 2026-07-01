@@ -6,6 +6,7 @@ apps/controltower-ui/.venv/
 apps/controltower-ui/state.json
 audits/
 logs/controltower_runs/
+logs/ui_jobs/
 hermes_lab/
 ControlTower.exe
 logs/final_recipe_report.md

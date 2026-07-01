@@ -87,6 +87,9 @@ Assert-True -Condition ($jsText.Contains("function showError")) -Message "UI JS 
 Assert-True -Condition (-not $jsText.Contains("window.alert")) -Message "UI JS should not use raw browser alert boxes."
 Assert-True -Condition ($jsText.Contains("cancelJob")) -Message "UI JS should support cancelling a running job."
 Assert-True -Condition ($jsText.Contains("Aucune activite recente")) -Message "UI JS should explain stalled jobs clearly."
+Assert-True -Condition ($jsText.Contains("renderLogPanel")) -Message "UI JS should render logs through a scroll-aware helper."
+Assert-True -Condition ($jsText.Contains("shouldStickToBottom")) -Message "UI JS should keep logs at the bottom only when the user is already near the bottom."
+Assert-True -Condition ($jsText.Contains("scrollTop = panel.scrollHeight")) -Message "UI JS should auto-scroll live logs to the bottom."
 
 $styleText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\styles.css") -Raw
 Assert-True -Condition ($styleText.Contains("minmax(560px, 1.65fr)")) -Message "Chat column should be wider than command catalog."

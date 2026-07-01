@@ -116,6 +116,9 @@ Assert-PathExists -Path $pack
 & (Join-Path $Root "tools\Start-AiderFix.ps1") -WorkspacePath $workspace -TicketPath $ticket -ContextPackPath $pack -DryRun | Out-Null
 Assert-PathExists -Path (Join-Path $workspace "fix_runs\fix_add_aider_message.md")
 Assert-PathExists -Path (Join-Path $workspace "validation\fix_add_baseline.json")
+$startFixText = Get-Content -LiteralPath (Join-Path $Root "tools\Start-AiderFix.ps1") -Raw
+Assert-True -Condition ($startFixText.Contains("PYTHONUTF8")) -Message "Aider fix must force Python UTF-8 mode on Windows."
+Assert-True -Condition ($startFixText.Contains("PYTHONIOENCODING")) -Message "Aider fix must force UTF-8 stdout/stderr on Windows."
 
 $editable = Join-Path $workspace "source_snapshot\pkg\core.py"
 [System.IO.File]::WriteAllText($editable, "def add(a, b):`n    return a + b`n", $utf8)

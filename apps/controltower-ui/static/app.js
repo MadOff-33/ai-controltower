@@ -178,10 +178,10 @@ function renderJobs(jobs) {
 function renderLogs(logs) {
   if (!els.logPanel) return;
   if (!logs || logs.length === 0) {
-    setHtml(els.logPanel, `<div class="log-entry"><strong>En attente</strong><pre>Choisissez un projet ou lancez une commande.</pre></div>`);
+    renderLogPanel(els.logPanel, `<div class="log-entry"><strong>En attente</strong><pre>Choisissez un projet ou lancez une commande.</pre></div>`);
     return;
   }
-  setHtml(els.logPanel, logs.slice().reverse().map((entry) => {
+  renderLogPanel(els.logPanel, logs.map((entry) => {
     return `
       <div class="log-entry">
         <strong>${entry.time} - ${entry.message}</strong>
@@ -189,6 +189,20 @@ function renderLogs(logs) {
       </div>
     `;
   }).join(""));
+}
+
+function shouldStickToBottom(panel) {
+  if (!panel) return false;
+  const distance = panel.scrollHeight - panel.scrollTop - panel.clientHeight;
+  return distance < 80;
+}
+
+function renderLogPanel(panel, html) {
+  const stickToBottom = shouldStickToBottom(panel);
+  panel.innerHTML = html;
+  if (stickToBottom) {
+    panel.scrollTop = panel.scrollHeight;
+  }
 }
 
 function render(nextState) {

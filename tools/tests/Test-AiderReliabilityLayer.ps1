@@ -146,6 +146,8 @@ Assert-True -Condition ($startAuditText.Contains('"--no-git"')) -Message "Aider 
 Assert-True -Condition ($startAuditText.Contains('"--read"')) -Message "Aider audit must pass the context pack as CLI read-only file."
 Assert-True -Condition ($startAuditText.Contains('"--no-pretty"')) -Message "Aider audit must use non-interactive friendly output."
 Assert-True -Condition (-not $startAuditText.Contains("/read-only")) -Message "Aider audit message should not rely on slash commands."
+Assert-True -Condition ($startAuditText.Contains("PYTHONUTF8")) -Message "Aider audit must force Python UTF-8 mode on Windows."
+Assert-True -Condition ($startAuditText.Contains("PYTHONIOENCODING")) -Message "Aider audit must force UTF-8 stdout/stderr on Windows."
 $badOutput = Join-Path $workspace "context_packs\unexpected.md"
 [System.IO.File]::WriteAllText($badOutput, "not allowed`n", (New-Object System.Text.UTF8Encoding($false)))
 Invoke-ExpectFailure -Name "unauthorized output" -Command {
