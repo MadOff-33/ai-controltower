@@ -10,5 +10,8 @@ creation_workspaces/
 logs/controltower_runs/
 logs/ui_jobs/
 hermes_lab/
+hermes_memory/central/entries.jsonl
+hermes_memory/central/index.json
+hermes_memory/central/guidance_cache.md
 ControlTower.exe
 logs/final_recipe_report.md
