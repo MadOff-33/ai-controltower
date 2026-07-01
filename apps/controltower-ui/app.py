@@ -687,6 +687,8 @@ def run_job(job_id, command_key, project_path, confirmed=False):
                 item["args"],
                 cwd=str(ROOT),
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 shell=False,
