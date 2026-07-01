@@ -1,5 +1,5 @@
 param(
-  [string]$MemoryRoot = "C:\AI_ControlTower\hermes_memory",
+  [string]$MemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory"),
 
   [Parameter(Mandatory = $true)]
   [string]$RunResultPath
@@ -7,7 +7,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$addScript = "C:\AI_ControlTower\tools\Add-HermesMemoryEntry.ps1"
+$addScript = (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Add-HermesMemoryEntry.ps1")
 if (-not (Test-Path -LiteralPath $addScript)) { throw "Add-HermesMemoryEntry.ps1 introuvable." }
 
 $runPath = (Resolve-Path -LiteralPath $RunResultPath).ProviderPath

@@ -1,6 +1,6 @@
 param(
-  [string]$ProjectPath = "C:\AI_ControlTower",
-  [string]$HermesMemoryRoot = "C:\AI_ControlTower\hermes_memory"
+  [string]$ProjectPath = (Split-Path -Parent $PSScriptRoot),
+  [string]$HermesMemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory")
 )
 
 $ErrorActionPreference = "Stop"

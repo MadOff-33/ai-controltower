@@ -77,4 +77,4 @@ Write-Host ("Files: " + $items.Count)
 Write-Host ("Inventory: " + $inventoryDir)
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg "C:\AI_ControlTower\tools\New-ContextPack.ps1") + " -WorkspacePath " + (Quote-Arg $workspace) + " -LotName " + (Quote-Arg "lot1_config") + " -PromptPath " + (Quote-Arg "C:\AI_ControlTower\prompts\audit\lot1_config.md"))
+Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\New-ContextPack.ps1")) + " -WorkspacePath " + (Quote-Arg $workspace) + " -LotName " + (Quote-Arg "lot1_config") + " -PromptPath " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\audit\lot1_config.md")))

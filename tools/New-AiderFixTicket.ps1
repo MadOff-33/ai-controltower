@@ -85,4 +85,4 @@ Write-Host "=== Aider fix ticket created ==="
 Write-Host ("Ticket: " + $ticketPath)
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg "C:\AI_ControlTower\tools\New-FixContextPack.ps1") + " -WorkspacePath " + (Quote-Arg $workspace) + " -TicketPath " + (Quote-Arg $ticketPath))
+Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\New-FixContextPack.ps1")) + " -WorkspacePath " + (Quote-Arg $workspace) + " -TicketPath " + (Quote-Arg $ticketPath))

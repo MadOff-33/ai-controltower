@@ -9,8 +9,8 @@ param(
   [string]$BriefPath = "",
 
   [string]$ProjectType = "python-basic",
-  [string]$WorkspaceRoot = "C:\AI_ControlTower\creation_workspaces",
-  [string]$PromptPath = "C:\AI_ControlTower\prompts\creation\new_project.md",
+  [string]$WorkspaceRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "creation_workspaces"),
+  [string]$PromptPath = (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\creation\new_project.md"),
   [string]$Model = "ollama_chat/ornith:9b",
   [switch]$RunAider,
   [switch]$ValidateAfterDryRun,
@@ -32,7 +32,7 @@ function Invoke-PipelineStep {
   }
 }
 
-$root = "C:\AI_ControlTower"
+$root = (Split-Path -Parent $PSScriptRoot)
 $newScript = Join-Path $root "tools\New-CreationWorkspace.ps1"
 $startScript = Join-Path $root "tools\Start-AiderCreation.ps1"
 $testScript = Join-Path $root "tools\Test-AiderCreation.ps1"

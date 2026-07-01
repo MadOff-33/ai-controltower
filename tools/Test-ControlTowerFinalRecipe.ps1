@@ -1,6 +1,6 @@
 param(
   [string]$ProjectPath = "",
-  [string]$ReportPath = "C:\AI_ControlTower\logs\final_recipe_report.md",
+  [string]$ReportPath = (Join-Path (Split-Path -Parent $PSScriptRoot) "logs\final_recipe_report.md"),
   [switch]$SkipFullSuite
 )
 
@@ -13,7 +13,7 @@ function Add-Line {
   $Lines.Add($Text) | Out-Null
 }
 
-$root = "C:\AI_ControlTower"
+$root = (Split-Path -Parent $PSScriptRoot)
 $usingFixture = $false
 if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
   $usingFixture = $true

@@ -8,16 +8,16 @@ param(
   [string]$Brief = "",
   [string]$BriefPath = "",
   [string]$ProjectType = "python-basic",
-  [string]$WorkspaceRoot = "C:\AI_ControlTower\audits",
+  [string]$WorkspaceRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "audits"),
   [string]$WorkspacePath = "",
   [string]$TicketPath = "",
   [string]$AuditName = "",
   [string]$LotName = "lot1_config",
-  [string]$PromptPath = "C:\AI_ControlTower\prompts\audit\lot1_config.md",
-  [string]$ProfilePath = "C:\AI_ControlTower\templates\audit_profiles\python-basic.yaml",
+  [string]$PromptPath = (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\audit\lot1_config.md"),
+  [string]$ProfilePath = (Join-Path (Split-Path -Parent $PSScriptRoot) "templates\audit_profiles\python-basic.yaml"),
   [string]$Model = "ollama_chat/ornith:9b",
-  [string]$LogRoot = "C:\AI_ControlTower\logs",
-  [string]$HermesMemoryRoot = "C:\AI_ControlTower\hermes_memory",
+  [string]$LogRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "logs"),
+  [string]$HermesMemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory"),
   [int]$MaxChars = 0,
   [switch]$RunAider,
   [switch]$ValidateAfterDryRun,
@@ -95,7 +95,7 @@ function New-RunSummary {
   return $summaryPath
 }
 
-$root = "C:\AI_ControlTower"
+$root = (Split-Path -Parent $PSScriptRoot)
 $auditPipeline = Join-Path $root "tools\Invoke-AiderAuditPipeline.ps1"
 $fixPipeline = Join-Path $root "tools\Invoke-AiderFixPipeline.ps1"
 $creationPipeline = Join-Path $root "tools\Invoke-AiderCreationPipeline.ps1"
@@ -164,8 +164,8 @@ try {
     if ([string]::IsNullOrWhiteSpace($ProjectName)) { throw "ProjectName est obligatoire en mode Creation." }
     if ([string]::IsNullOrWhiteSpace($ParentPath)) { throw "ParentPath est obligatoire en mode Creation." }
     if ([string]::IsNullOrWhiteSpace($Brief) -and [string]::IsNullOrWhiteSpace($BriefPath)) { throw "Brief ou BriefPath est obligatoire en mode Creation." }
-    if ($WorkspaceRoot -eq "C:\AI_ControlTower\audits") { $WorkspaceRoot = "C:\AI_ControlTower\creation_workspaces" }
-    if ($PromptPath -eq "C:\AI_ControlTower\prompts\audit\lot1_config.md") { $PromptPath = "C:\AI_ControlTower\prompts\creation\new_project.md" }
+    if ($WorkspaceRoot -eq (Join-Path (Split-Path -Parent $PSScriptRoot) "audits")) { $WorkspaceRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "creation_workspaces") }
+    if ($PromptPath -eq (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\audit\lot1_config.md")) { $PromptPath = (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\creation\new_project.md") }
     $creationArgs = @{
       ProjectName = $ProjectName
       ParentPath = $ParentPath

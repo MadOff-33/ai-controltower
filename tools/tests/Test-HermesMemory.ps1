@@ -2,7 +2,7 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-$Root = "C:\AI_ControlTower"
+$Root = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $MemoryRoot = Join-Path $Root "hermes_lab\hermes memory test"
 $Scripts = @(
   "tools\Initialize-HermesMemory.ps1",

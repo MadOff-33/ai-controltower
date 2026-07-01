@@ -1,5 +1,5 @@
 param(
-  [string]$MemoryRoot = "C:\AI_ControlTower\hermes_memory"
+  [string]$MemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory")
 )
 
 $ErrorActionPreference = "Stop"
@@ -33,7 +33,7 @@ if (-not (Test-Path -LiteralPath $guidance)) {
 }
 
 if (-not (Test-Path -LiteralPath $schema)) {
-  $templateSchema = "C:\AI_ControlTower\templates\hermes\central_memory.schema.json"
+  $templateSchema = (Join-Path (Split-Path -Parent $PSScriptRoot) "templates\hermes\central_memory.schema.json")
   if (Test-Path -LiteralPath $templateSchema) {
     Copy-Item -LiteralPath $templateSchema -Destination $schema -Force
   } else {
@@ -46,4 +46,4 @@ Write-Host ("MemoryRoot: " + $MemoryRoot)
 Write-Host ("Central:    " + $central)
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg "C:\AI_ControlTower\tools\Add-HermesMemoryEntry.ps1") + " -MemoryRoot " + (Quote-Arg $MemoryRoot) + " -Kind experience -Category general -Summary " + (Quote-Arg "Nouvelle experience") + " -Source manual")
+Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Add-HermesMemoryEntry.ps1")) + " -MemoryRoot " + (Quote-Arg $MemoryRoot) + " -Kind experience -Category general -Summary " + (Quote-Arg "Nouvelle experience") + " -Source manual")

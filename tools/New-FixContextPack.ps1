@@ -117,4 +117,4 @@ Write-Host ("Pack: " + $packPath)
 Write-Host ("Chars: " + $pack.Length + " / " + $MaxChars)
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg "C:\AI_ControlTower\tools\Start-AiderFix.ps1") + " -WorkspacePath " + (Quote-Arg $workspace) + " -TicketPath " + (Quote-Arg $ticket) + " -ContextPackPath " + (Quote-Arg $packPath) + " -DryRun")
+Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Start-AiderFix.ps1")) + " -WorkspacePath " + (Quote-Arg $workspace) + " -TicketPath " + (Quote-Arg $ticket) + " -ContextPackPath " + (Quote-Arg $packPath) + " -DryRun")

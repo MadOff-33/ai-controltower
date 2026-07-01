@@ -50,8 +50,8 @@ $inputHistoryPath = Join-Path $workspace "creation_aider_input_history"
 $llmHistoryPath = Join-Path $workspace "creation_aider_llm_history.md"
 $promptText = Get-Content -LiteralPath $prompt -Raw -Encoding UTF8
 $briefText = Get-Content -LiteralPath $brief -Raw -Encoding UTF8
-$guidanceText = Get-OptionalText -Path "C:\AI_ControlTower\prompts\common\controltower_aider_guidance.md"
-$hermesText = Get-OptionalText -Path "C:\AI_ControlTower\hermes_memory\central\guidance_cache.md"
+$guidanceText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\common\controltower_aider_guidance.md")
+$hermesText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory\central\guidance_cache.md")
 $message = @(
   "## ControlTower guidance",
   "",
@@ -139,4 +139,4 @@ if ($DryRun) {
 
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg "C:\AI_ControlTower\tools\Test-AiderCreation.ps1") + " -WorkspacePath " + (Quote-Arg $workspace))
+Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Test-AiderCreation.ps1")) + " -WorkspacePath " + (Quote-Arg $workspace))

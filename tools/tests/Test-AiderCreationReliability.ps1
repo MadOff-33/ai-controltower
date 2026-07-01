@@ -1,7 +1,7 @@
 param()
 
 $ErrorActionPreference = "Stop"
-$Root = "C:\AI_ControlTower"
+$Root = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 
 function Assert-True {
   param([bool]$Condition, [string]$Message)

@@ -2,11 +2,11 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$ProjectPath,
 
-  [string]$WorkspaceRoot = "C:\AI_ControlTower\audits",
+  [string]$WorkspaceRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "audits"),
   [string]$AuditName = "",
-  [string]$ProfilePath = "C:\AI_ControlTower\templates\audit_profiles\python-basic.yaml",
+  [string]$ProfilePath = (Join-Path (Split-Path -Parent $PSScriptRoot) "templates\audit_profiles\python-basic.yaml"),
   [string]$LotName = "lot1_config",
-  [string]$PromptPath = "C:\AI_ControlTower\prompts\audit\lot1_config.md",
+  [string]$PromptPath = (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\audit\lot1_config.md"),
   [int]$MaxChars = 0,
   [string]$Model = "ollama_chat/ornith:9b",
   [switch]$RunAider,
@@ -41,7 +41,7 @@ if (-not (Test-Path -LiteralPath $WorkspaceRoot)) {
   New-Item -ItemType Directory -Path $WorkspaceRoot | Out-Null
 }
 
-$root = "C:\AI_ControlTower"
+$root = (Split-Path -Parent $PSScriptRoot)
 $newWorkspaceScript = Join-Path $root "tools\New-AuditWorkspace.ps1"
 $inventoryScript = Join-Path $root "tools\New-ProjectInventory.ps1"
 $contextScript = Join-Path $root "tools\New-ContextPack.ps1"

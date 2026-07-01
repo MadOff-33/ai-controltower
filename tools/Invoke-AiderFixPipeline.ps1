@@ -30,7 +30,7 @@ function Read-SimpleYaml {
   return $data
 }
 
-$root = "C:\AI_ControlTower"
+$root = (Split-Path -Parent $PSScriptRoot)
 $workspace = (Resolve-Path -LiteralPath $WorkspacePath).ProviderPath
 $ticket = (Resolve-Path -LiteralPath $TicketPath).ProviderPath
 $packScript = Join-Path $root "tools\New-FixContextPack.ps1"
@@ -72,4 +72,4 @@ Write-Utf8NoBom -Path (Join-Path $validationDir ($safeId + "_pipeline_result.jso
 
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File `"C:\AI_ControlTower\tools\Test-AiderFix.ps1`" -WorkspacePath `"$workspace`" -TicketPath `"$ticket`" -ContextPackPath `"$pack`"")
+Write-Host ("powershell -ExecutionPolicy Bypass -File `"" + (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Test-AiderFix.ps1") + "`" -WorkspacePath `"$workspace`" -TicketPath `"$ticket`" -ContextPackPath `"$pack`"")

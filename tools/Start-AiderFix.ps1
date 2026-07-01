@@ -71,8 +71,8 @@ New-Item -ItemType Directory -Path $validationDir -Force | Out-Null
 
 $messagePath = Join-Path $runDir ($safeId + "_aider_message.md")
 $messageLines = New-Object System.Collections.Generic.List[string]
-$guidanceText = Get-OptionalText -Path "C:\AI_ControlTower\prompts\common\controltower_aider_guidance.md"
-$hermesText = Get-OptionalText -Path "C:\AI_ControlTower\hermes_memory\central\guidance_cache.md"
+$guidanceText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\common\controltower_aider_guidance.md")
+$hermesText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory\central\guidance_cache.md")
 $relativePack = [System.IO.Path]::GetFullPath($contextPack).Substring([System.IO.Path]::GetFullPath($snapshot).TrimEnd("\").Length).TrimStart("\") -replace "\\", "/"
 if ($relativePack.StartsWith("..")) {
   $relativePack = $contextPack
@@ -139,4 +139,4 @@ if ($DryRun) {
 
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg "C:\AI_ControlTower\tools\Test-AiderFix.ps1") + " -WorkspacePath " + (Quote-Arg $workspace) + " -TicketPath " + (Quote-Arg $ticket) + " -ContextPackPath " + (Quote-Arg $contextPack))
+Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Test-AiderFix.ps1")) + " -WorkspacePath " + (Quote-Arg $workspace) + " -TicketPath " + (Quote-Arg $ticket) + " -ContextPackPath " + (Quote-Arg $contextPack))

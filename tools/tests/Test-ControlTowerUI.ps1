@@ -280,6 +280,8 @@ finally:
     if workspace.exists():
         shutil.rmtree(workspace)
 '@
+$rootForwardSlash = $Root.Replace('\', '/')
+$behaviorScript = $behaviorScript.Replace('C:/AI_ControlTower', $rootForwardSlash)
 $behaviorOutput = $behaviorScript | & $python.Source @pythonArgs - 2>&1
 Assert-True -Condition ($LASTEXITCODE -eq 0) -Message ("Flask UI behavior test failed. " + ($behaviorOutput -join "`n"))
 

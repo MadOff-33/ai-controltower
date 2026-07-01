@@ -2,9 +2,9 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$ProjectPath,
 
-  [string]$WorkspaceRoot = "C:\AI_ControlTower\audits",
+  [string]$WorkspaceRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "audits"),
   [string]$AuditName = "",
-  [string]$ProfilePath = "C:\AI_ControlTower\templates\audit_profiles\python-basic.yaml"
+  [string]$ProfilePath = (Join-Path (Split-Path -Parent $PSScriptRoot) "templates\audit_profiles\python-basic.yaml")
 )
 
 $ErrorActionPreference = "Stop"
@@ -128,4 +128,4 @@ Write-Host ("Copied:    " + $copied)
 Write-Host ("Skipped:   " + $skipped)
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg "C:\AI_ControlTower\tools\New-ProjectInventory.ps1") + " -WorkspacePath " + (Quote-Arg $workspace))
+Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\New-ProjectInventory.ps1")) + " -WorkspacePath " + (Quote-Arg $workspace))

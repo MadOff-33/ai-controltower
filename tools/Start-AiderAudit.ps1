@@ -45,8 +45,8 @@ if (-not (Test-Path -LiteralPath $reportPath)) {
 }
 
 $messagePath = Join-Path $promptsDir ($safeLot + "_aider_message.md")
-$guidanceText = Get-OptionalText -Path "C:\AI_ControlTower\prompts\common\controltower_aider_guidance.md"
-$hermesText = Get-OptionalText -Path "C:\AI_ControlTower\hermes_memory\central\guidance_cache.md"
+$guidanceText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\common\controltower_aider_guidance.md")
+$hermesText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory\central\guidance_cache.md")
 $message = @(
   "## ControlTower guidance",
   "",
@@ -123,4 +123,4 @@ if ($DryRun) {
 
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg "C:\AI_ControlTower\tools\Test-AiderOutput.ps1") + " -WorkspacePath " + (Quote-Arg $workspace) + " -ReportPath " + (Quote-Arg $reportPath) + " -ContextPackPath " + (Quote-Arg $contextPack))
+Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Test-AiderOutput.ps1")) + " -WorkspacePath " + (Quote-Arg $workspace) + " -ReportPath " + (Quote-Arg $reportPath) + " -ContextPackPath " + (Quote-Arg $contextPack))

@@ -2,7 +2,7 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-$Root = "C:\AI_ControlTower"
+$Root = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $Scripts = @(
   "tools\New-AuditWorkspace.ps1",
   "tools\New-ProjectInventory.ps1",

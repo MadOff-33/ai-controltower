@@ -65,7 +65,7 @@ if ($AcceptanceCriteria.Count -eq 0) {
   $AcceptanceCriteria = @("Le changement reste limite aux fichiers editable_files.", "La validation ControlTower ne signale aucun fichier hors perimetre.")
 }
 
-$ticketScript = "C:\AI_ControlTower\tools\New-AiderFixTicket.ps1"
+$ticketScript = (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\New-AiderFixTicket.ps1")
 & $ticketScript -WorkspacePath $workspace -TicketId $TicketId -Title $Title -Goal $Goal -EditableFiles $EditableFiles -VerificationCommands $VerificationCommands -AcceptanceCriteria $AcceptanceCriteria
 
 Write-Host ""

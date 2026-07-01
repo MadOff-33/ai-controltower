@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 
 namespace AIControlTower
 {
@@ -9,7 +10,7 @@ namespace AIControlTower
         [STAThread]
         public static int Main(string[] args)
         {
-            string root = @"C:\AI_ControlTower";
+            string root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string launcher = Path.Combine(root, "apps", "controltower-ui", "ControlTower.cmd");
             if (!File.Exists(launcher))
             {

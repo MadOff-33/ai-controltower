@@ -12,8 +12,8 @@ import uuid
 from pathlib import Path
 
 
-ROOT = Path("C:/AI_ControlTower")
-APP_DIR = ROOT / "apps" / "controltower-ui"
+APP_DIR = Path(__file__).resolve().parent
+ROOT = APP_DIR.parent.parent
 STATE_PATH = APP_DIR / "state.json"
 LOG_LIMIT = 300
 JOB_OUTPUT_LIMIT = 60000
@@ -97,7 +97,7 @@ def build_new_project_command(payload, run_aider=False, persist_brief=False):
     else:
         brief_path = "<BRIEF_FILE_CREATED_ON_LAUNCH>"
     command = (
-        'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" '
+        'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Invoke-ControlTowerRun.ps1") + '" '
         '-Mode Creation -ProjectName '
         + quote_arg(data["project_name"])
         + " -ParentPath "
@@ -107,7 +107,7 @@ def build_new_project_command(payload, run_aider=False, persist_brief=False):
         + " -BriefPath "
         + quote_arg(brief_path)
         + " -WorkspaceRoot "
-        + quote_arg("C:\\AI_ControlTower\\creation_workspaces")
+        + quote_arg(str(ROOT / "creation_workspaces"))
     )
     args = [
         "powershell",
@@ -229,7 +229,7 @@ def build_commands(project_path):
             "dangerous": False,
             "template": False,
             "description": "Verifie et remet en place les dossiers, scripts, memoire Hermes et prerequis ControlTower.",
-            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Install-ControlTower.ps1"',
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Install-ControlTower.ps1") + '"',
             "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Install-ControlTower.ps1")],
         },
         "audit_dry_run": {
@@ -238,7 +238,7 @@ def build_commands(project_path):
             "dangerous": False,
             "template": False,
             "description": "Prepare un workspace d'audit, cree le snapshot, inventorie le projet et valide la structure sans lancer Aider.",
-            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Audit -ProjectPath '
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Invoke-ControlTowerRun.ps1") + '" -Mode Audit -ProjectPath '
             + project
             + " -ValidateAfterDryRun",
             "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Invoke-ControlTowerRun.ps1"),
@@ -250,7 +250,7 @@ def build_commands(project_path):
             "dangerous": True,
             "template": False,
             "description": "Lance Aider avec Ornith sur un pack de contexte cadre et produit un rapport valide dans reports.",
-            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Audit -ProjectPath '
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Invoke-ControlTowerRun.ps1") + '" -Mode Audit -ProjectPath '
             + project
             + " -RunAider",
             "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Invoke-ControlTowerRun.ps1"),
@@ -262,7 +262,7 @@ def build_commands(project_path):
             "dangerous": True,
             "template": False,
             "description": "Reprend le dernier audit avec les fichiers omis du pack precedent pour tendre vers une couverture complete.",
-            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-AiderAuditContinuation.ps1" -WorkspacePath '
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Invoke-AiderAuditContinuation.ps1") + '" -WorkspacePath '
             + latest_workspace_arg
             + " -RunAider",
             "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Invoke-AiderAuditContinuation.ps1"),
@@ -274,7 +274,7 @@ def build_commands(project_path):
             "dangerous": False,
             "template": False,
             "description": "Assemble les rapports de lots en un rapport global nomme avec le projet et la date, puis affiche la couverture totale.",
-            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\New-AuditConsolidatedReport.ps1" -WorkspacePath '
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "New-AuditConsolidatedReport.ps1") + '" -WorkspacePath '
             + latest_workspace_arg,
             "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "New-AuditConsolidatedReport.ps1"),
                       "-WorkspacePath", latest_workspace_value],
@@ -293,7 +293,7 @@ def build_commands(project_path):
             "dangerous": False,
             "template": True,
             "description": "Affiche la commande de correction a partir d'un ticket sans lancer Aider ni modifier le snapshot.",
-            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Fix -WorkspacePath '
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Invoke-ControlTowerRun.ps1") + '" -Mode Fix -WorkspacePath '
             + workspace
             + " -TicketPath "
             + ticket
@@ -305,7 +305,7 @@ def build_commands(project_path):
             "dangerous": True,
             "template": True,
             "description": "Lance une correction cadree par ticket dans le snapshot d'audit, puis valide les fichiers autorises.",
-            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Fix -WorkspacePath '
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Invoke-ControlTowerRun.ps1") + '" -Mode Fix -WorkspacePath '
             + workspace
             + " -TicketPath "
             + ticket
@@ -317,7 +317,7 @@ def build_commands(project_path):
             "dangerous": False,
             "template": False,
             "description": "Execute la suite de tests ControlTower pour verifier scripts, UI, encodage et validateurs.",
-            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\tests\\Invoke-ControlTowerTestSuite.ps1"',
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "tests" / "Invoke-ControlTowerTestSuite.ps1") + '"',
             "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "tests" / "Invoke-ControlTowerTestSuite.ps1")],
         },
         "final_recipe": {
@@ -326,7 +326,7 @@ def build_commands(project_path):
             "dangerous": False,
             "template": False,
             "description": "Deroule la recette finale sur le projet cible pour confirmer que le cockpit et le pipeline restent utilisables.",
-            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Test-ControlTowerFinalRecipe.ps1" -ProjectPath '
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Test-ControlTowerFinalRecipe.ps1") + '" -ProjectPath '
             + project
             + " -SkipFullSuite",
             "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Test-ControlTowerFinalRecipe.ps1"),
@@ -338,7 +338,7 @@ def build_commands(project_path):
             "dangerous": False,
             "template": False,
             "description": "Genere ou affiche la guidance issue de la memoire centrale Hermes pour reutiliser l'experience des runs.",
-            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Get-HermesGuidance.ps1"',
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Get-HermesGuidance.ps1") + '"',
             "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Get-HermesGuidance.ps1")],
         },
         "git_status": {

@@ -1,5 +1,5 @@
 param(
-  [string]$MemoryRoot = "C:\AI_ControlTower\hermes_memory",
+  [string]$MemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory"),
   [int]$MaxItems = 8,
   [string]$OutputPath = ""
 )
@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib\ControlTowerCommon.ps1")
 
-$initScript = "C:\AI_ControlTower\tools\Initialize-HermesMemory.ps1"
+$initScript = (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Initialize-HermesMemory.ps1")
 if (Test-Path -LiteralPath $initScript) {
   & $initScript -MemoryRoot $MemoryRoot | Out-Null
 }

@@ -9,8 +9,8 @@ param(
   [string]$BriefPath = "",
 
   [string]$ProjectType = "python-basic",
-  [string]$WorkspaceRoot = "C:\AI_ControlTower\creation_workspaces",
-  [string]$PromptPath = "C:\AI_ControlTower\prompts\creation\new_project.md",
+  [string]$WorkspaceRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "creation_workspaces"),
+  [string]$PromptPath = (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\creation\new_project.md"),
   [switch]$AllowExisting
 )
 
@@ -134,4 +134,4 @@ Write-Host ("Target:    " + $target)
 Write-Host ("Brief:     " + $briefPath)
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg "C:\AI_ControlTower\tools\Start-AiderCreation.ps1") + " -WorkspacePath " + (Quote-Arg $workspace) + " -DryRun")
+Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Start-AiderCreation.ps1")) + " -WorkspacePath " + (Quote-Arg $workspace) + " -DryRun")

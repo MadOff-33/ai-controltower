@@ -4,7 +4,7 @@ param(
 
   [string]$PreviousLotName = "",
   [string]$LotName = "lot2_continuation",
-  [string]$PromptPath = "C:\AI_ControlTower\prompts\audit\lot2_architecture.md",
+  [string]$PromptPath = (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\audit\lot2_architecture.md"),
   [int]$MaxChars = 45000,
   [string]$Model = "ollama_chat/ornith:9b",
   [switch]$RunAider,
@@ -43,7 +43,7 @@ function Get-PreviousManifest {
 $workspace = (Resolve-Path -LiteralPath $WorkspacePath).ProviderPath
 if (-not (Test-Path -LiteralPath $PromptPath)) { throw "Prompt introuvable: $PromptPath" }
 
-$root = "C:\AI_ControlTower"
+$root = (Split-Path -Parent $PSScriptRoot)
 $contextScript = Join-Path $root "tools\New-ContextPack.ps1"
 $startScript = Join-Path $root "tools\Start-AiderAudit.ps1"
 $validateScript = Join-Path $root "tools\Test-AiderOutput.ps1"

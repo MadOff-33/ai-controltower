@@ -2,7 +2,7 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-$Root = "C:\AI_ControlTower"
+$Root = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $Script = Join-Path $Root "tools\Invoke-ControlTowerRun.ps1"
 $AuditScript = Join-Path $Root "tools\Invoke-AiderAuditPipeline.ps1"
 $ContinueAuditScript = Join-Path $Root "tools\Invoke-AiderAuditContinuation.ps1"

@@ -7,6 +7,7 @@ param(
 
 Write-Host "=== AI Control Tower - Init Project Agent Kit ==="
 
+$root = (Split-Path -Parent $PSScriptRoot)
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
 if (!(Test-Path $ProjectPath)) {
@@ -33,19 +34,19 @@ New-Item -ItemType Directory -Force -Path "$ProjectPath\.agent\selected-skills\b
 New-Item -ItemType Directory -Force -Path "$ProjectPath\.agent\selected-skills\superpowers" | Out-Null
 
 if (!(Test-Path "$ProjectPath\AGENTS.md")) {
-  Copy-Item "C:\AI_ControlTower\skills\project_templates\AGENTS.template.md" "$ProjectPath\AGENTS.md" -Force
+  Copy-Item (Join-Path (Split-Path -Parent $PSScriptRoot) "skills\project_templates\AGENTS.template.md") "$ProjectPath\AGENTS.md" -Force
 }
 
 if (!(Test-Path "$ProjectPath\.agent\PROJECT_CONTEXT.md")) {
-  Copy-Item "C:\AI_ControlTower\skills\project_templates\PROJECT_CONTEXT.template.md" "$ProjectPath\.agent\PROJECT_CONTEXT.md" -Force
+  Copy-Item (Join-Path (Split-Path -Parent $PSScriptRoot) "skills\project_templates\PROJECT_CONTEXT.template.md") "$ProjectPath\.agent\PROJECT_CONTEXT.md" -Force
 }
 
 if (!(Test-Path "$ProjectPath\.agent\PROJECT_RULES.md")) {
-  Copy-Item "C:\AI_ControlTower\skills\project_templates\PROJECT_RULES.template.md" "$ProjectPath\.agent\PROJECT_RULES.md" -Force
+  Copy-Item (Join-Path (Split-Path -Parent $PSScriptRoot) "skills\project_templates\PROJECT_RULES.template.md") "$ProjectPath\.agent\PROJECT_RULES.md" -Force
 }
 
 if (!(Test-Path "$ProjectPath\.agent\skills.lock.md")) {
-  Copy-Item "C:\AI_ControlTower\skills\project_templates\skills.lock.template.md" "$ProjectPath\.agent\skills.lock.md" -Force
+  Copy-Item (Join-Path (Split-Path -Parent $PSScriptRoot) "skills\project_templates\skills.lock.template.md") "$ProjectPath\.agent\skills.lock.md" -Force
 }
 
 $aiderConfig = @'
@@ -71,14 +72,14 @@ if ($gitignoreContent -notmatch [regex]::Escape("!.aider.conf.yml")) {
   [System.IO.File]::AppendAllText($gitignore, "`n# AI ControlTower project config`n!.aider.conf.yml`n", $utf8NoBom)
 }
 
-Copy-Item "C:\AI_ControlTower\policies\NO_PROD_WITHOUT_GO.md" "$ProjectPath\.agent\selected-skills\policies\NO_PROD_WITHOUT_GO.md" -Force
-Copy-Item "C:\AI_ControlTower\policies\NO_SECRETS.md" "$ProjectPath\.agent\selected-skills\policies\NO_SECRETS.md" -Force
-Copy-Item "C:\AI_ControlTower\policies\GIT_RULES.md" "$ProjectPath\.agent\selected-skills\policies\GIT_RULES.md" -Force
+Copy-Item (Join-Path (Split-Path -Parent $PSScriptRoot) "policies\NO_PROD_WITHOUT_GO.md") "$ProjectPath\.agent\selected-skills\policies\NO_PROD_WITHOUT_GO.md" -Force
+Copy-Item (Join-Path (Split-Path -Parent $PSScriptRoot) "policies\NO_SECRETS.md") "$ProjectPath\.agent\selected-skills\policies\NO_SECRETS.md" -Force
+Copy-Item (Join-Path (Split-Path -Parent $PSScriptRoot) "policies\GIT_RULES.md") "$ProjectPath\.agent\selected-skills\policies\GIT_RULES.md" -Force
 
-Copy-Item "C:\AI_ControlTower\skills\bmad\adapted-for-aider\bmad_core_aider.md" "$ProjectPath\.agent\selected-skills\bmad\bmad_core_aider.md" -Force
-Copy-Item "C:\AI_ControlTower\skills\bmad\adapted-for-aider\bmad_dev_workflow_aider.md" "$ProjectPath\.agent\selected-skills\bmad\bmad_dev_workflow_aider.md" -Force
+Copy-Item (Join-Path (Split-Path -Parent $PSScriptRoot) "skills\bmad\adapted-for-aider\bmad_core_aider.md") "$ProjectPath\.agent\selected-skills\bmad\bmad_core_aider.md" -Force
+Copy-Item (Join-Path (Split-Path -Parent $PSScriptRoot) "skills\bmad\adapted-for-aider\bmad_dev_workflow_aider.md") "$ProjectPath\.agent\selected-skills\bmad\bmad_dev_workflow_aider.md" -Force
 
-Copy-Item "C:\AI_ControlTower\skills\superpowers\adapted-for-aider\superpowers_core_aider.md" "$ProjectPath\.agent\selected-skills\superpowers\superpowers_core_aider.md" -Force
+Copy-Item (Join-Path (Split-Path -Parent $PSScriptRoot) "skills\superpowers\adapted-for-aider\superpowers_core_aider.md") "$ProjectPath\.agent\selected-skills\superpowers\superpowers_core_aider.md" -Force
 
 $loader = @'
 /read-only .agent/selected-skills/policies/NO_PROD_WITHOUT_GO.md
@@ -100,7 +101,7 @@ $readme = @"
 
 Initialisation agentique effectuee depuis :
 
-C:\AI_ControlTower
+$root
 
 Date : initialisation agentique
 

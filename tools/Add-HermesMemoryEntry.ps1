@@ -1,5 +1,5 @@
 param(
-  [string]$MemoryRoot = "C:\AI_ControlTower\hermes_memory",
+  [string]$MemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory"),
 
   [Parameter(Mandatory = $true)]
   [string]$Kind,
@@ -53,7 +53,7 @@ function Update-HermesIndex {
   } | ConvertTo-Json -Depth 8)
 }
 
-$initScript = "C:\AI_ControlTower\tools\Initialize-HermesMemory.ps1"
+$initScript = (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Initialize-HermesMemory.ps1")
 if (Test-Path -LiteralPath $initScript) {
   & $initScript -MemoryRoot $MemoryRoot | Out-Null
 }

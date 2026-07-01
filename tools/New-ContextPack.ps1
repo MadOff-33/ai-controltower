@@ -222,4 +222,4 @@ Write-Host ("Included:  " + $included.Count)
 Write-Host ("Omitted:   " + $omitted.Count)
 Write-Host ""
 Write-Host "Next command:"
-Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg "C:\AI_ControlTower\tools\Start-AiderAudit.ps1") + " -WorkspacePath " + (Quote-Arg $workspace) + " -LotName " + (Quote-Arg $safeLot) + " -ContextPackPath " + (Quote-Arg $packPath) + " -DryRun")
+Write-Host ("powershell -ExecutionPolicy Bypass -File " + (Quote-Arg (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Start-AiderAudit.ps1")) + " -WorkspacePath " + (Quote-Arg $workspace) + " -LotName " + (Quote-Arg $safeLot) + " -ContextPackPath " + (Quote-Arg $packPath) + " -DryRun")

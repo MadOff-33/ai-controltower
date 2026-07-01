@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$Root = "C:\AI_ControlTower"
+$Root = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $Suites = @(
   "Test-AiderReliabilityLayer.ps1",
   "Test-AiderFixReliability.ps1",

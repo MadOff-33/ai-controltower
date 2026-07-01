@@ -1,6 +1,6 @@
 param(
-  [string]$Root = "C:\AI_ControlTower",
-  [string]$HermesMemoryRoot = "C:\AI_ControlTower\hermes_memory",
+  [string]$Root = (Split-Path -Parent $PSScriptRoot),
+  [string]$HermesMemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory"),
   [switch]$SkipDependencyCheck
 )
 
@@ -41,8 +41,8 @@ $report = [ordered]@{
   dependency_check_skipped = [bool]$SkipDependencyCheck
   dependencies = $dependencies
   next_commands = @(
-    'powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\tests\Invoke-ControlTowerTestSuite.ps1"',
-    'powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\Invoke-ControlTowerRun.ps1" -Mode Audit -ProjectPath "C:\chemin\Projet" -ValidateAfterDryRun'
+    ("powershell -ExecutionPolicy Bypass -File `"" + (Join-Path $Root "tools\tests\Invoke-ControlTowerTestSuite.ps1") + "`""),
+    ("powershell -ExecutionPolicy Bypass -File `"" + (Join-Path $Root "tools\Invoke-ControlTowerRun.ps1") + "`" -Mode Audit -ProjectPath `"C:\chemin\Projet`" -ValidateAfterDryRun")
   )
 }
 
@@ -55,4 +55,4 @@ Write-Host ("Hermes: " + $HermesMemoryRoot)
 Write-Host ("Report: " + $reportPath)
 Write-Host ""
 Write-Host "Next command:"
-Write-Host 'powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\tests\Invoke-ControlTowerTestSuite.ps1"'
+Write-Host ("powershell -ExecutionPolicy Bypass -File `"" + (Join-Path $Root "tools\tests\Invoke-ControlTowerTestSuite.ps1") + "`"")

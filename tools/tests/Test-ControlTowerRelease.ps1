@@ -2,7 +2,7 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-$Root = "C:\AI_ControlTower"
+$Root = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $TempRoot = Join-Path $Root "hermes_lab\release test runs"
 
 function Assert-True {

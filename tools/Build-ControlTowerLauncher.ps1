@@ -1,6 +1,6 @@
 param(
-  [string]$Root = "C:\AI_ControlTower",
-  [string]$OutputPath = "C:\AI_ControlTower\ControlTower.exe"
+  [string]$Root = (Split-Path -Parent $PSScriptRoot),
+  [string]$OutputPath = (Join-Path (Split-Path -Parent $PSScriptRoot) "ControlTower.exe")
 )
 
 $ErrorActionPreference = "Stop"
