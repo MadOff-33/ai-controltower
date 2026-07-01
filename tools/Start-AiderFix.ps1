@@ -20,6 +20,14 @@ function Write-Utf8NoBom {
   [System.IO.File]::WriteAllText($Path, $Content, $encoding)
 }
 
+function Get-OptionalText {
+  param([string]$Path)
+  if (Test-Path -LiteralPath $Path -PathType Leaf) {
+    return (Get-Content -LiteralPath $Path -Raw)
+  }
+  return ""
+}
+
 function Quote-Arg {
   param([string]$Value)
   return '"' + ($Value -replace '"', '\"') + '"'
@@ -106,12 +114,22 @@ New-Item -ItemType Directory -Path $validationDir -Force | Out-Null
 
 $messagePath = Join-Path $runDir ($safeId + "_aider_message.md")
 $messageLines = New-Object System.Collections.Generic.List[string]
+$guidanceText = Get-OptionalText -Path "C:\AI_ControlTower\prompts\common\controltower_aider_guidance.md"
+$hermesText = Get-OptionalText -Path "C:\AI_ControlTower\hermes_memory\central\guidance_cache.md"
 $relativePack = [System.IO.Path]::GetFullPath($contextPack).Substring([System.IO.Path]::GetFullPath($snapshot).TrimEnd("\").Length).TrimStart("\") -replace "\\", "/"
 if ($relativePack.StartsWith("..")) {
   $relativePack = $contextPack
 }
 $messageLines.Add("/read-only " + $relativePack) | Out-Null
 foreach ($file in $readonly) { $messageLines.Add("/read-only " + (($file -replace "\\", "/").Trim("/"))) | Out-Null }
+$messageLines.Add("") | Out-Null
+$messageLines.Add("## ControlTower guidance") | Out-Null
+$messageLines.Add("") | Out-Null
+$messageLines.Add($guidanceText) | Out-Null
+$messageLines.Add("") | Out-Null
+$messageLines.Add("## Hermes memory guidance") | Out-Null
+$messageLines.Add("") | Out-Null
+$messageLines.Add($hermesText) | Out-Null
 $messageLines.Add("") | Out-Null
 $messageLines.Add("Tu corriges uniquement le ticket fourni dans le pack read-only.") | Out-Null
 $messageLines.Add("Tu ne dois modifier que les fichiers editables passes a Aider.") | Out-Null

@@ -114,8 +114,12 @@ $pack = Join-Path $workspace "fix_context_packs\fix_add_pack.md"
 Assert-PathExists -Path $pack
 
 & (Join-Path $Root "tools\Start-AiderFix.ps1") -WorkspacePath $workspace -TicketPath $ticket -ContextPackPath $pack -DryRun | Out-Null
-Assert-PathExists -Path (Join-Path $workspace "fix_runs\fix_add_aider_message.md")
+$fixMessagePath = Join-Path $workspace "fix_runs\fix_add_aider_message.md"
+Assert-PathExists -Path $fixMessagePath
 Assert-PathExists -Path (Join-Path $workspace "validation\fix_add_baseline.json")
+$fixMessage = Get-Content -LiteralPath $fixMessagePath -Raw
+Assert-True -Condition ($fixMessage.Contains("ControlTower Aider guidance")) -Message "Fix message should include shared ControlTower guidance."
+Assert-True -Condition ($fixMessage.Contains("Hermes central guidance")) -Message "Fix message should include Hermes guidance."
 $startFixText = Get-Content -LiteralPath (Join-Path $Root "tools\Start-AiderFix.ps1") -Raw
 Assert-True -Condition ($startFixText.Contains("PYTHONUTF8")) -Message "Aider fix must force Python UTF-8 mode on Windows."
 Assert-True -Condition ($startFixText.Contains("PYTHONIOENCODING")) -Message "Aider fix must force UTF-8 stdout/stderr on Windows."

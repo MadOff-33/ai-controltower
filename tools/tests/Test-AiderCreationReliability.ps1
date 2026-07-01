@@ -30,6 +30,7 @@ $scripts = @(
   "tools\Start-AiderCreation.ps1",
   "tools\Test-AiderCreation.ps1",
   "tools\Invoke-AiderCreationPipeline.ps1",
+  "prompts\common\controltower_aider_guidance.md",
   "prompts\creation\new_project.md"
 )
 foreach ($relative in $scripts) {
@@ -71,6 +72,9 @@ Assert-True -Condition (Test-Path -LiteralPath (Join-Path $config.target_project
 Assert-True -Condition (Test-Path -LiteralPath (Join-Path $workspace.FullName "validation\creation_result.json")) -Message "Creation validation result missing."
 $result = Get-Content -LiteralPath (Join-Path $workspace.FullName "validation\creation_result.json") -Raw | ConvertFrom-Json
 Assert-True -Condition ($result.passed -eq $true) -Message "Dry-run creation validation should pass on seeded README."
+$creationMessage = Get-Content -LiteralPath (Join-Path $workspace.FullName "prompts\creation_aider_message.md") -Raw
+Assert-True -Condition ($creationMessage.Contains("ControlTower Aider guidance")) -Message "Creation message should include shared ControlTower guidance."
+Assert-True -Condition ($creationMessage.Contains("Hermes central guidance")) -Message "Creation message should include Hermes guidance."
 
 & (Join-Path $Root "tools\Test-AiderCreation.ps1") -WorkspacePath $workspace.FullName -RequireUsefulChanges
 Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Real creation validation should fail when no useful project file changed."

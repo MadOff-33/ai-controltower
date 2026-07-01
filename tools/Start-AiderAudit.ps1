@@ -31,6 +31,14 @@ function Get-FileHashSafe {
   return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
+function Get-OptionalText {
+  param([string]$Path)
+  if (Test-Path -LiteralPath $Path -PathType Leaf) {
+    return (Get-Content -LiteralPath $Path -Raw)
+  }
+  return ""
+}
+
 function Enable-AiderUtf8Environment {
   $script:PreviousPythonUtf8 = $env:PYTHONUTF8
   $script:PreviousPythonIoEncoding = $env:PYTHONIOENCODING
@@ -80,7 +88,17 @@ if (-not (Test-Path -LiteralPath $reportPath)) {
 }
 
 $messagePath = Join-Path $promptsDir ($safeLot + "_aider_message.md")
+$guidanceText = Get-OptionalText -Path "C:\AI_ControlTower\prompts\common\controltower_aider_guidance.md"
+$hermesText = Get-OptionalText -Path "C:\AI_ControlTower\hermes_memory\central\guidance_cache.md"
 $message = @(
+  "## ControlTower guidance",
+  "",
+  $guidanceText,
+  "",
+  "## Hermes memory guidance",
+  "",
+  $hermesText,
+  "",
   "Tu dois utiliser uniquement le fichier fourni avec --read comme source factuelle.",
   "Le seul fichier editable est le rapport ouvert par Aider.",
   "Ecris dans le rapport une section: Couverture, Synthese, Constats, Incertitudes, Prochaines actions.",

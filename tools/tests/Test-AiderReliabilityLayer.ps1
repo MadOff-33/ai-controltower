@@ -16,6 +16,7 @@ $DeliveredFiles = @(
   "docs\aider_operating_manual.md",
   "docs\controltower_reliability_v1_1_spec.md",
   "templates\audit_profiles\python-basic.yaml",
+  "prompts\common\controltower_aider_guidance.md",
   "prompts\audit\lot1_config.md",
   "prompts\audit\lot2_architecture.md"
 ) + $Scripts
@@ -144,6 +145,9 @@ Invoke-ExpectFailure -Name "report outside reports" -Command {
 Remove-Item -LiteralPath $outsideReport -Force
 
 & (Join-Path $Root "tools\Start-AiderAudit.ps1") -WorkspacePath $workspace -LotName "lot1_config" -ContextPackPath $pack -DryRun | Out-Null
+$auditMessage = Get-Content -LiteralPath (Join-Path $workspace "prompts\lot1_config_aider_message.md") -Raw
+Assert-True -Condition ($auditMessage.Contains("ControlTower Aider guidance")) -Message "Audit message should include shared ControlTower guidance."
+Assert-True -Condition ($auditMessage.Contains("Hermes central guidance")) -Message "Audit message should include Hermes guidance."
 $startAuditText = Get-Content -LiteralPath (Join-Path $Root "tools\Start-AiderAudit.ps1") -Raw
 Assert-True -Condition ($startAuditText.Contains('"--no-git"')) -Message "Aider audit must not attach to the ControlTower git repo."
 Assert-True -Condition ($startAuditText.Contains('"--read"')) -Message "Aider audit must pass the context pack as CLI read-only file."
