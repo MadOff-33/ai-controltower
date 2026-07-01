@@ -142,6 +142,8 @@ def read_json_process(command):
         command,
         cwd=str(ROOT),
         text=True,
+        encoding="utf-8",
+        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         shell=False,
