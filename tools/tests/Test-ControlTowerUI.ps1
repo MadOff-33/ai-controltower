@@ -70,6 +70,17 @@ Assert-True -Condition ($appText.Contains("@app.route(""/api/tickets/from-report
 Assert-True -Condition ($appText.Contains("WORKFLOW_STEPS")) -Message "Guided workflow missing."
 Assert-True -Condition ($appText.Contains("ALLOWED_COMMANDS")) -Message "Command allowlist missing."
 
+$templateText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\templates\index.html") -Raw
+Assert-True -Condition ($templateText.Contains("/static/app.js?v=")) -Message "UI script should use cache-busting query string."
+Assert-True -Condition ($templateText.Contains("errorPanel")) -Message "UI should include an inline error panel."
+
+$jsText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\app.js") -Raw
+Assert-True -Condition ($jsText.Contains("function setText")) -Message "UI JS should guard optional text targets."
+Assert-True -Condition ($jsText.Contains("if (!els.lastRunStatus && !els.artifactLinks) return;")) -Message "UI JS should tolerate older HTML without last-run panel."
+Assert-True -Condition ($jsText.Contains("if (els.commandCatalog)")) -Message "UI JS should tolerate missing command catalog events."
+Assert-True -Condition ($jsText.Contains("function showError")) -Message "UI JS should render friendly inline errors."
+Assert-True -Condition (-not $jsText.Contains("window.alert")) -Message "UI JS should not use raw browser alert boxes."
+
 $styleText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\styles.css") -Raw
 Assert-True -Condition ($styleText.Contains("minmax(560px, 1.65fr)")) -Message "Chat column should be wider than command catalog."
 Assert-True -Condition ($styleText.Contains(".command-card button")) -Message "Command buttons should have compact styling."
