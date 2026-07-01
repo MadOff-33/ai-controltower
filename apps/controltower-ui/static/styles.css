@@ -308,8 +308,8 @@ textarea {
 }
 
 .creation-log {
-  min-height: 460px;
-  height: min(60vh, 640px);
+  min-height: 260px;
+  height: min(44vh, 420px);
 }
 
 .panel {
@@ -497,6 +497,29 @@ textarea {
   word-break: break-word;
   color: #344054;
   font-size: 11px;
+}
+
+.creation-current {
+  background: #f8fbff;
+}
+
+.job-output summary,
+.older-logs summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.older-logs {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  padding: 8px;
+}
+
+.log-entry.compact {
+  padding: 5px 0;
 }
 
 .job-entry button {

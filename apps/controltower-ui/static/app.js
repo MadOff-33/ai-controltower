@@ -62,6 +62,7 @@ let confirmResolver = null;
 const REPORT_READER_LABEL = "Lire le rapport";
 const NEW_PROJECT_LABEL = "Nouveau projet";
 let activeTab = "audit";
+let refreshInFlight = false;
 
 function escapeHtml(value) {
   return String(value || "")
@@ -296,32 +297,35 @@ function renderAuditJobs(jobs) {
 
 function renderCreationJobs(jobs) {
   if (!els.creationJobPanel) return;
-  const visibleJobs = (jobs || []).filter((job) => job.command === "new_project").slice(-4).reverse();
-  if (visibleJobs.length === 0) {
+  const creationJobs = (jobs || []).filter((job) => job.command === "new_project");
+  const runningJob = creationJobs.find((job) => job.status === "queued" || job.status === "running");
+  const job = runningJob || creationJobs[creationJobs.length - 1];
+  if (!job) {
     setHtml(els.creationJobPanel, "");
     return;
   }
-  setHtml(els.creationJobPanel, visibleJobs.map((job) => {
-    const stalled = job.stalled || job.health === "stalled";
-    const statusText = stalled
-      ? `Aucune activite recente (${job.silence_seconds || 0}s)`
-      : (job.status_label || job.status);
-    const output = (job.output || "").slice(-700);
-    const cancelButton = (job.status === "queued" || job.status === "running")
-      ? `<button class="secondary job-cancel" data-job-cancel="${job.id}" type="button">Arreter</button>`
-      : "";
-    return `
-      <div class="job-entry ${stalled ? "stalled" : ""}">
-        <div class="job-main">
-          <strong>${escapeHtml(job.label)}</strong>
-          <span>${escapeHtml(statusText)}</span>
-          ${job.target_project_path ? `<small>${escapeHtml(job.target_project_path)}</small>` : ""}
-          ${output ? `<pre>${escapeHtml(output)}</pre>` : ""}
-        </div>
-        ${cancelButton}
+  const stalled = job.stalled || job.health === "stalled";
+  const statusText = stalled
+    ? `Aucune activite recente (${job.silence_seconds || 0}s)`
+    : (job.status_label || job.status);
+  const output = (job.output || "").slice(-900);
+  const cancelButton = (job.status === "queued" || job.status === "running")
+    ? `<button class="secondary job-cancel" data-job-cancel="${job.id}" type="button">Arreter</button>`
+    : "";
+  setHtml(els.creationJobPanel, `
+    <div class="job-entry creation-current ${stalled ? "stalled" : ""}">
+      <div class="job-main">
+        <strong>${escapeHtml(job.label)}</strong>
+        <span>${escapeHtml(statusText)}</span>
+        ${job.target_project_path ? `<small>${escapeHtml(job.target_project_path)}</small>` : ""}
+        ${job.last_activity_at ? `<small>Derniere activite: ${escapeHtml(job.last_activity_at)}</small>` : ""}
+        ${job.finished_at ? `<small>Fin: ${escapeHtml(job.finished_at)}</small>` : ""}
+        ${job.log_path ? `<small>Log: ${escapeHtml(job.log_path)}</small>` : ""}
+        ${output ? `<details class="job-output"><summary>Voir les dernieres lignes</summary><pre>${escapeHtml(output)}</pre></details>` : ""}
       </div>
-    `;
-  }).join(""));
+      ${cancelButton}
+    </div>
+  `);
 }
 
 function renderLogs(logs) {
@@ -339,8 +343,8 @@ function renderAuditLogs(logs) {
   renderLogPanel(els.logPanel, auditLogs.map((entry) => {
     return `
       <div class="log-entry">
-        <strong>${entry.time} - ${entry.message}</strong>
-        <pre>${entry.output || entry.level}</pre>
+        <strong>${escapeHtml(entry.time)} - ${escapeHtml(entry.message)}</strong>
+        <pre>${escapeHtml(entry.output || entry.level)}</pre>
       </div>
     `;
   }).join(""));
@@ -353,14 +357,20 @@ function renderCreationLogs(logs) {
     renderLogPanel(els.creationLogPanel, `<div class="log-entry"><strong>En attente</strong><pre>Renseignez un brief puis lancez un dry-run ou Aider.</pre></div>`);
     return;
   }
-  renderLogPanel(els.creationLogPanel, creationLogs.map((entry) => {
-    return `
-      <div class="log-entry">
-        <strong>${entry.time} - ${entry.message}</strong>
-        <pre>${entry.output || entry.level}</pre>
+  const latest = creationLogs[creationLogs.length - 1];
+  const olderCount = Math.max(0, creationLogs.length - 1);
+  const older = creationLogs.slice(0, -1).slice(-5).reverse();
+  renderLogPanel(els.creationLogPanel, `
+    ${olderCount ? `<details class="older-logs"><summary>${olderCount} ancien(s) evenement(s) creation</summary>${older.map((entry) => `
+      <div class="log-entry compact">
+        <strong>${escapeHtml(entry.time)} - ${escapeHtml(entry.message)}</strong>
       </div>
-    `;
-  }).join(""));
+    `).join("")}</details>` : ""}
+      <div class="log-entry">
+        <strong>${escapeHtml(latest.time)} - ${escapeHtml(latest.message)}</strong>
+        <pre>${escapeHtml(latest.output || latest.level)}</pre>
+      </div>
+  `);
 }
 
 function shouldStickToBottom(panel) {
@@ -371,9 +381,12 @@ function shouldStickToBottom(panel) {
 
 function renderLogPanel(panel, html) {
   const stickToBottom = shouldStickToBottom(panel);
+  const previousTop = panel.scrollTop;
   panel.innerHTML = html;
   if (stickToBottom) {
     panel.scrollTop = panel.scrollHeight;
+  } else {
+    panel.scrollTop = previousTop;
   }
 }
 
@@ -400,10 +413,22 @@ function render(nextState) {
 }
 
 async function refresh() {
+  if (refreshInFlight) return;
+  refreshInFlight = true;
+  if (els.refreshButton) {
+    els.refreshButton.disabled = true;
+    els.refreshButton.textContent = "Rafraichissement...";
+  }
   try {
     render(await requestJson("/api/state"));
   } catch (error) {
     showError("Etat indisponible", "Impossible de charger l'etat ControlTower. Verifiez que le serveur local tourne.", error.message);
+  } finally {
+    refreshInFlight = false;
+    if (els.refreshButton) {
+      els.refreshButton.disabled = false;
+      els.refreshButton.textContent = "Rafraichir";
+    }
   }
 }
 
