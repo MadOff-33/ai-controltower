@@ -60,7 +60,7 @@ if (-not $RunAider) { $startArgs["DryRun"] = $true }
 $validation = "skipped"
 if ($RunAider -or $ValidateAfterDryRun) {
   & $testScript -WorkspacePath $workspace -TicketPath $ticket -ContextPackPath $pack
-  $validation = "passed"
+  $validation = if ($LASTEXITCODE -eq 0) { "passed" } else { "failed" }
 }
 
 $validationDir = Join-Path $workspace "validation"

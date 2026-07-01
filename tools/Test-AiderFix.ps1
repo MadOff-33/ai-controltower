@@ -119,10 +119,13 @@ $commandResults = @()
 if (($unauthorized.Count -eq 0) -and ($ghostFindings.Count -eq 0)) {
   foreach ($command in $commands) {
     Push-Location $snapshot
+    $previousEap = $ErrorActionPreference
     try {
+      $ErrorActionPreference = "Continue"
       $output = cmd.exe /c $command 2>&1
       $code = $LASTEXITCODE
     } finally {
+      $ErrorActionPreference = $previousEap
       Pop-Location
     }
     $commandResults += [pscustomobject][ordered]@{ command = $command; exit_code = $code; output = ($output -join [Environment]::NewLine) }
