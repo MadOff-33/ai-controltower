@@ -141,6 +141,11 @@ Invoke-ExpectFailure -Name "report outside reports" -Command {
 Remove-Item -LiteralPath $outsideReport -Force
 
 & (Join-Path $Root "tools\Start-AiderAudit.ps1") -WorkspacePath $workspace -LotName "lot1_config" -ContextPackPath $pack -DryRun | Out-Null
+$startAuditText = Get-Content -LiteralPath (Join-Path $Root "tools\Start-AiderAudit.ps1") -Raw
+Assert-True -Condition ($startAuditText.Contains('"--no-git"')) -Message "Aider audit must not attach to the ControlTower git repo."
+Assert-True -Condition ($startAuditText.Contains('"--read"')) -Message "Aider audit must pass the context pack as CLI read-only file."
+Assert-True -Condition ($startAuditText.Contains('"--no-pretty"')) -Message "Aider audit must use non-interactive friendly output."
+Assert-True -Condition (-not $startAuditText.Contains("/read-only")) -Message "Aider audit message should not rely on slash commands."
 $badOutput = Join-Path $workspace "context_packs\unexpected.md"
 [System.IO.File]::WriteAllText($badOutput, "not allowed`n", (New-Object System.Text.UTF8Encoding($false)))
 Invoke-ExpectFailure -Name "unauthorized output" -Command {
@@ -154,5 +159,31 @@ Invoke-ExpectFailure -Name "ghost marker" -Command {
   & (Join-Path $Root "tools\Test-AiderOutput.ps1") -WorkspacePath $workspace -ReportPath $report -ContextPackPath $pack
 }
 
+$fakeBin = Join-Path $testRoot "fake aider bin"
+New-Item -ItemType Directory -Path $fakeBin -Force | Out-Null
+$fakeAider = Join-Path $fakeBin "aider.cmd"
+[System.IO.File]::WriteAllText($fakeAider, "@echo off`r`necho fake aider no changes`r`nexit /b 0`r`n", (New-Object System.Text.UTF8Encoding($false)))
+$oldPath = $env:PATH
+try {
+  $env:PATH = $fakeBin + ";" + $oldPath
+  Invoke-ExpectFailure -Name "pipeline fails when aider leaves draft report" -Command {
+    & (Join-Path $Root "tools\Invoke-AiderAuditPipeline.ps1") `
+      -ProjectPath $project `
+      -WorkspaceRoot $workspaceRoot `
+      -AuditName "Fake Aider No Report" `
+      -LotName "lot1_config" `
+      -PromptPath (Join-Path $Root "prompts\audit\lot1_config.md") `
+      -MaxChars 12000 `
+      -RunAider
+  }
+} finally {
+  $env:PATH = $oldPath
+}
+
 Remove-TestTree -Path $testRoot
+
+$pipelineText = Get-Content -LiteralPath (Join-Path $Root "tools\Invoke-AiderAuditPipeline.ps1") -Raw
+Assert-True -Condition ($pipelineText.Contains("Invoke-PipelineStep")) -Message "Audit pipeline helper missing."
+Assert-True -Condition ($pipelineText.Contains("LASTEXITCODE")) -Message "Audit pipeline must propagate failing child scripts."
+
 Write-Host "All reliability layer tests passed."

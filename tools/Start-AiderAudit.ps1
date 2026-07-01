@@ -51,15 +51,14 @@ if (-not (Test-Path -LiteralPath $reportPath)) {
 }
 
 $messagePath = Join-Path $promptsDir ($safeLot + "_aider_message.md")
-$relativeContext = "context_packs/" + (Split-Path -Path $contextPack -Leaf)
 $message = @(
-  "/read-only $relativeContext",
-  "",
-  "Tu dois utiliser uniquement le fichier read-only ci-dessus comme source factuelle.",
-  "Le seul fichier editable est le rapport deja ouvert par Aider dans `reports/`.",
+  "Tu dois utiliser uniquement le fichier fourni avec --read comme source factuelle.",
+  "Le seul fichier editable est le rapport ouvert par Aider.",
+  "Ecris dans le rapport une section: Synthese, Constats, Incertitudes, Prochaines actions.",
   "N'invente pas de fichiers, de fonctions ou de comportements absents du contexte.",
   "Chaque constat factuel doit citer un chemin relatif present dans le contexte.",
-  "Ecris ou mets a jour le rapport maintenant."
+  "Si le contexte ne permet pas de conclure, ecris explicitement l'incertitude.",
+  "Mets a jour le rapport maintenant."
 ) -join [Environment]::NewLine
 Write-Utf8NoBom -Path $messagePath -Content $message
 
@@ -75,7 +74,20 @@ Get-ChildItem -LiteralPath $workspace -Recurse -File -Force | ForEach-Object {
 }
 Write-Utf8NoBom -Path (Join-Path $validationDir "baseline_files.json") -Content ($baseline | ConvertTo-Json -Depth 6)
 
-$args = @("--model", $Model, $reportPath, "--message-file", $messagePath)
+$args = @(
+  "--model", $Model,
+  "--no-git",
+  "--no-gitignore",
+  "--no-auto-commits",
+  "--no-dirty-commits",
+  "--no-pretty",
+  "--no-stream",
+  "--no-fancy-input",
+  "--yes-always",
+  "--read", $contextPack,
+  $reportPath,
+  "--message-file", $messagePath
+)
 $display = "aider " + (($args | ForEach-Object { Quote-Arg $_ }) -join " ")
 
 Write-Host "=== Aider audit command ==="

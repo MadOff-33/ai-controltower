@@ -30,7 +30,11 @@ function Invoke-PipelineStep {
   param([string]$Name, [scriptblock]$Command)
   Write-Host ""
   Write-Host ("=== " + $Name + " ===")
+  $global:LASTEXITCODE = 0
   & $Command
+  if ($LASTEXITCODE -ne 0) {
+    throw ("Etape echouee: " + $Name + " (exit " + $LASTEXITCODE + ")")
+  }
 }
 
 function Get-NewestDirectory {
