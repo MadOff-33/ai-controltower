@@ -6,6 +6,7 @@
 
 - audit fiable V1.1;
 - correction bornee V2;
+- creation de projet depuis zero;
 - journal global de run;
 - mode sec par defaut.
 
@@ -35,6 +36,19 @@ Contraintes:
 - `-TicketPath` est obligatoire;
 - la correction reste dans `source_snapshot/`;
 - lancement reel seulement avec `-RunAider`.
+
+### Creation
+
+Le mode `Creation` appelle `Invoke-AiderCreationPipeline.ps1`.
+
+Contraintes:
+
+- `-ProjectName` est obligatoire;
+- `-ParentPath` est obligatoire;
+- `-Brief` est obligatoire;
+- le dossier cible est cree sous le parent choisi;
+- lancement reel seulement avec `-RunAider`;
+- validation par `Test-AiderCreation.ps1`.
 
 ### AuditThenFix
 

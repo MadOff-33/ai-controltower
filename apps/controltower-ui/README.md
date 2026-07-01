@@ -24,9 +24,12 @@ http://127.0.0.1:8765
 - Catalogue de commandes ControlTower.
 - Confirmation avant les commandes reelles qui lancent Aider.
 - Chat simple pour declencher `audit`, `tests`, `git`, `diff`, `hermes` ou `aider`.
+- Creation de projet depuis zero: formulaire `Nouveau projet`, dry-run, lancement Aider/Ornith et validation des fichiers generes.
 
 ## Securite
 
 L'API n'accepte pas de commande libre. Les actions passent par une liste autorisee dans `app.py`.
 
 Les commandes de correction avec ticket sont affichees comme templates tant que le workspace et le ticket ne sont pas fournis explicitement.
+
+Le mode creation appelle les scripts ControlTower, pas une commande libre du navigateur. Le dossier cible est cree dans le parent choisi, puis `Test-AiderCreation.ps1` bloque les fichiers interdits.

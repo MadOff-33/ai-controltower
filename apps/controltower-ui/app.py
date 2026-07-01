@@ -25,6 +25,7 @@ JOB_PROCESSES = {}
 JOBS_LOCK = threading.Lock()
 JOB_LOG_DIR = ROOT / "logs" / "ui_jobs"
 MOJIBAKE_MARKERS = ["Ã", "Â", "â–º", "âœ", "â", "�"]
+PROJECT_TYPES = ["python-cli", "python-app", "webapp", "api", "desktop", "library", "other"]
 
 WORKFLOW_STEPS = [
     {"id": "project", "label": "Selectionner projet", "command": None},
@@ -42,6 +43,63 @@ WORKFLOW_STEPS = [
 
 def quote_arg(value):
     return '"' + str(value).replace('"', '\\"') + '"'
+
+
+def sanitize_project_name(name):
+    value = str(name or "").strip()
+    if not value or value in (".", ".."):
+        raise ValueError("Nom de projet invalide.")
+    if re.search(r'[\\/:*?"<>|]', value):
+        raise ValueError("Nom de projet invalide: caractere Windows interdit.")
+    safe = re.sub(r"[^a-zA-Z0-9_.-]", "_", value).strip("_")
+    if not safe or safe in (".", ".."):
+        raise ValueError("Nom de projet invalide.")
+    return safe
+
+
+def validate_new_project_payload(payload):
+    name = sanitize_project_name(payload.get("project_name") or payload.get("name"))
+    parent = Path(str(payload.get("parent_path") or payload.get("parent_dir") or "")).expanduser()
+    brief = str(payload.get("brief") or "").strip()
+    project_type = str(payload.get("project_type") or "python-basic").strip() or "python-basic"
+    if project_type not in PROJECT_TYPES and project_type != "python-basic":
+        project_type = "other"
+    if not brief:
+        raise ValueError("Brief projet obligatoire.")
+    if not parent.exists() or not parent.is_dir():
+        raise ValueError("Le dossier parent n'existe pas.")
+    target = parent / name
+    if target.exists() and any(target.iterdir()):
+        raise ValueError("Le dossier projet existe deja et n'est pas vide.")
+    return {
+        "project_name": name,
+        "parent_path": str(parent.resolve()),
+        "project_type": project_type,
+        "brief": brief,
+        "target_project_path": str(target),
+    }
+
+
+def build_new_project_command(payload, run_aider=False):
+    data = validate_new_project_payload(payload)
+    command = (
+        'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" '
+        '-Mode Creation -ProjectName '
+        + quote_arg(data["project_name"])
+        + " -ParentPath "
+        + quote_arg(data["parent_path"])
+        + " -ProjectType "
+        + quote_arg(data["project_type"])
+        + " -Brief "
+        + quote_arg(data["brief"])
+        + " -WorkspaceRoot "
+        + quote_arg("C:\\AI_ControlTower\\creation_workspaces")
+    )
+    if run_aider:
+        command += " -RunAider"
+    else:
+        command += " -ValidateAfterDryRun"
+    return data, command
 
 
 def read_json_process(command):
@@ -592,6 +650,103 @@ def create_job(command_key, project_path, confirmed=False):
     return job
 
 
+def create_new_project_job(payload, confirmed=False):
+    run_aider = bool(payload.get("run_aider"))
+    if run_aider and not confirmed:
+        raise PermissionError("Confirmation requise pour cette action.")
+    data, command = build_new_project_command(payload, run_aider=run_aider)
+    job_id = "job_" + uuid.uuid4().hex[:12]
+    job = {
+        "id": job_id,
+        "command": "new_project",
+        "label": "Nouveau projet: " + data["project_name"],
+        "status": "queued",
+        "created_at": now_iso(),
+        "started_at": "",
+        "finished_at": "",
+        "last_activity_at": "",
+        "health": "queued",
+        "stalled": False,
+        "silence_seconds": 0,
+        "pid": None,
+        "return_code": None,
+        "output": "",
+        "target_project_path": data["target_project_path"],
+    }
+    with JOBS_LOCK:
+        JOBS[job_id] = job
+    thread = threading.Thread(target=run_dynamic_job, args=(job_id, job["label"], command), daemon=True)
+    thread.start()
+    return job
+
+
+def run_dynamic_job(job_id, label, command):
+    with JOBS_LOCK:
+        job = JOBS[job_id]
+        job["status"] = "running"
+        job["started_at"] = now_iso()
+        job["last_activity_at"] = job["started_at"]
+        job["last_activity_ts"] = time.time()
+        job["health"] = "active"
+        job["stalled"] = False
+    try:
+        add_log("run", label, command)
+        process = subprocess.Popen(
+            command,
+            cwd=str(ROOT),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True,
+            bufsize=1,
+        )
+        with JOBS_LOCK:
+            JOB_PROCESSES[job_id] = process
+            JOBS[job_id]["pid"] = process.pid
+        output_parts = []
+        while True:
+            line = process.stdout.readline() if process.stdout else ""
+            if line:
+                output_parts.append(line)
+                append_job_output(job_id, line)
+                continue
+            if process.poll() is not None:
+                break
+            time.sleep(0.25)
+        if process.stdout:
+            remaining = process.stdout.read()
+            if remaining:
+                output_parts.append(remaining)
+                append_job_output(job_id, remaining)
+        return_code = process.wait()
+        output = "".join(output_parts)
+        entry = add_log("ok" if return_code == 0 else "error", label, output)
+        with JOBS_LOCK:
+            JOB_PROCESSES.pop(job_id, None)
+            job = JOBS[job_id]
+            if job.get("cancel_requested"):
+                job["status"] = "canceled"
+                job["health"] = "canceled"
+            else:
+                job["status"] = "succeeded" if return_code == 0 else "failed"
+                job["health"] = "done" if return_code == 0 else "failed"
+            job["finished_at"] = now_iso()
+            job["return_code"] = return_code
+            job["output"] = output
+            job["log_entry"] = entry
+    except Exception as exc:
+        entry = add_log("error", "Job creation echoue", str(exc))
+        with JOBS_LOCK:
+            JOB_PROCESSES.pop(job_id, None)
+            job = JOBS[job_id]
+            job["status"] = "failed"
+            job["health"] = "failed"
+            job["finished_at"] = now_iso()
+            job["return_code"] = 1
+            job["output"] = str(exc)
+            job["log_entry"] = entry
+
+
 def cancel_job(job_id):
     with JOBS_LOCK:
         job = JOBS.get(job_id)
@@ -740,6 +895,44 @@ def create_app(default_project=None):
             return jsonify({"ok": True, "project_path": selected})
         except Exception as exc:
             return jsonify({"error": "Selection dossier indisponible: " + str(exc)}), 400
+
+    @app.route("/api/new-project/browse-parent", methods=["POST"])
+    def api_new_project_browse_parent():
+        try:
+            import tkinter
+            from tkinter import filedialog
+
+            root = tkinter.Tk()
+            root.withdraw()
+            root.attributes("-topmost", True)
+            selected = filedialog.askdirectory(initialdir=str(ROOT), title="Choisir le dossier parent")
+            root.destroy()
+            if not selected:
+                return jsonify({"ok": False, "canceled": True})
+            return jsonify({"ok": True, "parent_path": selected})
+        except Exception as exc:
+            return jsonify({"error": "Selection dossier indisponible: " + str(exc)}), 400
+
+    @app.route("/api/new-project/preview", methods=["POST"])
+    def api_new_project_preview():
+        payload = request.get_json(force=True)
+        try:
+            data, command = build_new_project_command(payload, run_aider=False)
+            return jsonify({"ok": True, "project": data, "command_preview": command})
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
+
+    @app.route("/api/new-project", methods=["POST"])
+    def api_new_project():
+        payload = request.get_json(force=True)
+        confirmed = bool(payload.get("confirmed"))
+        try:
+            job = create_new_project_job(payload, confirmed=confirmed)
+            return jsonify({"ok": True, "job": job})
+        except PermissionError as exc:
+            return jsonify({"error": str(exc), "requires_confirmation": True}), 409
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
 
     @app.route("/api/report")
     def api_report():

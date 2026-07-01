@@ -28,6 +28,7 @@ Zones attendues:
 - Fiche projet: chemin, branche Git, remote, GitHub URL, dernier commit, etat Git.
 - Etat dependances: Git, PowerShell, Aider, Ollama, Ornith, Hermes.
 - Catalogue de commandes: installation, audit, correction, Hermes, Git, tests.
+- Creation de projet depuis zero: nom, dossier parent, type, brief, dry-run et run Aider.
 - Journal/chat de pilotage: sortie lisible, commande generee, sortie brute.
 
 ## Limite navigateur
@@ -51,6 +52,7 @@ Le catalogue doit inclure:
 - Git diff
 - Ouvrir GitHub via lien detecte
 - Ouvrir Aider manuel cadre
+- Nouveau projet
 
 Les actions reelles comme `-RunAider` doivent etre separees des dry-runs et demander confirmation.
 
@@ -61,6 +63,8 @@ L'API Flask ne doit pas executer de commande libre envoyee par le navigateur.
 Les lancements passent par une liste autorisee dans `app.py`.
 
 Les commandes de correction avec ticket restent des templates tant que le workspace et le ticket ne sont pas fournis.
+
+Le mode `Nouveau projet` appelle `/api/new-project`, valide le nom, le dossier parent et le brief, puis lance `Invoke-ControlTowerRun.ps1 -Mode Creation` via le systeme de jobs.
 
 ## Outils associes
 
@@ -75,6 +79,10 @@ Les commandes de correction avec ticket restent des templates tant que le worksp
 - `apps/controltower-ui/README.md`
 - `apps/controltower-ui/state.json`
 - `tools/tests/Test-ControlTowerUI.ps1`
+- `tools\Invoke-AiderCreationPipeline.ps1`
+- `tools\New-CreationWorkspace.ps1`
+- `tools\Start-AiderCreation.ps1`
+- `tools\Test-AiderCreation.ps1`
 
 ## Critere d'acceptation
 

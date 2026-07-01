@@ -119,6 +119,54 @@
     </div>
   </section>
 
-  <script src="/static/app.js?v=20260701_report_ux"></script>
+  <section id="newProjectModal" class="modal-panel" hidden>
+    <div class="modal-card new-project-card">
+      <div class="report-header">
+        <div>
+          <h2>Nouveau projet</h2>
+          <p>Creation cadree par ControlTower, Aider et Ornith dans un dossier neuf.</p>
+        </div>
+        <button id="newProjectCloseButton" class="secondary" type="button">Fermer</button>
+      </div>
+      <div class="new-project-form">
+        <div class="form-grid">
+          <label>
+            Nom
+            <input id="newProjectName" type="text" autocomplete="off" placeholder="mon-projet">
+          </label>
+          <label>
+            Type
+            <select id="newProjectType">
+              <option value="python-cli">Python CLI</option>
+              <option value="python-app">Python app</option>
+              <option value="webapp">Web app</option>
+              <option value="api">API</option>
+              <option value="desktop">Desktop</option>
+              <option value="library">Library</option>
+              <option value="other">Autre</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          Dossier parent
+          <div class="path-row">
+            <input id="newProjectParent" type="text" spellcheck="false" autocomplete="off" placeholder="D:\Dev">
+            <button id="newProjectBrowseParentButton" class="secondary" type="button">Parcourir</button>
+          </div>
+        </label>
+        <label>
+          Brief
+          <textarea id="newProjectBrief" rows="8" placeholder="Decris ce que le projet doit faire, le public cible, les contraintes, les technos souhaitees et le niveau de finition attendu."></textarea>
+        </label>
+        <div id="newProjectPreview" class="preview-block"></div>
+        <div class="modal-actions">
+          <button id="newProjectPreviewButton" class="secondary" type="button">Dry-run</button>
+          <button id="newProjectRunButton" class="danger" type="button">Lancer Aider</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/static/app.js?v=20260701_creation"></script>
 </body>
 </html>

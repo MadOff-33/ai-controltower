@@ -9,6 +9,7 @@ $Root = "C:\AI_ControlTower"
 $Suites = @(
   "Test-AiderReliabilityLayer.ps1",
   "Test-AiderFixReliability.ps1",
+  "Test-AiderCreationReliability.ps1",
   "Test-ControlTowerOrchestrator.ps1",
   "Test-HermesMemory.ps1",
   "Test-ControlTowerUI.ps1",

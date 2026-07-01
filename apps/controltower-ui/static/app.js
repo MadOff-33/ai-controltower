@@ -39,7 +39,17 @@ const els = {
   reportPath: document.getElementById("reportPath"),
   reportWarnings: document.getElementById("reportWarnings"),
   reportContent: document.getElementById("reportContent"),
-  reportCloseButton: document.getElementById("reportCloseButton")
+  reportCloseButton: document.getElementById("reportCloseButton"),
+  newProjectModal: document.getElementById("newProjectModal"),
+  newProjectCloseButton: document.getElementById("newProjectCloseButton"),
+  newProjectName: document.getElementById("newProjectName"),
+  newProjectParent: document.getElementById("newProjectParent"),
+  newProjectType: document.getElementById("newProjectType"),
+  newProjectBrief: document.getElementById("newProjectBrief"),
+  newProjectBrowseParentButton: document.getElementById("newProjectBrowseParentButton"),
+  newProjectPreviewButton: document.getElementById("newProjectPreviewButton"),
+  newProjectRunButton: document.getElementById("newProjectRunButton"),
+  newProjectPreview: document.getElementById("newProjectPreview")
 };
 
 let state = null;
@@ -321,6 +331,10 @@ async function refresh() {
 }
 
 async function runCommand(commandKey, confirmed = false) {
+  if (commandKey === "new_project") {
+    openNewProjectForm();
+    return;
+  }
   try {
     if (commandKey === "ticket_from_report") {
       await requestJson("/api/tickets/from-report", {
@@ -399,6 +413,78 @@ function downloadReport() {
   window.location.href = "/api/report/download";
 }
 
+function openNewProjectForm() {
+  if (els.newProjectParent && !els.newProjectParent.value) {
+    els.newProjectParent.value = "D:\\Dev";
+  }
+  if (els.newProjectModal) els.newProjectModal.hidden = false;
+}
+
+function closeNewProjectForm() {
+  if (els.newProjectModal) els.newProjectModal.hidden = true;
+}
+
+function collectNewProjectPayload(runAider = false) {
+  return {
+    project_name: els.newProjectName ? els.newProjectName.value.trim() : "",
+    parent_path: els.newProjectParent ? els.newProjectParent.value.trim() : "",
+    project_type: els.newProjectType ? els.newProjectType.value : "python-cli",
+    brief: els.newProjectBrief ? els.newProjectBrief.value.trim() : "",
+    run_aider: Boolean(runAider)
+  };
+}
+
+async function browseNewProjectParent() {
+  try {
+    const payload = await requestJson("/api/new-project/browse-parent", {
+      method: "POST",
+      body: JSON.stringify({})
+    });
+    if (payload.canceled) return;
+    if (els.newProjectParent && payload.parent_path) els.newProjectParent.value = payload.parent_path;
+  } catch (error) {
+    showError("Selection dossier impossible", friendlyError(error), error.message);
+  }
+}
+
+async function previewNewProject() {
+  try {
+    const payload = await requestJson("/api/new-project/preview", {
+      method: "POST",
+      body: JSON.stringify(collectNewProjectPayload(false))
+    });
+    setHtml(els.newProjectPreview, `
+      <strong>Dry-run pret</strong>
+      <span>Projet: ${escapeHtml(payload.project.target_project_path)}</span>
+      <pre>${escapeHtml(payload.command_preview)}</pre>
+    `);
+  } catch (error) {
+    setHtml(els.newProjectPreview, `<strong>Erreur</strong><span>${escapeHtml(friendlyError(error))}</span>`);
+  }
+}
+
+async function submitNewProject(runAider) {
+  try {
+    const payload = collectNewProjectPayload(runAider);
+    if (runAider) {
+      const accepted = await showConfirm(
+        "Creer le projet avec Aider",
+        "ControlTower va creer le workspace, lancer Aider/Ornith dans le dossier cible, puis valider les fichiers generes."
+      );
+      if (!accepted) return;
+    }
+    await requestJson("/api/new-project", {
+      method: "POST",
+      body: JSON.stringify({ ...payload, confirmed: runAider })
+    });
+    closeNewProjectForm();
+    startJobPolling();
+    await refresh();
+  } catch (error) {
+    showError("Creation non lancee", friendlyError(error), error.message);
+  }
+}
+
 let pollTimer = null;
 
 function startJobPolling() {
@@ -446,6 +532,10 @@ if (els.helpCloseButton) els.helpCloseButton.addEventListener("click", closeComm
 if (els.reportCloseButton) els.reportCloseButton.addEventListener("click", closeReport);
 if (els.readReportButton) els.readReportButton.addEventListener("click", readReport);
 if (els.downloadReportButton) els.downloadReportButton.addEventListener("click", downloadReport);
+if (els.newProjectCloseButton) els.newProjectCloseButton.addEventListener("click", closeNewProjectForm);
+if (els.newProjectBrowseParentButton) els.newProjectBrowseParentButton.addEventListener("click", browseNewProjectParent);
+if (els.newProjectPreviewButton) els.newProjectPreviewButton.addEventListener("click", previewNewProject);
+if (els.newProjectRunButton) els.newProjectRunButton.addEventListener("click", () => submitNewProject(true));
 
 if (els.commandCatalog) els.commandCatalog.addEventListener("click", async (event) => {
   const helpButton = event.target.closest("button[data-command-help]");

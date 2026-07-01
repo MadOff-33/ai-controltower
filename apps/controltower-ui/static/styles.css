@@ -95,13 +95,21 @@ button.template {
   border-color: var(--warn);
 }
 
-input {
+input,
+select,
+textarea {
   width: 100%;
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 9px 10px;
   color: var(--text);
+  background: #ffffff;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 160px;
 }
 
 .project-band,
@@ -521,6 +529,52 @@ input {
   width: min(1180px, calc(100vw - 32px));
 }
 
+.new-project-card {
+  width: min(980px, calc(100vw - 32px));
+}
+
+.new-project-form {
+  display: grid;
+  gap: 14px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 12px;
+}
+
+.new-project-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 650;
+}
+
+.preview-block {
+  display: grid;
+  gap: 6px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #f7f9fb;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.preview-block:empty {
+  display: none;
+}
+
+.preview-block pre {
+  margin: 4px 0 0;
+  max-height: 180px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #344054;
+}
+
 .report-header {
   display: flex;
   align-items: flex-start;
@@ -611,6 +665,7 @@ input {
   .topbar,
   .status-band,
   .coverage-panel,
+  .form-grid,
   .path-row,
   .chat-form {
     grid-template-columns: 1fr;

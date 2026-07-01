@@ -1,8 +1,12 @@
 param(
-  [ValidateSet("Audit", "Fix", "AuditThenFix")]
+  [ValidateSet("Audit", "Fix", "AuditThenFix", "Creation")]
   [string]$Mode = "Audit",
 
   [string]$ProjectPath = "",
+  [string]$ProjectName = "",
+  [string]$ParentPath = "",
+  [string]$Brief = "",
+  [string]$ProjectType = "python-basic",
   [string]$WorkspaceRoot = "C:\AI_ControlTower\audits",
   [string]$WorkspacePath = "",
   [string]$TicketPath = "",
@@ -16,6 +20,7 @@ param(
   [int]$MaxChars = 0,
   [switch]$RunAider,
   [switch]$ValidateAfterDryRun,
+  [switch]$AllowExisting,
   [switch]$SkipHermes
 )
 
@@ -108,10 +113,11 @@ function New-RunSummary {
 $root = "C:\AI_ControlTower"
 $auditPipeline = Join-Path $root "tools\Invoke-AiderAuditPipeline.ps1"
 $fixPipeline = Join-Path $root "tools\Invoke-AiderFixPipeline.ps1"
+$creationPipeline = Join-Path $root "tools\Invoke-AiderCreationPipeline.ps1"
 $initHermes = Join-Path $root "tools\Initialize-HermesMemory.ps1"
 $updateHermes = Join-Path $root "tools\Update-HermesFromRun.ps1"
 $guidanceHermes = Join-Path $root "tools\Get-HermesGuidance.ps1"
-foreach ($scriptPath in @($auditPipeline, $fixPipeline)) {
+foreach ($scriptPath in @($auditPipeline, $fixPipeline, $creationPipeline)) {
   if (-not (Test-Path -LiteralPath $scriptPath)) { throw "Script introuvable: $scriptPath" }
 }
 
@@ -169,6 +175,35 @@ try {
     }
     $ticketId = [System.IO.Path]::GetFileNameWithoutExtension($ticket)
     $status = Get-PipelineStatus -Workspace $workspace -ResultFileName ($ticketId + "_pipeline_result.json")
+  } elseif ($Mode -eq "Creation") {
+    if ([string]::IsNullOrWhiteSpace($ProjectName)) { throw "ProjectName est obligatoire en mode Creation." }
+    if ([string]::IsNullOrWhiteSpace($ParentPath)) { throw "ParentPath est obligatoire en mode Creation." }
+    if ([string]::IsNullOrWhiteSpace($Brief)) { throw "Brief est obligatoire en mode Creation." }
+    if ($WorkspaceRoot -eq "C:\AI_ControlTower\audits") { $WorkspaceRoot = "C:\AI_ControlTower\creation_workspaces" }
+    if ($PromptPath -eq "C:\AI_ControlTower\prompts\audit\lot1_config.md") { $PromptPath = "C:\AI_ControlTower\prompts\creation\new_project.md" }
+    $creationArgs = @{
+      ProjectName = $ProjectName
+      ParentPath = $ParentPath
+      Brief = $Brief
+      ProjectType = $ProjectType
+      WorkspaceRoot = $WorkspaceRoot
+      PromptPath = $PromptPath
+      Model = $Model
+    }
+    if ($RunAider) { $creationArgs["RunAider"] = $true }
+    if ($ValidateAfterDryRun) { $creationArgs["ValidateAfterDryRun"] = $true }
+    if ($AllowExisting) { $creationArgs["AllowExisting"] = $true }
+    & $creationPipeline @creationArgs
+    $workspace = Get-NewestDirectory -Path $WorkspaceRoot
+    $config = Get-Content -LiteralPath (Join-Path $workspace "creation.config.json") -Raw | ConvertFrom-Json
+    $result = @{
+      project_name = $ProjectName
+      project_type = $ProjectType
+      workspace_path = $workspace
+      target_project_path = [string]$config.target_project_path
+      pipeline = "creation"
+    }
+    $status = Get-PipelineStatus -Workspace $workspace -ResultFileName "pipeline_result.json"
   } else {
     throw "AuditThenFix automatique est reserve a une version ulterieure. Utiliser Audit puis Fix avec un ticket explicite."
   }
@@ -220,4 +255,6 @@ if ($Mode -eq "Audit") {
   Write-Host "Creer un ticket avec New-AiderFixTicket.ps1 ou lancer un autre lot d'audit."
 } elseif ($Mode -eq "Fix") {
   Write-Host "Relire validation/*_result.json puis appliquer manuellement le patch si accepte."
+} elseif ($Mode -eq "Creation") {
+  Write-Host "Ouvrir le dossier projet genere ou relire validation/creation_result.json."
 }

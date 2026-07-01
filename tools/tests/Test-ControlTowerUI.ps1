@@ -71,7 +71,13 @@ Assert-True -Condition ($appText.Contains("@app.route(""/api/tickets/from-report
 Assert-True -Condition ($appText.Contains("@app.route(""/api/report""")) -Message "Report viewer API route missing."
 Assert-True -Condition ($appText.Contains("@app.route(""/api/report/download""")) -Message "Report download API route missing."
 Assert-True -Condition ($appText.Contains("@app.route(""/api/project/browse""")) -Message "Project folder browse API route missing."
+Assert-True -Condition ($appText.Contains("@app.route(""/api/new-project/preview""")) -Message "New project preview API route missing."
+Assert-True -Condition ($appText.Contains("@app.route(""/api/new-project""")) -Message "New project API route missing."
+Assert-True -Condition ($appText.Contains("@app.route(""/api/new-project/browse-parent""")) -Message "New project parent browse API route missing."
 Assert-True -Condition ($appText.Contains("tkinter")) -Message "Project browse should use the native local folder picker."
+Assert-True -Condition ($appText.Contains("sanitize_project_name")) -Message "New project should sanitize project names."
+Assert-True -Condition ($appText.Contains("validate_new_project_payload")) -Message "New project payload validation missing."
+Assert-True -Condition ($appText.Contains("create_new_project_job")) -Message "New project job creation missing."
 Assert-True -Condition ($appText.Contains("WORKFLOW_STEPS")) -Message "Guided workflow missing."
 Assert-True -Condition ($appText.Contains("ALLOWED_COMMANDS")) -Message "Command allowlist missing."
 Assert-True -Condition ($appText.Contains("subprocess.Popen")) -Message "Jobs should stream live output with Popen."
@@ -94,6 +100,11 @@ Assert-True -Condition ($templateText.Contains("reportActions")) -Message "UI sh
 Assert-True -Condition ($templateText.Contains("modalPanel")) -Message "UI should include an in-app confirmation modal."
 Assert-True -Condition ($templateText.Contains("helpModal")) -Message "UI should include a command help modal."
 Assert-True -Condition ($templateText.Contains("reportModal")) -Message "UI should include a report reader modal."
+Assert-True -Condition ($templateText.Contains("newProjectModal")) -Message "UI should include a new project modal."
+Assert-True -Condition ($templateText.Contains("newProjectName")) -Message "UI should include new project name input."
+Assert-True -Condition ($templateText.Contains("newProjectParent")) -Message "UI should include new project parent input."
+Assert-True -Condition ($templateText.Contains("newProjectType")) -Message "UI should include new project type select."
+Assert-True -Condition ($templateText.Contains("newProjectBrief")) -Message "UI should include new project brief textarea."
 
 $jsText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\app.js") -Raw
 Assert-True -Condition ($jsText.Contains("function setText")) -Message "UI JS should guard optional text targets."
@@ -105,6 +116,10 @@ Assert-True -Condition (-not $jsText.Contains("window.confirm")) -Message "UI JS
 Assert-True -Condition ($jsText.Contains("showConfirm")) -Message "UI JS should use an in-app confirmation modal."
 Assert-True -Condition ($jsText.Contains("browseProject")) -Message "UI JS should browse project folders."
 Assert-True -Condition ($jsText.Contains("openCommandHelp")) -Message "UI JS should show command help."
+Assert-True -Condition ($jsText.Contains("openNewProjectForm")) -Message "UI JS should open the new project form."
+Assert-True -Condition ($jsText.Contains("previewNewProject")) -Message "UI JS should preview new project creation."
+Assert-True -Condition ($jsText.Contains("submitNewProject")) -Message "UI JS should submit new project creation."
+Assert-True -Condition ($jsText.Contains('commandKey === "new_project"')) -Message "UI JS should intercept new_project command."
 Assert-True -Condition ($jsText.Contains("Lire le rapport")) -Message "UI JS should expose a report reader action."
 Assert-True -Condition ($jsText.Contains("Nouveau projet")) -Message "UI JS should expose the new project foundation."
 Assert-True -Condition ($jsText.Contains("cancelJob")) -Message "UI JS should support cancelling a running job."
@@ -124,6 +139,8 @@ Assert-True -Condition ($styleText.Contains(".coverage-panel")) -Message "UI sho
 Assert-True -Condition ($styleText.Contains(".modal-panel")) -Message "UI should style modal panels."
 Assert-True -Condition ($styleText.Contains(".report-actions")) -Message "UI should style report actions."
 Assert-True -Condition ($styleText.Contains(".help-button")) -Message "UI should style command help buttons."
+Assert-True -Condition ($styleText.Contains(".new-project-form")) -Message "UI should style the new project form."
+Assert-True -Condition ($styleText.Contains(".preview-block")) -Message "UI should style new project previews."
 
 $python = Get-Command py -ErrorAction SilentlyContinue
 $pythonArgs = @("-3")
@@ -193,6 +210,28 @@ try:
 
     forbidden = client.get("/api/report?path=C:/AI_ControlTower/apps/controltower-ui/app.py")
     assert forbidden.status_code == 404, forbidden.status_code
+
+    parent = root / "hermes_lab" / "ui new project parent"
+    parent.mkdir(parents=True, exist_ok=True)
+    preview = client.post("/api/new-project/preview", json={
+        "project_name": "Fresh UI Project",
+        "parent_path": str(parent),
+        "project_type": "python-cli",
+        "brief": "Créer une CLI de démonstration."
+    })
+    assert preview.status_code == 200, preview.data.decode("utf-8", "replace")
+    preview_payload = preview.get_json()
+    assert "Invoke-ControlTowerRun.ps1" in preview_payload["command_preview"], preview_payload
+    assert preview_payload["project"]["target_project_path"].endswith("Fresh_UI_Project"), preview_payload
+    assert not (parent / "Fresh_UI_Project").exists(), "preview must not create project directory"
+
+    invalid = client.post("/api/new-project/preview", json={
+        "project_name": "..\\bad",
+        "parent_path": str(parent),
+        "project_type": "python-cli",
+        "brief": "bad"
+    })
+    assert invalid.status_code == 400, invalid.status_code
 finally:
     for name in ("response", "download", "forbidden"):
         if name in locals():
