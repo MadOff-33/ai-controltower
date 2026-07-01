@@ -5,8 +5,12 @@ const els = {
   branchState: document.getElementById("branchState"),
   githubLink: document.getElementById("githubLink"),
   gitState: document.getElementById("gitState"),
+  lastRunStatus: document.getElementById("lastRunStatus"),
+  artifactLinks: document.getElementById("artifactLinks"),
   dependencyList: document.getElementById("dependencyList"),
+  workflowPanel: document.getElementById("workflowPanel"),
   commandCatalog: document.getElementById("commandCatalog"),
+  jobPanel: document.getElementById("jobPanel"),
   logPanel: document.getElementById("logPanel"),
   chatForm: document.getElementById("chatForm"),
   chatInput: document.getElementById("chatInput")
@@ -59,6 +63,48 @@ function renderCommands(commands) {
   }).join("");
 }
 
+function renderWorkflow(steps) {
+  els.workflowPanel.innerHTML = (steps || []).map((step, index) => {
+    const button = step.command
+      ? `<button class="secondary" data-command="${step.command}">Faire</button>`
+      : `<span class="badge ok">OK</span>`;
+    return `
+      <div class="workflow-step">
+        <span class="workflow-index">${index + 1}</span>
+        <strong>${step.label}</strong>
+        ${button}
+      </div>
+    `;
+  }).join("");
+}
+
+function renderLastRun(lastRun) {
+  const info = lastRun || {};
+  els.lastRunStatus.textContent = info.label || "En attente";
+  const artifacts = info.artifacts || {};
+  const links = [
+    ["Workspace", artifacts.workspace],
+    ["Rapport", artifacts.report],
+    ["Validation", artifacts.validation],
+    ["Run log", artifacts.run_log],
+    ["Summary", artifacts.summary]
+  ].filter(([, value]) => value);
+  els.artifactLinks.innerHTML = links.length
+    ? links.map(([label, value]) => `<span title="${value}">${label}</span>`).join("")
+    : `<span>Aucun artefact recent</span>`;
+}
+
+function renderJobs(jobs) {
+  const visibleJobs = (jobs || []).slice(-4).reverse();
+  if (visibleJobs.length === 0) {
+    els.jobPanel.innerHTML = "";
+    return;
+  }
+  els.jobPanel.innerHTML = visibleJobs.map((job) => {
+    return `<div class="job-entry"><strong>${job.label}</strong><span>${job.status}</span></div>`;
+  }).join("");
+}
+
 function renderLogs(logs) {
   if (!logs || logs.length === 0) {
     els.logPanel.innerHTML = `<div class="log-entry"><strong>En attente</strong><pre>Choisissez un projet ou lancez une commande.</pre></div>`;
@@ -87,7 +133,10 @@ function render(nextState) {
     els.githubLink.textContent = "GitHub non detecte";
   }
   renderDependencies(state.dependencies || {});
+  renderLastRun(state.last_run || {});
+  renderWorkflow(state.workflow_steps || []);
   renderCommands(state.commands || {});
+  renderJobs(state.jobs || []);
   renderLogs(state.logs || []);
 }
 
@@ -97,10 +146,19 @@ async function refresh() {
 
 async function runCommand(commandKey, confirmed = false) {
   try {
-    await requestJson("/api/run", {
+    if (commandKey === "ticket_from_report") {
+      await requestJson("/api/tickets/from-report", {
+        method: "POST",
+        body: JSON.stringify({})
+      });
+      await refresh();
+      return;
+    }
+    await requestJson("/api/jobs", {
       method: "POST",
       body: JSON.stringify({ command: commandKey, confirmed })
     });
+    startJobPolling();
   } catch (error) {
     if (error.payload && error.payload.requires_confirmation) {
       if (window.confirm("Cette action lance une commande reelle. Continuer ?")) {
@@ -112,6 +170,20 @@ async function runCommand(commandKey, confirmed = false) {
   } finally {
     await refresh();
   }
+}
+
+let pollTimer = null;
+
+function startJobPolling() {
+  if (pollTimer) return;
+  pollTimer = window.setInterval(async () => {
+    await refresh();
+    const running = (state.jobs || []).some((job) => job.status === "queued" || job.status === "running");
+    if (!running) {
+      window.clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }, 1500);
 }
 
 els.setProjectButton.addEventListener("click", async () => {
@@ -129,6 +201,12 @@ els.setProjectButton.addEventListener("click", async () => {
 els.refreshButton.addEventListener("click", refresh);
 
 els.commandCatalog.addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-command]");
+  if (!button) return;
+  await runCommand(button.dataset.command);
+});
+
+els.workflowPanel.addEventListener("click", async (event) => {
   const button = event.target.closest("button[data-command]");
   if (!button) return;
   await runCommand(button.dataset.command);

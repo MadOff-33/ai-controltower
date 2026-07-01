@@ -69,6 +69,42 @@ function New-RunLog {
   return $path
 }
 
+function New-RunSummary {
+  param(
+    [string]$Mode,
+    [string]$Status,
+    [hashtable]$Data,
+    [string]$RunLogPath
+  )
+  $runLogDir = Split-Path -Parent $RunLogPath
+  $summaryPath = [System.IO.Path]::ChangeExtension($RunLogPath, ".summary.md")
+  $lines = New-Object System.Collections.Generic.List[string]
+  $lines.Add("# ControlTower run summary") | Out-Null
+  $lines.Add("") | Out-Null
+  $lines.Add("- Mode: $Mode") | Out-Null
+  $lines.Add("- Status: $Status") | Out-Null
+  $lines.Add("- Run log: $RunLogPath") | Out-Null
+  $lines.Add("- Created: $((Get-Date).ToString("o"))") | Out-Null
+  $lines.Add("") | Out-Null
+  $lines.Add("## Artefacts") | Out-Null
+  foreach ($key in $Data.Keys | Sort-Object) {
+    $lines.Add("- ${key}: $($Data[$key])") | Out-Null
+  }
+  $lines.Add("") | Out-Null
+  $lines.Add("## Next action") | Out-Null
+  if ($Status -eq "structure-passed") {
+    $lines.Add("Lancer un audit reel avec `-RunAider` pour produire un rapport exploitable.") | Out-Null
+  } elseif ($Status -eq "passed") {
+    $lines.Add("Relire les rapports et creer un ticket de correction borne si necessaire.") | Out-Null
+  } elseif ($Status -eq "prepared") {
+    $lines.Add("Relire les artefacts de preparation puis lancer l'action reelle si le perimetre est correct.") | Out-Null
+  } else {
+    $lines.Add("Corriger la cause du blocage puis relancer le run.") | Out-Null
+  }
+  Write-Utf8NoBom -Path $summaryPath -Content ($lines -join [Environment]::NewLine)
+  return $summaryPath
+}
+
 $root = "C:\AI_ControlTower"
 $auditPipeline = Join-Path $root "tools\Invoke-AiderAuditPipeline.ps1"
 $fixPipeline = Join-Path $root "tools\Invoke-AiderFixPipeline.ps1"
@@ -168,10 +204,13 @@ if (-not $SkipHermes) {
   }
 }
 
+$summaryPath = New-RunSummary -Mode $Mode -Status $status -Data $result -RunLogPath $logPath
+
 Write-Host ""
 Write-Host "=== ControlTower summary ==="
 Write-Host ("Status:  " + $status)
 Write-Host ("Run log: " + $logPath)
+Write-Host ("Summary: " + $summaryPath)
 if (-not $SkipHermes) {
   Write-Host ("Hermes:  " + (Join-Path $HermesMemoryRoot "central\guidance_cache.md"))
 }

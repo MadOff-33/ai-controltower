@@ -29,6 +29,14 @@
       </div>
     </section>
 
+    <section class="status-band">
+      <div>
+        <span class="eyebrow">Dernier run</span>
+        <strong id="lastRunStatus">En attente</strong>
+      </div>
+      <div id="artifactLinks" class="artifact-links"></div>
+    </section>
+
     <section class="grid">
       <aside class="panel dependencies">
         <h2>Dependances</h2>
@@ -36,12 +44,15 @@
       </aside>
 
       <section class="panel commands">
-        <h2>Catalogue</h2>
+        <h2>Parcours recommande</h2>
+        <div id="workflowPanel" class="workflow-panel"></div>
+        <h2 class="catalog-title">Catalogue</h2>
         <div id="commandCatalog" class="command-grid"></div>
       </section>
 
       <section class="panel chat">
         <h2>Chat de pilotage</h2>
+        <div id="jobPanel" class="job-panel"></div>
         <div id="logPanel" class="log-panel"></div>
         <form id="chatForm" class="chat-form">
           <input id="chatInput" type="text" placeholder="audit, tests, git, diff, hermes, aider..." autocomplete="off">

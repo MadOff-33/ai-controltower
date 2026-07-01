@@ -116,6 +116,37 @@ input {
   margin-bottom: 14px;
 }
 
+.status-band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.eyebrow {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.artifact-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.artifact-links span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .project-band label {
   display: block;
   font-weight: 650;
@@ -194,6 +225,44 @@ input {
   gap: 8px;
 }
 
+.workflow-panel {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.workflow-step {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.workflow-index {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #edf4fb;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.workflow-step button {
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.catalog-title {
+  margin-top: 4px;
+}
+
 .command-card {
   display: grid;
   gap: 6px;
@@ -230,6 +299,26 @@ input {
   border-radius: 8px;
   background: #101820;
   color: #e7edf3;
+}
+
+.job-panel {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.job-entry {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.job-entry span {
+  color: var(--muted);
 }
 
 .log-entry {
@@ -274,6 +363,7 @@ input {
   }
 
   .topbar,
+  .status-band,
   .path-row,
   .chat-form {
     grid-template-columns: 1fr;

@@ -20,6 +20,11 @@ $required = @(
   "docs\controltower_ui_spec.md",
   "tools\Get-ProjectGitInfo.ps1",
   "tools\Test-ControlTowerDependencies.ps1",
+  "tools\New-AiderFixTicketFromReport.ps1",
+  "tools\Test-ControlTowerFinalRecipe.ps1",
+  "tools\Build-ControlTowerLauncher.ps1",
+  "launchers\ControlTowerLauncher.cs",
+  "ControlTower.cmd",
   "apps\controltower-ui\app.py",
   "apps\controltower-ui\ControlTower.cmd",
   "apps\controltower-ui\requirements.txt",
@@ -59,6 +64,10 @@ $appText = Get-Content -LiteralPath $appPath -Raw
 Assert-True -Condition ($appText.Contains("Flask(")) -Message "Flask app factory missing."
 Assert-True -Condition ($appText.Contains("@app.route(""/api/state""")) -Message "State API route missing."
 Assert-True -Condition ($appText.Contains("@app.route(""/api/run""")) -Message "Run API route missing."
+Assert-True -Condition ($appText.Contains("@app.route(""/api/jobs""")) -Message "Jobs API route missing."
+Assert-True -Condition ($appText.Contains("@app.route(""/api/jobs/<job_id>""")) -Message "Job detail API route missing."
+Assert-True -Condition ($appText.Contains("@app.route(""/api/tickets/from-report""")) -Message "Ticket-from-report API route missing."
+Assert-True -Condition ($appText.Contains("WORKFLOW_STEPS")) -Message "Guided workflow missing."
 Assert-True -Condition ($appText.Contains("ALLOWED_COMMANDS")) -Message "Command allowlist missing."
 
 $styleText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\styles.css") -Raw
@@ -90,11 +99,22 @@ $selfTestJson = & $python.Source @pythonArgs $appPath --self-test --project-path
 Assert-True -Condition ($LASTEXITCODE -eq 0) -Message "Flask UI self-test failed."
 $selfTest = $selfTestJson | ConvertFrom-Json
 Assert-True -Condition ($selfTest.kind -eq "controltower-flask-ui") -Message "Unexpected self-test kind."
+Assert-True -Condition ($selfTest.jobs_supported -eq $true) -Message "UI selftest should expose job support."
+Assert-True -Condition ($selfTest.workflow_steps.Count -ge 8) -Message "Workflow should expose at least 8 steps."
 Assert-True -Condition ($selfTest.commands.audit_dry_run.command.Contains("Invoke-ControlTowerRun.ps1")) -Message "Audit command not generated."
 Assert-True -Condition ($selfTest.commands.audit_dry_run.command.Contains("-ValidateAfterDryRun")) -Message "Audit dry-run should validate."
 Assert-True -Condition ($selfTest.commands.audit_real.dangerous -eq $true) -Message "Real audit should be marked dangerous."
 Assert-True -Condition ($selfTest.commands.fix_dry_run.command.Contains("-Mode Fix")) -Message "Fix dry-run command missing."
 Assert-True -Condition ($selfTest.commands.aider_manual.command.Contains("ollama_chat/ornith:9b")) -Message "Manual Aider command missing Ornith."
 Assert-True -Condition ($selfTest.github_url -eq "https://github.com/MadOff-33/ai-controltower") -Message "UI selftest did not expose GitHub URL."
+
+$recipeScript = Join-Path $Root "tools\Test-ControlTowerFinalRecipe.ps1"
+$recipeText = Get-Content -LiteralPath $recipeScript -Raw
+Assert-True -Condition ($recipeText.Contains("Invoke-ControlTowerTestSuite.ps1")) -Message "Final recipe should run the global test suite."
+Assert-True -Condition ($recipeText.Contains("Invoke-ControlTowerRun.ps1")) -Message "Final recipe should exercise ControlTower run."
+
+$launcherBuild = Join-Path $Root "tools\Build-ControlTowerLauncher.ps1"
+$launcherText = Get-Content -LiteralPath $launcherBuild -Raw
+Assert-True -Condition ($launcherText.Contains("ControlTower.exe")) -Message "Launcher builder should produce ControlTower.exe."
 
 Write-Host "All ControlTower Flask UI tests passed."

@@ -331,6 +331,8 @@ Resultat attendu:
 
 ### Phase 1: UX de statut et parcours guide
 
+Etat: implemente V1.
+
 Objectif: empecher toute confusion entre preparation, audit reel et validation.
 
 Livrables:
@@ -345,6 +347,8 @@ Critere de sortie:
 - un utilisateur peut savoir quoi faire ensuite sans lire la console.
 
 ### Phase 2: Jobs asynchrones UI
+
+Etat: implemente V1.
 
 Objectif: rendre le cockpit robuste pour les commandes longues.
 
@@ -362,6 +366,8 @@ Critere de sortie:
 
 ### Phase 3: Workflow ticket/fix guide
 
+Etat: implemente V1 pour la creation de ticket depuis rapport et les templates fix.
+
 Objectif: rendre la correction autonome mais bornee.
 
 Livrables:
@@ -377,6 +383,8 @@ Critere de sortie:
 - l'utilisateur peut passer d'un rapport a une correction bornee sans construire la commande a la main.
 
 ### Phase 4: Rapport final de run
+
+Etat: implemente V1.
 
 Objectif: chaque run produit un artefact humain lisible.
 
@@ -395,6 +403,8 @@ Critere de sortie:
 - l'utilisateur peut ouvrir un seul fichier pour comprendre le run.
 
 ### Phase 5: Packaging Windows
+
+Etat: implemente V1.
 
 Objectif: rendre l'installation propre et stable.
 

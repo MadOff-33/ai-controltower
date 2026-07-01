@@ -10,6 +10,18 @@ Lancer le cockpit Flask local:
 C:\AI_ControlTower\apps\controltower-ui\ControlTower.cmd
 ```
 
+Lancer via le point d'entree racine:
+
+```cmd
+C:\AI_ControlTower\ControlTower.cmd
+```
+
+Generer l'executable local:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\Build-ControlTowerLauncher.ps1"
+```
+
 Installer ou reparer l'environnement:
 
 ```powershell
@@ -26,6 +38,12 @@ Lancer toute la verification:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\tests\Invoke-ControlTowerTestSuite.ps1"
+```
+
+Lancer la recette finale rapide:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\AI_ControlTower\tools\Test-ControlTowerFinalRecipe.ps1" -SkipFullSuite
 ```
 
 ## Architecture
