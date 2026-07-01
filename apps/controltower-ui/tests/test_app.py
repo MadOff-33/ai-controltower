@@ -42,19 +42,21 @@ def test_report_endpoint_rejects_paths_outside_reports(client):
 def test_new_project_preview_does_not_create_directory(client, tmp_path):
     parent = tmp_path / "new project parent"
     parent.mkdir()
+    brief_text = "Créer une CLI de démonstration.\né è à ç œ"
     preview = client.post(
         "/api/new-project/preview",
         json={
             "project_name": "Fresh UI Project",
             "parent_path": str(parent),
             "project_type": "python-cli",
-            "brief": "Creer une CLI de demonstration.",
+            "brief": brief_text,
         },
     )
     assert preview.status_code == 200
     payload = preview.get_json()
     assert "Invoke-ControlTowerRun.ps1" in payload["command_preview"]
     assert "-BriefPath" in payload["command_preview"]
+    assert brief_text not in payload["command_preview"]
     assert payload["project"]["target_project_path"].endswith("Fresh_UI_Project")
     assert not (parent / "Fresh_UI_Project").exists()
 
@@ -77,20 +79,26 @@ def test_new_project_preview_rejects_unsafe_project_name(client, tmp_path):
 def test_new_project_real_command_persists_brief_to_file(app_module, tmp_path):
     parent = tmp_path / "new project parent"
     parent.mkdir()
+    brief_text = "Créer une CLI de démonstration.\né è à ç œ"
     _, real_command, args = app_module.build_new_project_command(
         {
             "project_name": "Fresh UI Project",
             "parent_path": str(parent),
             "project_type": "python-cli",
-            "brief": "Ligne 1\nLigne 2 preservee",
+            "brief": brief_text,
         },
         run_aider=True,
         persist_brief=True,
     )
     assert "-RunAider" in real_command
     assert "-BriefPath" in real_command
-    assert "Ligne 2 preservee" not in real_command
+    assert brief_text not in real_command
     assert "-RunAider" in args
+
+    brief_path = Path(args[args.index("-BriefPath") + 1])
+    persisted = brief_path.read_text(encoding="utf-8")
+    assert persisted == brief_text
+    assert not any(marker in persisted for marker in app_module.MOJIBAKE_MARKERS)
 
 
 def test_creation_parent_is_persisted_in_state(client, tmp_path):
