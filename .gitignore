@@ -1,6 +1,7 @@
 .aider*
 __pycache__/
 *.pyc
+.pytest_cache/
 .venv/
 apps/controltower-ui/.venv/
 apps/controltower-ui/state.json

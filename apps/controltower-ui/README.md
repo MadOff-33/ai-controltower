@@ -37,3 +37,12 @@ Les commandes de correction avec ticket sont affichees comme templates tant que 
 Le mode creation appelle les scripts ControlTower, pas une commande libre du navigateur. Le dossier cible est cree dans le parent choisi, puis `Test-AiderCreation.ps1` bloque les fichiers interdits.
 
 Le chemin du projet audit/correction et le dossier parent de creation sont stockes separement pour pouvoir piloter deux projets sans confusion.
+
+## Tests
+
+```cmd
+pip install -r requirements-dev.txt
+pytest
+```
+
+Les tests vivent dans `tests/` et couvrent les routes API principales (`/api/state`, `/api/report`, `/api/new-project/preview`, `/api/creation-parent`). Ils sont aussi executes via `tools\tests\Test-ControlTowerUI.ps1` (qui delegue a `tools\tests\run_pytest.ps1`).
