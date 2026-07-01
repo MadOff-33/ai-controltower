@@ -5,6 +5,7 @@ __pycache__/
 apps/controltower-ui/.venv/
 apps/controltower-ui/state.json
 audits/
+creation_workspaces/
 logs/controltower_runs/
 logs/ui_jobs/
 hermes_lab/

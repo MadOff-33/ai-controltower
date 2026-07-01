@@ -5,8 +5,8 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$ParentPath,
 
-  [Parameter(Mandatory = $true)]
-  [string]$Brief,
+  [string]$Brief = "",
+  [string]$BriefPath = "",
 
   [string]$ProjectType = "python-basic",
   [string]$WorkspaceRoot = "C:\AI_ControlTower\creation_workspaces",
@@ -39,6 +39,10 @@ function Write-IfMissing {
 if ($ProjectName -match '[\\/:*?"<>|]') { throw "ProjectName ne doit pas contenir de separateur ou caractere interdit Windows." }
 $safeName = ($ProjectName -replace '[^a-zA-Z0-9_.-]', '_').Trim("_")
 if ([string]::IsNullOrWhiteSpace($safeName)) { throw "ProjectName invalide." }
+if (-not [string]::IsNullOrWhiteSpace($BriefPath)) {
+  $resolvedBriefPath = (Resolve-Path -LiteralPath $BriefPath).ProviderPath
+  $Brief = Get-Content -LiteralPath $resolvedBriefPath -Raw
+}
 if ([string]::IsNullOrWhiteSpace($Brief)) { throw "Brief obligatoire." }
 
 if (-not (Test-Path -LiteralPath $ParentPath)) {

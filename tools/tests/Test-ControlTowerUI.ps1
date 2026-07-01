@@ -246,8 +246,20 @@ try:
     assert preview.status_code == 200, preview.data.decode("utf-8", "replace")
     preview_payload = preview.get_json()
     assert "Invoke-ControlTowerRun.ps1" in preview_payload["command_preview"], preview_payload
+    assert "-BriefPath" in preview_payload["command_preview"], preview_payload["command_preview"]
+    assert "CrÃ©er une CLI" not in preview_payload["command_preview"], preview_payload["command_preview"]
     assert preview_payload["project"]["target_project_path"].endswith("Fresh_UI_Project"), preview_payload
     assert not (parent / "Fresh_UI_Project").exists(), "preview must not create project directory"
+
+    _, real_command = module.build_new_project_command({
+        "project_name": "Fresh UI Project",
+        "parent_path": str(parent),
+        "project_type": "python-cli",
+        "brief": "Ligne 1\nLigne 2 preservee"
+    }, run_aider=True, persist_brief=True)
+    assert "-RunAider" in real_command, real_command
+    assert "-BriefPath" in real_command, real_command
+    assert "Ligne 2 preservee" not in real_command, real_command
 
     invalid = client.post("/api/new-project/preview", json={
         "project_name": "..\\bad",

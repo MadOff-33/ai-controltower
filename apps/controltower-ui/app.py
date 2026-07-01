@@ -80,8 +80,22 @@ def validate_new_project_payload(payload):
     }
 
 
-def build_new_project_command(payload, run_aider=False):
+def write_creation_brief_request(project_name, brief):
+    request_dir = ROOT / "creation_workspaces" / "_requests"
+    request_dir.mkdir(parents=True, exist_ok=True)
+    safe_name = sanitize_project_name(project_name)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    path = request_dir / (stamp + "_" + safe_name + "_brief.md")
+    path.write_text(str(brief or ""), encoding="utf-8")
+    return str(path)
+
+
+def build_new_project_command(payload, run_aider=False, persist_brief=False):
     data = validate_new_project_payload(payload)
+    if persist_brief:
+        brief_path = write_creation_brief_request(data["project_name"], data["brief"])
+    else:
+        brief_path = "<BRIEF_FILE_CREATED_ON_LAUNCH>"
     command = (
         'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" '
         '-Mode Creation -ProjectName '
@@ -90,8 +104,8 @@ def build_new_project_command(payload, run_aider=False):
         + quote_arg(data["parent_path"])
         + " -ProjectType "
         + quote_arg(data["project_type"])
-        + " -Brief "
-        + quote_arg(data["brief"])
+        + " -BriefPath "
+        + quote_arg(brief_path)
         + " -WorkspaceRoot "
         + quote_arg("C:\\AI_ControlTower\\creation_workspaces")
     )
@@ -723,7 +737,7 @@ def create_new_project_job(payload, confirmed=False):
     run_aider = bool(payload.get("run_aider"))
     if run_aider and not confirmed:
         raise PermissionError("Confirmation requise pour cette action.")
-    data, command = build_new_project_command(payload, run_aider=run_aider)
+    data, command = build_new_project_command(payload, run_aider=run_aider, persist_brief=True)
     job_id = "job_" + uuid.uuid4().hex[:12]
     job = {
         "id": job_id,

@@ -6,6 +6,7 @@ param(
   [string]$ProjectName = "",
   [string]$ParentPath = "",
   [string]$Brief = "",
+  [string]$BriefPath = "",
   [string]$ProjectType = "python-basic",
   [string]$WorkspaceRoot = "C:\AI_ControlTower\audits",
   [string]$WorkspacePath = "",
@@ -178,17 +179,21 @@ try {
   } elseif ($Mode -eq "Creation") {
     if ([string]::IsNullOrWhiteSpace($ProjectName)) { throw "ProjectName est obligatoire en mode Creation." }
     if ([string]::IsNullOrWhiteSpace($ParentPath)) { throw "ParentPath est obligatoire en mode Creation." }
-    if ([string]::IsNullOrWhiteSpace($Brief)) { throw "Brief est obligatoire en mode Creation." }
+    if ([string]::IsNullOrWhiteSpace($Brief) -and [string]::IsNullOrWhiteSpace($BriefPath)) { throw "Brief ou BriefPath est obligatoire en mode Creation." }
     if ($WorkspaceRoot -eq "C:\AI_ControlTower\audits") { $WorkspaceRoot = "C:\AI_ControlTower\creation_workspaces" }
     if ($PromptPath -eq "C:\AI_ControlTower\prompts\audit\lot1_config.md") { $PromptPath = "C:\AI_ControlTower\prompts\creation\new_project.md" }
     $creationArgs = @{
       ProjectName = $ProjectName
       ParentPath = $ParentPath
-      Brief = $Brief
       ProjectType = $ProjectType
       WorkspaceRoot = $WorkspaceRoot
       PromptPath = $PromptPath
       Model = $Model
+    }
+    if (-not [string]::IsNullOrWhiteSpace($BriefPath)) {
+      $creationArgs["BriefPath"] = $BriefPath
+    } else {
+      $creationArgs["Brief"] = $Brief
     }
     if ($RunAider) { $creationArgs["RunAider"] = $true }
     if ($ValidateAfterDryRun) { $creationArgs["ValidateAfterDryRun"] = $true }

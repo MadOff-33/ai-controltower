@@ -5,8 +5,8 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$ParentPath,
 
-  [Parameter(Mandatory = $true)]
-  [string]$Brief,
+  [string]$Brief = "",
+  [string]$BriefPath = "",
 
   [string]$ProjectType = "python-basic",
   [string]$WorkspaceRoot = "C:\AI_ControlTower\creation_workspaces",
@@ -67,10 +67,14 @@ Write-Host ("Mode:          " + $(if ($RunAider) { "RunAider" } else { "DryRun" 
 $workspaceArgs = @{
   ProjectName = $ProjectName
   ParentPath = $ParentPath
-  Brief = $Brief
   ProjectType = $ProjectType
   WorkspaceRoot = $WorkspaceRoot
   PromptPath = $PromptPath
+}
+if (-not [string]::IsNullOrWhiteSpace($BriefPath)) {
+  $workspaceArgs["BriefPath"] = $BriefPath
+} else {
+  $workspaceArgs["Brief"] = $Brief
 }
 if ($AllowExisting) { $workspaceArgs["AllowExisting"] = $true }
 
