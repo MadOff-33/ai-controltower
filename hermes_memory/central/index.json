@@ -1,10 +1,12 @@
 {
-    "updated_at":  "2026-06-30T23:07:24.2468601+02:00",
-    "entries_count":  1,
+    "updated_at":  "2026-07-01T12:03:02.4973035+02:00",
+    "entries_count":  3,
     "kinds":  {
-                  "experience":  1
+                  "validation_rule":  1,
+                  "experience":  2
               },
     "categories":  {
-                       "run_preparation":  1
+                       "audit_report_reliability":  1,
+                       "run_preparation":  2
                    }
 }
