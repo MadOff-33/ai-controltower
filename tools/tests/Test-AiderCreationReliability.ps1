@@ -18,7 +18,7 @@ $workspaces = Join-Path $lab "Creation Workspaces"
 New-Item -ItemType Directory -Path $parent -Force | Out-Null
 $briefPath = Join-Path $lab "long_brief.md"
 $briefText = @"
-Creer une petite CLI Python qui additionne deux nombres.
+Créer une petite CLI Python qui additionne deux nombres.
 
 La deuxieme ligne doit rester presente dans le brief final.
 Ajouter un README et un test simple.
@@ -62,8 +62,10 @@ Assert-True -Condition ($LASTEXITCODE -eq 0) -Message "Creation dry-run pipeline
 $workspace = Get-ChildItem -LiteralPath $workspaces -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 Assert-True -Condition ($null -ne $workspace) -Message "Creation workspace not created."
 $config = Get-Content -LiteralPath (Join-Path $workspace.FullName "creation.config.json") -Raw | ConvertFrom-Json
-$finalBrief = Get-Content -LiteralPath $config.brief_path -Raw
-Assert-True -Condition ($finalBrief.Contains("La deuxieme ligne doit rester presente")) -Message "Creation brief should preserve multiline content passed through BriefPath."
+$finalBriefUtf8 = Get-Content -LiteralPath $config.brief_path -Raw -Encoding UTF8
+Assert-True -Condition ($finalBriefUtf8.Contains("Créer une petite CLI")) -Message "Creation brief should preserve UTF-8 accents from BriefPath."
+Assert-True -Condition (-not $finalBriefUtf8.Contains("CrÃ")) -Message "Creation brief should not contain mojibake."
+Assert-True -Condition ($finalBriefUtf8.Contains("La deuxieme ligne doit rester presente")) -Message "Creation brief should preserve multiline content passed through BriefPath."
 Assert-True -Condition (Test-Path -LiteralPath $config.target_project_path) -Message "Target project not created."
 Assert-True -Condition (Test-Path -LiteralPath (Join-Path $config.target_project_path "README.md")) -Message "README seed missing."
 Assert-True -Condition (Test-Path -LiteralPath (Join-Path $config.target_project_path "pyproject.toml")) -Message "Python pyproject seed missing."
@@ -72,9 +74,11 @@ Assert-True -Condition (Test-Path -LiteralPath (Join-Path $config.target_project
 Assert-True -Condition (Test-Path -LiteralPath (Join-Path $workspace.FullName "validation\creation_result.json")) -Message "Creation validation result missing."
 $result = Get-Content -LiteralPath (Join-Path $workspace.FullName "validation\creation_result.json") -Raw | ConvertFrom-Json
 Assert-True -Condition ($result.passed -eq $true) -Message "Dry-run creation validation should pass on seeded README."
-$creationMessage = Get-Content -LiteralPath (Join-Path $workspace.FullName "prompts\creation_aider_message.md") -Raw
+$creationMessage = Get-Content -LiteralPath (Join-Path $workspace.FullName "prompts\creation_aider_message.md") -Raw -Encoding UTF8
 Assert-True -Condition ($creationMessage.Contains("ControlTower Aider guidance")) -Message "Creation message should include shared ControlTower guidance."
 Assert-True -Condition ($creationMessage.Contains("Hermes central guidance")) -Message "Creation message should include Hermes guidance."
+Assert-True -Condition ($creationMessage.Contains("Créer une petite CLI")) -Message "Creation message should preserve UTF-8 brief content."
+Assert-True -Condition (-not $creationMessage.Contains("CrÃ")) -Message "Creation message should not contain mojibake."
 
 & (Join-Path $Root "tools\Test-AiderCreation.ps1") -WorkspacePath $workspace.FullName -RequireUsefulChanges
 Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Real creation validation should fail when no useful project file changed."

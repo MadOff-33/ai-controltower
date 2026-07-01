@@ -23,7 +23,7 @@ function Write-Utf8NoBom {
 function Get-OptionalText {
   param([string]$Path)
   if (Test-Path -LiteralPath $Path -PathType Leaf) {
-    return (Get-Content -LiteralPath $Path -Raw)
+    return (Get-Content -LiteralPath $Path -Raw -Encoding UTF8)
   }
   return ""
 }
@@ -162,6 +162,7 @@ Write-Host "=== Aider fix command ==="
 Write-Host ("Workspace: " + $workspace)
 Write-Host ("Snapshot:  " + $snapshot)
 Write-Host ("Ticket:    " + $ticket)
+Write-Host "Guidance:  ControlTower Aider guidance + Hermes memory loaded"
 Write-Host $display
 Write-Host ""
 

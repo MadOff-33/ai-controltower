@@ -86,10 +86,10 @@ $hasIncludeFilter = ($includeLookup.Count -gt 0)
 $previousManifest = $null
 if (-not [string]::IsNullOrWhiteSpace($PreviousManifestPath)) {
   $previousManifestResolved = (Resolve-Path -LiteralPath $PreviousManifestPath).ProviderPath
-  $previousManifest = Get-Content -LiteralPath $previousManifestResolved -Raw | ConvertFrom-Json
+  $previousManifest = Get-Content -LiteralPath $previousManifestResolved -Raw -Encoding UTF8 | ConvertFrom-Json
 }
 
-$prompt = Get-Content -LiteralPath $PromptPath -Raw
+$prompt = Get-Content -LiteralPath $PromptPath -Raw -Encoding UTF8
 $contextDir = Join-Path $workspace "context_packs"
 $promptDir = Join-Path $workspace "prompts"
 New-Item -ItemType Directory -Path $contextDir -Force | Out-Null

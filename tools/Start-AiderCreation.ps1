@@ -27,7 +27,7 @@ function Get-FileHashSafe {
 function Get-OptionalText {
   param([string]$Path)
   if (Test-Path -LiteralPath $Path -PathType Leaf) {
-    return (Get-Content -LiteralPath $Path -Raw)
+    return (Get-Content -LiteralPath $Path -Raw -Encoding UTF8)
   }
   return ""
 }
@@ -91,8 +91,8 @@ $messagePath = Join-Path $promptsDir "creation_aider_message.md"
 $chatHistoryPath = Join-Path $workspace "creation_aider_chat_history.md"
 $inputHistoryPath = Join-Path $workspace "creation_aider_input_history"
 $llmHistoryPath = Join-Path $workspace "creation_aider_llm_history.md"
-$promptText = Get-Content -LiteralPath $prompt -Raw
-$briefText = Get-Content -LiteralPath $brief -Raw
+$promptText = Get-Content -LiteralPath $prompt -Raw -Encoding UTF8
+$briefText = Get-Content -LiteralPath $brief -Raw -Encoding UTF8
 $guidanceText = Get-OptionalText -Path "C:\AI_ControlTower\prompts\common\controltower_aider_guidance.md"
 $hermesText = Get-OptionalText -Path "C:\AI_ControlTower\hermes_memory\central\guidance_cache.md"
 $message = @(
@@ -115,6 +115,8 @@ $message = @(
   "Cree maintenant le projet complet dans le dossier courant.",
   "Tu peux creer les fichiers necessaires, mais tu dois rester dans le dossier courant.",
   "Ne cree aucun fichier interdit: .env, secrets, venv, .git, cache, db, exe, dll, archive.",
+  "Le brief utilisateur peut contenir des accents; convertis les textes generes en ASCII simple dans les fichiers.",
+  "N'utilise pas d'accents, emoji, fleches typographiques ou caracteres speciaux dans les fichiers generes.",
   "Termine par un README clair et une commande de verification."
 ) -join [Environment]::NewLine
 Write-Utf8NoBom -Path $messagePath -Content $message
@@ -159,6 +161,7 @@ Write-Host "=== Aider creation command ==="
 Write-Host ("Workspace: " + $workspace)
 Write-Host ("Target:    " + $target)
 Write-Host ("Brief:     " + $brief)
+Write-Host "Guidance:  ControlTower Aider guidance + Hermes memory loaded"
 Write-Host ""
 Write-Host $display
 Write-Host ""

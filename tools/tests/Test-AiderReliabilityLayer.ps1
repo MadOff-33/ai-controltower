@@ -145,7 +145,7 @@ Invoke-ExpectFailure -Name "report outside reports" -Command {
 Remove-Item -LiteralPath $outsideReport -Force
 
 & (Join-Path $Root "tools\Start-AiderAudit.ps1") -WorkspacePath $workspace -LotName "lot1_config" -ContextPackPath $pack -DryRun | Out-Null
-$auditMessage = Get-Content -LiteralPath (Join-Path $workspace "prompts\lot1_config_aider_message.md") -Raw
+$auditMessage = Get-Content -LiteralPath (Join-Path $workspace "prompts\lot1_config_aider_message.md") -Raw -Encoding UTF8
 Assert-True -Condition ($auditMessage.Contains("ControlTower Aider guidance")) -Message "Audit message should include shared ControlTower guidance."
 Assert-True -Condition ($auditMessage.Contains("Hermes central guidance")) -Message "Audit message should include Hermes guidance."
 $startAuditText = Get-Content -LiteralPath (Join-Path $Root "tools\Start-AiderAudit.ps1") -Raw

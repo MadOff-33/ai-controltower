@@ -34,7 +34,7 @@ function Get-FileHashSafe {
 function Get-OptionalText {
   param([string]$Path)
   if (Test-Path -LiteralPath $Path -PathType Leaf) {
-    return (Get-Content -LiteralPath $Path -Raw)
+    return (Get-Content -LiteralPath $Path -Raw -Encoding UTF8)
   }
   return ""
 }
@@ -145,6 +145,7 @@ Write-Host "=== Aider audit command ==="
 Write-Host ("Workspace: " + $workspace)
 Write-Host ("Report:    " + $reportPath)
 Write-Host ("Context:   " + $contextPack)
+Write-Host "Guidance:  ControlTower Aider guidance + Hermes memory loaded"
 Write-Host ""
 Write-Host $display
 Write-Host ""

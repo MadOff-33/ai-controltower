@@ -41,7 +41,7 @@ $safeName = ($ProjectName -replace '[^a-zA-Z0-9_.-]', '_').Trim("_")
 if ([string]::IsNullOrWhiteSpace($safeName)) { throw "ProjectName invalide." }
 if (-not [string]::IsNullOrWhiteSpace($BriefPath)) {
   $resolvedBriefPath = (Resolve-Path -LiteralPath $BriefPath).ProviderPath
-  $Brief = Get-Content -LiteralPath $resolvedBriefPath -Raw
+  $Brief = Get-Content -LiteralPath $resolvedBriefPath -Raw -Encoding UTF8
 }
 if ([string]::IsNullOrWhiteSpace($Brief)) { throw "Brief obligatoire." }
 
