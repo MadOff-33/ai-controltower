@@ -1,5 +1,9 @@
+import shutil
 import sys
 import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
 
 ACCENTED_TEXT = "Créer é è à ç œ"
 
@@ -54,3 +58,31 @@ def test_run_job_captures_utf8_accents_without_mojibake(app_module, monkeypatch,
     assert finished["status"] == "succeeded"
     assert finished["output"] == ACCENTED_TEXT
     assert not any(marker in finished["output"] for marker in app_module.MOJIBAKE_MARKERS)
+
+
+def test_new_project_recipe_utf8_end_to_end(client, app_module):
+    workspace = ROOT / "audits" / "20990101-000000_utf8_recipe_fixture"
+    report_dir = workspace / "reports"
+    report_text = "# Rapport UI\n\nCréer une CLI de démonstration.\né è à ç œ\n"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    report_path = report_dir / "utf8_recipe_report.md"
+    report_path.write_text(report_text, encoding="utf-8")
+    try:
+        response = client.get("/api/report")
+        assert response.status_code == 200
+        payload = response.get_json()
+        assert payload["warnings"] == []
+        assert "Créer" in payload["raw"]
+        assert not any(marker in payload["raw"] for marker in app_module.MOJIBAKE_MARKERS)
+        assert not any(marker in payload["html"] for marker in app_module.MOJIBAKE_MARKERS)
+
+        download = client.get("/api/report/download")
+        assert download.status_code == 200
+        download_text = download.data.decode("utf-8")
+        # Normalize line endings for comparison (Flask on Windows may use \r\n)
+        assert download_text.replace("\r\n", "\n") == report_text
+        assert "Créer" in download_text
+        assert not any(marker in download_text for marker in app_module.MOJIBAKE_MARKERS)
+        download.close()
+    finally:
+        shutil.rmtree(workspace)
