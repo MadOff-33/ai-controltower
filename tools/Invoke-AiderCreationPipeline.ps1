@@ -97,7 +97,9 @@ Invoke-PipelineStep -Name "Start Aider creation" -Command {
 $validationStatus = "skipped"
 if ($RunAider -or $ValidateAfterDryRun) {
   Invoke-PipelineStep -Name "Validate Aider creation" -Command {
-    & $testScript -WorkspacePath $workspace
+    $testArgs = @{ WorkspacePath = $workspace }
+    if ($RunAider) { $testArgs["RequireUsefulChanges"] = $true }
+    & $testScript @testArgs
   }
   $validationStatus = $(if ($RunAider) { "passed" } else { "structure-passed" })
 }

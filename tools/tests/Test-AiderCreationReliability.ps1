@@ -72,11 +72,20 @@ Assert-True -Condition (Test-Path -LiteralPath (Join-Path $workspace.FullName "v
 $result = Get-Content -LiteralPath (Join-Path $workspace.FullName "validation\creation_result.json") -Raw | ConvertFrom-Json
 Assert-True -Condition ($result.passed -eq $true) -Message "Dry-run creation validation should pass on seeded README."
 
+& (Join-Path $Root "tools\Test-AiderCreation.ps1") -WorkspacePath $workspace.FullName -RequireUsefulChanges
+Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Real creation validation should fail when no useful project file changed."
+
 $forbiddenFile = Join-Path $config.target_project_path ".env"
 Set-Content -LiteralPath $forbiddenFile -Value "SECRET=bad"
 & (Join-Path $Root "tools\Test-AiderCreation.ps1") -WorkspacePath $workspace.FullName
 Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Creation validation should fail on forbidden .env."
 Remove-Item -LiteralPath $forbiddenFile -Force
+
+$aiderHistory = Join-Path $config.target_project_path ".aider.chat.history.md"
+Set-Content -LiteralPath $aiderHistory -Value "history"
+& (Join-Path $Root "tools\Test-AiderCreation.ps1") -WorkspacePath $workspace.FullName
+Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Creation validation should fail on .aider history files inside the target project."
+Remove-Item -LiteralPath $aiderHistory -Force
 
 $invalidFailed = $false
 try {

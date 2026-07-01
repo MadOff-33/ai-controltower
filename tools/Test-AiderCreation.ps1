@@ -1,6 +1,8 @@
 param(
   [Parameter(Mandatory = $true)]
-  [string]$WorkspacePath
+  [string]$WorkspacePath,
+
+  [switch]$RequireUsefulChanges
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,6 +28,7 @@ function Test-ForbiddenPath {
     if ($segments -contains $dir) { return $true }
   }
   $name = [System.IO.Path]::GetFileName($lower)
+  if ($name -like ".aider*") { return $true }
   $forbiddenFiles = @(".env", ".env.*", "*.pem", "*.key", "*.pfx", "*.sqlite", "*.sqlite3", "*.db", "*.exe", "*.dll", "*.bin", "*.zip", "*.7z", "*.tar", "*.gz", "*.pyc", "*.pyo")
   foreach ($pattern in $forbiddenFiles) {
     if ($name -like $pattern) { return $true }
@@ -68,6 +71,11 @@ foreach ($path in $currentMap.Keys) {
     $changes += [pscustomobject][ordered]@{ path = $path; change = "modified" }
   }
 }
+
+$usefulChanges = @($changes | Where-Object {
+  $name = [System.IO.Path]::GetFileName(([string]$_.path).ToLowerInvariant())
+  -not ($name -like ".aider*")
+})
 foreach ($path in $baselineMap.Keys) {
   if (-not $currentMap.ContainsKey($path)) {
     $changes += [pscustomobject][ordered]@{ path = $path; change = "deleted" }
@@ -98,16 +106,20 @@ foreach ($path in $currentMap.Keys) {
 
 $readmePath = Join-Path $target "README.md"
 $readmeOk = (Test-Path -LiteralPath $readmePath -PathType Leaf) -and ((Get-Item -LiteralPath $readmePath).Length -gt 40)
-$passed = (($forbidden.Count -eq 0) -and $readmeOk -and ($currentMap.Keys.Count -gt 0))
+$usefulChangeOk = ((-not $RequireUsefulChanges) -or ($usefulChanges.Count -gt 0))
+$passed = (($forbidden.Count -eq 0) -and $readmeOk -and ($currentMap.Keys.Count -gt 0) -and $usefulChangeOk)
 
 $result = [ordered]@{
   checked_at = (Get-Date).ToString("o")
   workspace_path = $workspace
   target_project_path = $target
   changes = $changes
+  useful_changes = $usefulChanges
   forbidden_files = $forbidden
   ghost_findings = $ghostFindings
   readme_ok = $readmeOk
+  require_useful_changes = [bool]$RequireUsefulChanges
+  useful_change_ok = $usefulChangeOk
   passed = $passed
 }
 Write-Utf8NoBom -Path (Join-Path $validationDir "creation_result.json") -Content ($result | ConvertTo-Json -Depth 8)
@@ -115,6 +127,7 @@ Write-Utf8NoBom -Path (Join-Path $validationDir "creation_result.json") -Content
 Write-Host "=== Aider creation validation ==="
 Write-Host ("Target files:     " + $currentMap.Keys.Count)
 Write-Host ("Changes:          " + $changes.Count)
+Write-Host ("Useful changes:   " + $usefulChanges.Count)
 Write-Host ("Forbidden files:  " + $forbidden.Count)
 Write-Host ("Ghost findings:   " + $ghostFindings.Count)
 Write-Host ("README present:   " + $readmeOk)
@@ -122,6 +135,10 @@ if ($forbidden.Count -gt 0) {
   Write-Host ""
   Write-Host "Forbidden files:"
   $forbidden | ForEach-Object { Write-Host ("- " + $_.path) }
+}
+if (-not $usefulChangeOk) {
+  Write-Host ""
+  Write-Host "No useful generated project changes were detected."
 }
 
 if ($passed) {

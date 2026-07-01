@@ -80,6 +80,9 @@ Get-ChildItem -LiteralPath $target -Recurse -File -Force -ErrorAction SilentlyCo
 Write-Utf8NoBom -Path (Join-Path $validationDir "creation_baseline.json") -Content ($baseline | ConvertTo-Json -Depth 6)
 
 $messagePath = Join-Path $promptsDir "creation_aider_message.md"
+$chatHistoryPath = Join-Path $workspace "creation_aider_chat_history.md"
+$inputHistoryPath = Join-Path $workspace "creation_aider_input_history"
+$llmHistoryPath = Join-Path $workspace "creation_aider_llm_history.md"
 $promptText = Get-Content -LiteralPath $prompt -Raw
 $briefText = Get-Content -LiteralPath $brief -Raw
 $message = @(
@@ -123,6 +126,9 @@ $args = @(
   "--no-stream",
   "--no-fancy-input",
   "--yes-always",
+  "--chat-history-file", $chatHistoryPath,
+  "--input-history-file", $inputHistoryPath,
+  "--llm-history-file", $llmHistoryPath,
   "--read", $brief
 )
 foreach ($file in $editableFiles) { $args += $file }
