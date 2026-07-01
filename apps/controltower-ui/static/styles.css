@@ -173,6 +173,14 @@ input {
   padding-left: 18px;
 }
 
+.coverage-action {
+  justify-self: start;
+  min-height: 30px;
+  margin-top: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
 .eyebrow {
   display: block;
   color: var(--muted);

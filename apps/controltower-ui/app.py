@@ -28,6 +28,7 @@ WORKFLOW_STEPS = [
     {"id": "deps", "label": "Verifier dependances", "command": None},
     {"id": "audit_dry_run", "label": "Audit dry-run", "command": "audit_dry_run"},
     {"id": "audit_real", "label": "Audit reel", "command": "audit_real"},
+    {"id": "continue_audit", "label": "Continuer audit", "command": "continue_audit"},
     {"id": "ticket_from_report", "label": "Creer ticket depuis rapport", "command": "ticket_from_report"},
     {"id": "fix_dry_run", "label": "Fix dry-run", "command": "fix_dry_run"},
     {"id": "fix_real", "label": "Fix reel", "command": "fix_real"},
@@ -104,6 +105,8 @@ def get_dependency_info(project_path):
 
 def build_commands(project_path):
     project = quote_arg(project_path)
+    latest_workspace = newest_workspace() if "newest_workspace" in globals() else ""
+    latest_workspace_arg = quote_arg(latest_workspace) if latest_workspace else '"<LATEST_WORKSPACE>"'
     workspace = '"<WORKSPACE_PATH>"'
     ticket = '"<TICKET_PATH>"'
     return {
@@ -130,6 +133,15 @@ def build_commands(project_path):
             "template": False,
             "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-ControlTowerRun.ps1" -Mode Audit -ProjectPath '
             + project
+            + " -RunAider",
+        },
+        "continue_audit": {
+            "label": "Continuer audit",
+            "group": "Audit",
+            "dangerous": True,
+            "template": False,
+            "command": 'powershell -ExecutionPolicy Bypass -File "C:\\AI_ControlTower\\tools\\Invoke-AiderAuditContinuation.ps1" -WorkspacePath '
+            + latest_workspace_arg
             + " -RunAider",
         },
         "fix_dry_run": {

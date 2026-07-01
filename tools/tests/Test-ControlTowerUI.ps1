@@ -76,6 +76,8 @@ Assert-True -Condition ($appText.Contains("stalled")) -Message "Jobs should expo
 Assert-True -Condition ($appText.Contains("taskkill")) -Message "Windows job cancellation should stop the process tree."
 Assert-True -Condition ($appText.Contains("read_audit_coverage")) -Message "UI API should expose audit coverage."
 Assert-True -Condition ($appText.Contains('"audit_coverage"')) -Message "State API should include audit coverage."
+Assert-True -Condition ($appText.Contains('"continue_audit"')) -Message "UI should expose a continue audit command."
+Assert-True -Condition ($appText.Contains("Invoke-AiderAuditContinuation.ps1")) -Message "Continue audit command should call the continuation script."
 
 $templateText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\templates\index.html") -Raw
 Assert-True -Condition ($templateText.Contains("/static/app.js?v=")) -Message "UI script should use cache-busting query string."
@@ -95,6 +97,7 @@ Assert-True -Condition ($jsText.Contains("shouldStickToBottom")) -Message "UI JS
 Assert-True -Condition ($jsText.Contains("scrollTop = panel.scrollHeight")) -Message "UI JS should auto-scroll live logs to the bottom."
 Assert-True -Condition ($jsText.Contains("renderAuditCoverage")) -Message "UI JS should render audit coverage."
 Assert-True -Condition ($jsText.Contains("Audit projet incomplet")) -Message "UI JS should explicitly distinguish incomplete project audits."
+Assert-True -Condition ($jsText.Contains("Continuer audit")) -Message "UI JS should guide the user to continue incomplete audits."
 
 $styleText = Get-Content -LiteralPath (Join-Path $Root "apps\controltower-ui\static\styles.css") -Raw
 Assert-True -Condition ($styleText.Contains("minmax(560px, 1.65fr)")) -Message "Chat column should be wider than command catalog."

@@ -172,6 +172,7 @@ function renderAuditCoverage(coverage) {
     <span>${included}/${total} fichiers couverts (${percent}%).</span>
     <span>${omitted} fichier(s) hors contexte.</span>
     ${omittedItems ? `<ul>${omittedItems}</ul>` : ""}
+    ${!complete && omitted > 0 ? `<button class="secondary coverage-action" data-command="continue_audit" type="button">Continuer audit</button>` : ""}
   `);
 }
 
@@ -340,6 +341,12 @@ if (els.commandCatalog) els.commandCatalog.addEventListener("click", async (even
 });
 
 if (els.workflowPanel) els.workflowPanel.addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-command]");
+  if (!button) return;
+  await runCommand(button.dataset.command);
+});
+
+if (els.coveragePanel) els.coveragePanel.addEventListener("click", async (event) => {
   const button = event.target.closest("button[data-command]");
   if (!button) return;
   await runCommand(button.dataset.command);

@@ -5,6 +5,7 @@ $ErrorActionPreference = "Stop"
 $Root = "C:\AI_ControlTower"
 $Script = Join-Path $Root "tools\Invoke-ControlTowerRun.ps1"
 $AuditScript = Join-Path $Root "tools\Invoke-AiderAuditPipeline.ps1"
+$ContinueAuditScript = Join-Path $Root "tools\Invoke-AiderAuditContinuation.ps1"
 $FixTicketScript = Join-Path $Root "tools\New-AiderFixTicket.ps1"
 $TestRoot = Join-Path $Root "hermes_lab\orchestrator test runs"
 
@@ -52,7 +53,7 @@ function Get-LatestWorkspace {
 Write-Host "=== Test ControlTower Orchestrator ==="
 
 Assert-PathExists -Path $Script
-foreach ($path in @($Script, $AuditScript, $FixTicketScript)) {
+foreach ($path in @($Script, $AuditScript, $ContinueAuditScript, $FixTicketScript)) {
   $tokens = $null
   $errors = $null
   [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
@@ -72,9 +73,10 @@ New-Item -ItemType Directory -Path (Join-Path $project "pkg") -Force | Out-Null
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText((Join-Path $project "pkg\core.py"), "def add(a, b):`n    return a - b`n", $utf8)
 [System.IO.File]::WriteAllText((Join-Path $project "README.md"), "# Fixture`n", $utf8)
+[System.IO.File]::WriteAllText((Join-Path $project "pkg\large.py"), ("# large`n" + ("x = 1`n" * 400)), $utf8)
 [System.IO.File]::WriteAllText((Join-Path $project ".env"), "TOKEN=do-not-copy`n", $utf8)
 
-& $Script -Mode Audit -ProjectPath $project -WorkspaceRoot $workspaceRoot -LogRoot $logRoot -HermesMemoryRoot $hermesRoot -ValidateAfterDryRun
+& $Script -Mode Audit -ProjectPath $project -WorkspaceRoot $workspaceRoot -LogRoot $logRoot -HermesMemoryRoot $hermesRoot -MaxChars 1800 -ValidateAfterDryRun
 $workspace = Get-LatestWorkspace -WorkspaceRoot $workspaceRoot
 Assert-PathExists -Path (Join-Path $workspace "validation\pipeline_result.json")
 Assert-PathExists -Path (Join-Path $logRoot "controltower_runs")
@@ -83,6 +85,15 @@ $firstLog = Get-ChildItem -LiteralPath (Join-Path $logRoot "controltower_runs") 
 Assert-True -Condition ($null -ne $firstLog) -Message "No orchestrator log created for audit mode."
 $firstRun = Get-Content -LiteralPath $firstLog.FullName -Raw | ConvertFrom-Json
 Assert-True -Condition ($firstRun.status -eq "structure-passed") -Message ("Dry-run audit should be logged as structure-passed, got: " + $firstRun.status)
+$firstManifest = Get-Content -LiteralPath (Join-Path $workspace "context_packs\lot1_config_manifest.json") -Raw | ConvertFrom-Json
+Assert-True -Condition ($firstManifest.coverage.status -eq "partial") -Message "Small audit pack should be partial before continuation."
+
+& $ContinueAuditScript -WorkspacePath $workspace -PreviousLotName "lot1_config" -LotName "lot2_continuation" -MaxChars 8000 -ValidateAfterDryRun | Out-Null
+Assert-PathExists -Path (Join-Path $workspace "context_packs\lot2_continuation_pack.md")
+Assert-PathExists -Path (Join-Path $workspace "reports\lot2_continuation_report.md")
+$secondManifest = Get-Content -LiteralPath (Join-Path $workspace "context_packs\lot2_continuation_manifest.json") -Raw | ConvertFrom-Json
+Assert-True -Condition ($secondManifest.coverage.previous_omitted_files -gt 0) -Message "Continuation manifest should remember previous omissions."
+Assert-True -Condition ($secondManifest.coverage.included_files -gt 0) -Message "Continuation should include omitted files from previous lot."
 
 & $FixTicketScript `
   -WorkspacePath $workspace `

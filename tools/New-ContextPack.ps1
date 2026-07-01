@@ -8,7 +8,9 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$PromptPath,
 
-  [int]$MaxChars = 0
+  [int]$MaxChars = 0,
+  [string[]]$IncludePaths = @(),
+  [string]$PreviousManifestPath = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -75,6 +77,17 @@ foreach ($ext in $allowedExtensions) { $allowedLookup[$ext.ToLowerInvariant()] =
 
 $safeLot = ($LotName -replace '[^a-zA-Z0-9_.-]', '_').Trim("_")
 if ([string]::IsNullOrWhiteSpace($safeLot)) { throw "LotName invalide." }
+$includeLookup = @{}
+foreach ($path in $IncludePaths) {
+  $normal = ($path -replace "\\", "/").Trim("/")
+  if (-not [string]::IsNullOrWhiteSpace($normal)) { $includeLookup[$normal] = $true }
+}
+$hasIncludeFilter = ($includeLookup.Count -gt 0)
+$previousManifest = $null
+if (-not [string]::IsNullOrWhiteSpace($PreviousManifestPath)) {
+  $previousManifestResolved = (Resolve-Path -LiteralPath $PreviousManifestPath).ProviderPath
+  $previousManifest = Get-Content -LiteralPath $previousManifestResolved -Raw | ConvertFrom-Json
+}
 
 $prompt = Get-Content -LiteralPath $PromptPath -Raw
 $contextDir = Join-Path $workspace "context_packs"
@@ -111,8 +124,9 @@ $current = $header.Length
 
 Get-ChildItem -LiteralPath $snapshot -Recurse -File -Force | Sort-Object FullName | ForEach-Object {
   $relative = $_.FullName.Substring($rootLength).TrimStart("\") -replace "\\", "/"
+  if ($hasIncludeFilter -and -not $includeLookup.ContainsKey($relative)) { return }
   $ext = $_.Extension.ToLowerInvariant()
-  if (-not $allowedLookup.ContainsKey($ext)) {
+  if ((-not $hasIncludeFilter) -and -not $allowedLookup.ContainsKey($ext)) {
     $omitted += [ordered]@{ path = $relative; reason = "extension non incluse"; size_bytes = $_.Length }
     return
   }
@@ -165,6 +179,7 @@ if ($pack.Length -gt $MaxChars) {
 }
 Write-Utf8NoBom -Path $packPath -Content $pack
 $totalFiles = $included.Count + $omitted.Count
+$previousOmittedFiles = 0
 if ($totalFiles -gt 0) {
   $coveragePercent = [math]::Round(($included.Count * 100.0) / $totalFiles, 1)
 } else {
@@ -172,6 +187,18 @@ if ($totalFiles -gt 0) {
 }
 $coverageStatus = "complete"
 if ($omitted.Count -gt 0) { $coverageStatus = "partial" }
+if ($previousManifest -and $previousManifest.coverage) {
+  $previousOmittedFiles = [int]$previousManifest.coverage.omitted_files
+  $previousIncluded = [int]$previousManifest.coverage.included_files
+  $previousTotal = [int]$previousManifest.coverage.total_files
+  $totalFiles = $previousTotal
+  $cumulativeIncluded = $previousIncluded + $included.Count
+  if ($cumulativeIncluded -gt $totalFiles) { $cumulativeIncluded = $totalFiles }
+  $coveragePercent = if ($totalFiles -gt 0) { [math]::Round(($cumulativeIncluded * 100.0) / $totalFiles, 1) } else { 100 }
+  $coverageStatus = if ($omitted.Count -eq 0) { "complete" } else { "partial" }
+} else {
+  $cumulativeIncluded = $included.Count
+}
 Write-Utf8NoBom -Path (Join-Path $contextDir ($safeLot + "_manifest.json")) -Content ([ordered]@{
   lot = $safeLot
   max_chars = $MaxChars
@@ -179,11 +206,13 @@ Write-Utf8NoBom -Path (Join-Path $contextDir ($safeLot + "_manifest.json")) -Con
   omitted_written_in_pack = $omittedWritten
   coverage = [ordered]@{
     status = $coverageStatus
-    included_files = $included.Count
+    included_files = $cumulativeIncluded
+    lot_included_files = $included.Count
     omitted_files = $omitted.Count
     total_files = $totalFiles
     percent = $coveragePercent
     is_project_complete = ($omitted.Count -eq 0)
+    previous_omitted_files = $previousOmittedFiles
   }
   included = $included
   omitted = $omitted
