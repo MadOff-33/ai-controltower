@@ -93,6 +93,12 @@ Set-Content -LiteralPath $commandLikeFile -Value "bad"
 Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Creation validation should fail on command-like generated filenames."
 Remove-Item -LiteralPath $commandLikeFile -Force
 
+$startLikeFile = Join-Path $config.target_project_path "start index.html"
+Set-Content -LiteralPath $startLikeFile -Value "bad"
+& (Join-Path $Root "tools\Test-AiderCreation.ps1") -WorkspacePath $workspace.FullName
+Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Creation validation should fail on Windows command-like generated filenames."
+Remove-Item -LiteralPath $startLikeFile -Force
+
 $treeFile = Join-Path $config.target_project_path (([char]0x2514) + ([char]0x2500) + ([char]0x2500) + " game.js # tree output")
 Set-Content -LiteralPath $treeFile -Value "bad"
 & (Join-Path $Root "tools\Test-AiderCreation.ps1") -WorkspacePath $workspace.FullName

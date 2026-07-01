@@ -48,7 +48,7 @@ function Get-SuspiciousPathReasons {
   $lowerPath = $normalized.ToLowerInvariant()
   if ($name -match "[\u2500-\u257F]") { $reasons += "tree_art_path" }
   if ($name -match "#") { $reasons += "comment_in_filename" }
-  if ($name -match "^\s*(open|cd|dir|ls|cat|type|mkdir|copy|move|del|rm)\s+") { $reasons += "command_like_filename" }
+  if ($name -match "^\s*(open|start|cd|dir|ls|cat|type|mkdir|copy|move|del|rm)\s+") { $reasons += "command_like_filename" }
   if ($null -ne (Find-Mojibake -Text $lowerPath)) { $reasons += "mojibake_path" }
   if ($lowerName -match "\s{2,}") { $reasons += "excessive_spacing_filename" }
   return $reasons

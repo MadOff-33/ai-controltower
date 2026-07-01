@@ -126,6 +126,8 @@ $args = @(
   "--no-stream",
   "--no-fancy-input",
   "--yes-always",
+  "--no-restore-chat-history",
+  "--max-chat-history-tokens", "200000",
   "--chat-history-file", $chatHistoryPath,
   "--input-history-file", $inputHistoryPath,
   "--llm-history-file", $llmHistoryPath,

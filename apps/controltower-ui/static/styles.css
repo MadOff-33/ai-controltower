@@ -511,6 +511,38 @@ textarea {
   margin-top: 4px;
 }
 
+.creation-progress {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  margin: 8px 0 4px;
+}
+
+.creation-progress span {
+  min-height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  padding: 3px 5px;
+  font-size: 11px;
+  color: var(--muted);
+  background: #ffffff;
+  text-align: center;
+}
+
+.creation-progress span.done {
+  border-color: #b7d6f8;
+  color: #0b5cad;
+  background: #eef6ff;
+}
+
+.creation-progress span.current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(15, 108, 189, 0.12);
+  font-weight: 800;
+}
+
 .older-logs {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;

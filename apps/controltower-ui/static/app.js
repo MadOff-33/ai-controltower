@@ -309,6 +309,7 @@ function renderCreationJobs(jobs) {
     ? `Aucune activite recente (${job.silence_seconds || 0}s)`
     : (job.status_label || job.status);
   const output = (job.output || "").slice(-900);
+  const progress = getCreationProgress(job);
   const cancelButton = (job.status === "queued" || job.status === "running")
     ? `<button class="secondary job-cancel" data-job-cancel="${job.id}" type="button">Arreter</button>`
     : "";
@@ -323,11 +324,39 @@ function renderCreationJobs(jobs) {
         ${job.last_activity_at ? `<small>Derniere activite: ${escapeHtml(job.last_activity_at)}</small>` : ""}
         ${job.finished_at ? `<small>Fin: ${escapeHtml(job.finished_at)}</small>` : ""}
         ${job.log_path ? `<small>Log: ${escapeHtml(job.log_path)}</small>` : ""}
+        ${renderCreationProgress(progress)}
         ${output ? `<details class="job-output" data-job-output="${escapeHtml(job.id)}"${outputOpen}><summary>Voir les dernieres lignes</summary><pre>${escapeHtml(output)}</pre></details>` : ""}
       </div>
       ${cancelButton}
     </div>
   `);
+  const outputPre = els.creationJobPanel.querySelector("details[data-job-output] pre");
+  if (outputPre) outputPre.scrollTop = outputPre.scrollHeight;
+}
+
+function getCreationProgress(job) {
+  const output = String((job && job.output) || "");
+  const status = String((job && job.status) || "");
+  let index = 0;
+  if (output.includes("Aider creation command") || output.includes("Aider v")) index = 1;
+  if (output.includes("THINKING") || output.includes("ANSWER") || output.includes("Tokens:")) index = 2;
+  if (output.includes("Applied edit")) index = 3;
+  if (output.includes("Validate Aider creation") || output.includes("Aider creation validation")) index = 4;
+  if (status === "succeeded" || status === "failed" || status === "canceled") index = 5;
+  const labels = ["Preparation", "Aider lance", "Ornith genere", "Ecriture fichiers", "Validation", "Termine"];
+  return { index, labels };
+}
+
+function renderCreationProgress(progress) {
+  return `
+    <div class="creation-progress" aria-label="Avancement creation">
+      ${progress.labels.map((label, idx) => `
+        <span class="${idx <= progress.index ? "done" : ""}${idx === progress.index ? " current" : ""}">
+          ${escapeHtml(label)}
+        </span>
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderLogs(logs) {
