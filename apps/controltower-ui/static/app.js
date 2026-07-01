@@ -284,10 +284,10 @@ function renderAuditJobs(jobs) {
     return `
       <div class="job-entry ${stalled ? "stalled" : ""}">
         <div class="job-main">
-          <strong>${job.label}</strong>
-          <span>${statusText}</span>
-          ${job.last_activity_at ? `<small>Derniere activite: ${job.last_activity_at}</small>` : ""}
-          ${output ? `<pre>${output}</pre>` : ""}
+          <strong>${escapeHtml(job.label)}</strong>
+          <span>${escapeHtml(statusText)}</span>
+          ${job.last_activity_at ? `<small>Derniere activite: ${escapeHtml(job.last_activity_at)}</small>` : ""}
+          ${output ? `<pre>${escapeHtml(output)}</pre>` : ""}
         </div>
         ${cancelButton}
       </div>

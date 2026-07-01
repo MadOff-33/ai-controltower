@@ -923,6 +923,13 @@ def create_app(default_project=None):
 
     app = Flask(__name__)
 
+    @app.before_request
+    def reject_cross_origin_mutations():
+        if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+            origin = request.headers.get("Origin")
+            if origin and origin != request.host_url.rstrip("/"):
+                return jsonify({"error": "Origine non autorisee."}), 403
+
     def current_project():
         return load_state(default_project).get("audit_project_path", str(ROOT))
 
@@ -963,7 +970,9 @@ def create_app(default_project=None):
 
     @app.route("/api/project", methods=["POST"])
     def api_project():
-        payload = request.get_json(force=True)
+        payload = request.get_json(silent=True)
+        if payload is None:
+            return jsonify({"error": "JSON invalide."}), 400
         project_path = payload.get("project_path", "").strip()
         if not project_path:
             return jsonify({"error": "Chemin projet manquant."}), 400
@@ -994,7 +1003,9 @@ def create_app(default_project=None):
 
     @app.route("/api/creation-parent", methods=["POST"])
     def api_creation_parent():
-        payload = request.get_json(force=True)
+        payload = request.get_json(silent=True)
+        if payload is None:
+            return jsonify({"error": "JSON invalide."}), 400
         parent_path = payload.get("creation_parent_path", "").strip()
         if not parent_path:
             return jsonify({"error": "Dossier parent manquant."}), 400
@@ -1024,7 +1035,9 @@ def create_app(default_project=None):
 
     @app.route("/api/new-project/preview", methods=["POST"])
     def api_new_project_preview():
-        payload = request.get_json(force=True)
+        payload = request.get_json(silent=True)
+        if payload is None:
+            return jsonify({"error": "JSON invalide."}), 400
         try:
             data, command = build_new_project_command(payload, run_aider=False)
             return jsonify({"ok": True, "project": data, "command_preview": command})
@@ -1033,7 +1046,9 @@ def create_app(default_project=None):
 
     @app.route("/api/new-project", methods=["POST"])
     def api_new_project():
-        payload = request.get_json(force=True)
+        payload = request.get_json(silent=True)
+        if payload is None:
+            return jsonify({"error": "JSON invalide."}), 400
         confirmed = bool(payload.get("confirmed"))
         try:
             job = create_new_project_job(payload, confirmed=confirmed)
@@ -1073,7 +1088,9 @@ def create_app(default_project=None):
 
     @app.route("/api/run", methods=["POST"])
     def api_run():
-        payload = request.get_json(force=True)
+        payload = request.get_json(silent=True)
+        if payload is None:
+            return jsonify({"error": "JSON invalide."}), 400
         command_key = payload.get("command")
         confirmed = bool(payload.get("confirmed"))
         use_job = bool(payload.get("job"))
@@ -1095,7 +1112,9 @@ def create_app(default_project=None):
             with JOBS_LOCK:
                 jobs = [public_job(job) for job in list(JOBS.values())[-50:]]
             return jsonify({"jobs": jobs})
-        payload = request.get_json(force=True)
+        payload = request.get_json(silent=True)
+        if payload is None:
+            return jsonify({"error": "JSON invalide."}), 400
         command_key = payload.get("command")
         confirmed = bool(payload.get("confirmed"))
         try:
@@ -1125,7 +1144,9 @@ def create_app(default_project=None):
 
     @app.route("/api/tickets/from-report", methods=["POST"])
     def api_ticket_from_report():
-        payload = request.get_json(force=True)
+        payload = request.get_json(silent=True)
+        if payload is None:
+            return jsonify({"error": "JSON invalide."}), 400
         artifacts = latest_artifacts()
         workspace = payload.get("workspace_path") or artifacts.get("workspace")
         report = payload.get("report_path") or artifacts.get("report")
@@ -1139,7 +1160,9 @@ def create_app(default_project=None):
 
     @app.route("/api/chat", methods=["POST"])
     def api_chat():
-        payload = request.get_json(force=True)
+        payload = request.get_json(silent=True)
+        if payload is None:
+            return jsonify({"error": "JSON invalide."}), 400
         message = payload.get("message", "").strip().lower()
         mapping = [
             ("audit", "audit_dry_run"),
