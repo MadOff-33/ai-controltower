@@ -87,6 +87,24 @@ Set-Content -LiteralPath $aiderHistory -Value "history"
 Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Creation validation should fail on .aider history files inside the target project."
 Remove-Item -LiteralPath $aiderHistory -Force
 
+$commandLikeFile = Join-Path $config.target_project_path "open index.html"
+Set-Content -LiteralPath $commandLikeFile -Value "bad"
+& (Join-Path $Root "tools\Test-AiderCreation.ps1") -WorkspacePath $workspace.FullName
+Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Creation validation should fail on command-like generated filenames."
+Remove-Item -LiteralPath $commandLikeFile -Force
+
+$treeFile = Join-Path $config.target_project_path (([char]0x2514) + ([char]0x2500) + ([char]0x2500) + " game.js # tree output")
+Set-Content -LiteralPath $treeFile -Value "bad"
+& (Join-Path $Root "tools\Test-AiderCreation.ps1") -WorkspacePath $workspace.FullName
+Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Creation validation should fail on tree-art filenames."
+Remove-Item -LiteralPath $treeFile -Force
+
+$mojibakeFile = Join-Path $config.target_project_path "mojibake.md"
+Set-Content -LiteralPath $mojibakeFile -Value "Texte corrompu: CrÃ©er un Ã©cran"
+& (Join-Path $Root "tools\Test-AiderCreation.ps1") -WorkspacePath $workspace.FullName
+Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Creation validation should fail on mojibake content."
+Remove-Item -LiteralPath $mojibakeFile -Force
+
 $invalidFailed = $false
 try {
   & (Join-Path $Root "tools\New-CreationWorkspace.ps1") -ProjectName "..\bad" -ParentPath $parent -Brief "bad" -WorkspaceRoot $workspaces

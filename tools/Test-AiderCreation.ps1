@@ -39,6 +39,51 @@ function Test-ForbiddenPath {
   return $false
 }
 
+function Get-SuspiciousPathReasons {
+  param([string]$RelativePath)
+  $reasons = @()
+  $normalized = ($RelativePath -replace "\\", "/").Trim("/")
+  $name = [System.IO.Path]::GetFileName($normalized)
+  $lowerName = $name.ToLowerInvariant()
+  $lowerPath = $normalized.ToLowerInvariant()
+  if ($name -match "[\u2500-\u257F]") { $reasons += "tree_art_path" }
+  if ($name -match "#") { $reasons += "comment_in_filename" }
+  if ($name -match "^\s*(open|cd|dir|ls|cat|type|mkdir|copy|move|del|rm)\s+") { $reasons += "command_like_filename" }
+  if ($null -ne (Find-Mojibake -Text $lowerPath)) { $reasons += "mojibake_path" }
+  if ($lowerName -match "\s{2,}") { $reasons += "excessive_spacing_filename" }
+  return $reasons
+}
+
+function Test-TextExtension {
+  param([string]$Path)
+  $extension = [System.IO.Path]::GetExtension($Path).ToLowerInvariant()
+  if ([string]::IsNullOrWhiteSpace($extension)) { return $false }
+  return @(".txt", ".md", ".json", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".py", ".ps1", ".js", ".ts", ".jsx", ".tsx", ".html", ".htm", ".css", ".scss", ".xml", ".svg", ".csv") -contains $extension
+}
+
+function Find-Mojibake {
+  param([string]$Text)
+  $patterns = @(
+    ([string][char]0x00C3),
+    ([string][char]0x00C2),
+    ([string][char]0xFFFD),
+    (([string][char]0x00E2) + ([string][char]0x20AC)),
+    (([string][char]0x00F0) + ([string][char]0x0178))
+  )
+  foreach ($pattern in $patterns) {
+    $index = $Text.IndexOf($pattern, [System.StringComparison]::Ordinal)
+    if ($index -ge 0) {
+      $start = [Math]::Max(0, $index - 24)
+      $length = [Math]::Min(80, $Text.Length - $start)
+      return [pscustomobject][ordered]@{
+        marker = $pattern
+        excerpt = ($Text.Substring($start, $length) -replace "\r?\n", " ")
+      }
+    }
+  }
+  return $null
+}
+
 $workspace = (Resolve-Path -LiteralPath $WorkspacePath).ProviderPath
 $configPath = Join-Path $workspace "creation.config.json"
 if (-not (Test-Path -LiteralPath $configPath)) { throw "creation.config.json introuvable: $configPath" }
@@ -83,14 +128,20 @@ foreach ($path in $baselineMap.Keys) {
 }
 
 $forbidden = @()
+$suspiciousFiles = @()
 foreach ($path in $currentMap.Keys) {
   if (Test-ForbiddenPath -RelativePath $path) {
     $forbidden += [pscustomobject][ordered]@{ path = $path; reason = "forbidden_path" }
+  }
+  $pathReasons = @(Get-SuspiciousPathReasons -RelativePath $path)
+  foreach ($reason in $pathReasons) {
+    $suspiciousFiles += [pscustomobject][ordered]@{ path = $path; reason = $reason }
   }
 }
 
 $ghostMarkers = @("app.run()", "sys.exit(app.exec_())")
 $ghostFindings = @()
+$encodingFindings = @()
 foreach ($path in $currentMap.Keys) {
   $absolute = Join-Path $target ($path -replace "/", "\")
   if (-not (Test-Path -LiteralPath $absolute -PathType Leaf)) { continue }
@@ -102,12 +153,22 @@ foreach ($path in $currentMap.Keys) {
       $ghostFindings += [pscustomobject][ordered]@{ path = $path; marker = $marker }
     }
   }
+  if ((Test-TextExtension -Path $absolute) -and ($text.Length -gt 0)) {
+    $mojibake = Find-Mojibake -Text $text
+    if ($null -ne $mojibake) {
+      $encodingFindings += [pscustomobject][ordered]@{
+        path = $path
+        marker = $mojibake.marker
+        excerpt = $mojibake.excerpt
+      }
+    }
+  }
 }
 
 $readmePath = Join-Path $target "README.md"
 $readmeOk = (Test-Path -LiteralPath $readmePath -PathType Leaf) -and ((Get-Item -LiteralPath $readmePath).Length -gt 40)
 $usefulChangeOk = ((-not $RequireUsefulChanges) -or ($usefulChanges.Count -gt 0))
-$passed = (($forbidden.Count -eq 0) -and $readmeOk -and ($currentMap.Keys.Count -gt 0) -and $usefulChangeOk)
+$passed = (($forbidden.Count -eq 0) -and ($suspiciousFiles.Count -eq 0) -and ($encodingFindings.Count -eq 0) -and $readmeOk -and ($currentMap.Keys.Count -gt 0) -and $usefulChangeOk)
 
 $result = [ordered]@{
   checked_at = (Get-Date).ToString("o")
@@ -116,7 +177,9 @@ $result = [ordered]@{
   changes = $changes
   useful_changes = $usefulChanges
   forbidden_files = $forbidden
+  suspicious_files = $suspiciousFiles
   ghost_findings = $ghostFindings
+  encoding_findings = $encodingFindings
   readme_ok = $readmeOk
   require_useful_changes = [bool]$RequireUsefulChanges
   useful_change_ok = $usefulChangeOk
@@ -129,12 +192,24 @@ Write-Host ("Target files:     " + $currentMap.Keys.Count)
 Write-Host ("Changes:          " + $changes.Count)
 Write-Host ("Useful changes:   " + $usefulChanges.Count)
 Write-Host ("Forbidden files:  " + $forbidden.Count)
+Write-Host ("Suspicious files: " + $suspiciousFiles.Count)
 Write-Host ("Ghost findings:   " + $ghostFindings.Count)
+Write-Host ("Encoding issues:  " + $encodingFindings.Count)
 Write-Host ("README present:   " + $readmeOk)
 if ($forbidden.Count -gt 0) {
   Write-Host ""
   Write-Host "Forbidden files:"
   $forbidden | ForEach-Object { Write-Host ("- " + $_.path) }
+}
+if ($suspiciousFiles.Count -gt 0) {
+  Write-Host ""
+  Write-Host "Suspicious files:"
+  $suspiciousFiles | ForEach-Object { Write-Host ("- " + $_.path + " (" + $_.reason + ")") }
+}
+if ($encodingFindings.Count -gt 0) {
+  Write-Host ""
+  Write-Host "Encoding issues:"
+  $encodingFindings | ForEach-Object { Write-Host ("- " + $_.path + " marker=" + $_.marker) }
 }
 if (-not $usefulChangeOk) {
   Write-Host ""
