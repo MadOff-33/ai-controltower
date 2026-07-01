@@ -124,8 +124,8 @@ foreach ($change in $changes) {
   if (-not $allowed) { $unauthorized += $change }
 }
 
-$reportText = Get-Content -LiteralPath $report -Raw
-$contextText = Get-Content -LiteralPath $contextPack -Raw
+$reportText = Get-Content -LiteralPath $report -Raw -Encoding UTF8
+$contextText = Get-Content -LiteralPath $contextPack -Raw -Encoding UTF8
 $contextManifestPath = Get-ContextManifestPath -ContextPack $contextPack
 $contextManifest = $null
 $includedPaths = @()
@@ -141,7 +141,7 @@ if ($contextManifestPath) {
     foreach ($path in $includedPaths) {
       $absolute = Join-Path $snapshotRoot ($path -replace "/", "\")
       if (Test-Path -LiteralPath $absolute -PathType Leaf) {
-        $includedContent[$path] = Get-Content -LiteralPath $absolute -Raw -ErrorAction SilentlyContinue
+        $includedContent[$path] = Get-Content -LiteralPath $absolute -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
       }
     }
   }

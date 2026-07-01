@@ -138,7 +138,7 @@ foreach ($path in $currentMap.Keys) {
   if (-not (Test-Path -LiteralPath $absolute -PathType Leaf)) { continue }
   $extension = [System.IO.Path]::GetExtension($absolute).ToLowerInvariant()
   if (@(".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf") -contains $extension) { continue }
-  $text = Get-Content -LiteralPath $absolute -Raw -ErrorAction SilentlyContinue
+  $text = Get-Content -LiteralPath $absolute -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
   foreach ($marker in $ghostMarkers) {
     if ($text.IndexOf($marker, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
       $ghostFindings += [pscustomobject][ordered]@{ path = $path; marker = $marker }

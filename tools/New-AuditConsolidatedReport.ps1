@@ -91,7 +91,7 @@ $sourceReports = @(Get-ChildItem -LiteralPath $reportsDir -File -Filter "*_repor
 $sourceSections = @()
 $encodingWarnings = @()
 foreach ($source in $sourceReports) {
-  $text = Get-Content -LiteralPath $source.FullName -Raw
+  $text = Get-Content -LiteralPath $source.FullName -Raw -Encoding UTF8
   if (Test-TextMojibake -Text $text) { $encodingWarnings += $source.Name }
   $sourceSections += "## Source: " + $source.Name
   $sourceSections += ""
