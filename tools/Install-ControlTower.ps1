@@ -27,6 +27,19 @@ if (-not (Test-Path -LiteralPath $initHermes)) {
 }
 & $initHermes -MemoryRoot $HermesMemoryRoot | Out-Null
 
+$headlessDir = Join-Path $Root "tools\headless"
+if ((Test-Path -LiteralPath (Join-Path $headlessDir "package.json")) -and (Get-Command "npm" -ErrorAction SilentlyContinue)) {
+  Push-Location $headlessDir
+  try {
+    & npm install
+    & npx playwright install chromium
+  } finally {
+    Pop-Location
+  }
+} else {
+  Write-Host "npm introuvable ou tools/headless absent: verification navigateur non installee."
+}
+
 $dependencies = @()
 if (-not $SkipDependencyCheck) {
   foreach ($name in @("git", "powershell", "aider", "ollama")) {

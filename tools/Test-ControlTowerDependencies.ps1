@@ -60,6 +60,14 @@ function Test-OllamaServingHealth {
   return [ordered]@{ name = $ModelName; status = $status; message = $message }
 }
 
+function Test-HeadlessBrowser {
+  param([string]$ScriptRoot)
+  $nodeAvailable = $null -ne (Get-Command "node" -ErrorAction SilentlyContinue)
+  $playwrightPath = Join-Path $ScriptRoot "headless\node_modules\playwright"
+  $playwrightAvailable = $nodeAvailable -and (Test-Path -LiteralPath $playwrightPath)
+  return [ordered]@{ name = "Playwright"; available = $playwrightAvailable }
+}
+
 $projectExists = Test-Path -LiteralPath $ProjectPath
 $hermesEntries = Join-Path $HermesMemoryRoot "central\entries.jsonl"
 $hermesGuidance = Join-Path $HermesMemoryRoot "central\guidance_cache.md"
@@ -80,6 +88,7 @@ $result = [ordered]@{
   ollama = Test-CommandAvailable -Name "ollama"
   ornith = Test-OllamaModel -ModelName "ornith:9b"
   serving_health = Test-OllamaServingHealth -ModelName "ornith:9b"
+  headless_browser = Test-HeadlessBrowser -ScriptRoot $PSScriptRoot
   hermes = [ordered]@{
     name = "Hermes central memory"
     available = ((Test-Path -LiteralPath $hermesEntries) -and (Test-Path -LiteralPath $hermesGuidance))
