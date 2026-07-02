@@ -234,3 +234,9 @@ def test_screenshot_endpoint_rejects_path_outside_validation_shape(client, tmp_p
     stray.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 16)
     response = client.get("/api/screenshot", query_string={"path": str(stray)})
     assert response.status_code == 400
+
+
+def test_screenshot_endpoint_rejects_unc_path(client):
+    unc_path = "\\\\attacker-host\\share\\validation\\screenshot.png"
+    response = client.get("/api/screenshot", query_string={"path": unc_path})
+    assert response.status_code == 400
