@@ -16,3 +16,4 @@ hermes_memory/central/guidance_cache.md
 ControlTower.exe
 logs/final_recipe_report.md
 node_modules/
+.claude/
