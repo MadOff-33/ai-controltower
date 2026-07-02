@@ -1,0 +1,9 @@
+{
+  "name": "controltower-headless-checks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Verification headless des projets webapp generes par ControlTower",
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}
