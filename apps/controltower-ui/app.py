@@ -661,13 +661,15 @@ def read_last_run_status():
     artifacts = latest_artifacts()
     run_log = artifacts.get("run_log")
     if not run_log:
-        return {"status": "idle", "label": "En attente", "artifacts": artifacts}
+        return {"status": "idle", "label": "En attente", "artifacts": artifacts, "functional_check": None}
     try:
         payload = json.loads(Path(run_log).read_text(encoding="utf-8"))
         status = payload.get("status", "observed")
+        functional_check = (payload.get("data") or {}).get("functional_check")
     except Exception:
         status = "observed"
-    return {"status": status, "label": status_label(status), "artifacts": artifacts}
+        functional_check = None
+    return {"status": status, "label": status_label(status), "artifacts": artifacts, "functional_check": functional_check}
 
 
 def run_job(job_id, command_key, project_path, confirmed=False):

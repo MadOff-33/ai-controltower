@@ -56,9 +56,15 @@ if (-not $RunAider) { $startArgs["DryRun"] = $true }
 & $startScript @startArgs
 
 $validation = "skipped"
+$functionalCheck = $null
 if ($RunAider -or $ValidateAfterDryRun) {
   & $testScript -WorkspacePath $workspace -TicketPath $ticket -ContextPackPath $pack
   $validation = if ($LASTEXITCODE -eq 0) { "passed" } else { "failed" }
+  $validationResultPath = Join-Path $workspace ("validation\" + $safeId + "_result.json")
+  if (Test-Path -LiteralPath $validationResultPath) {
+    $validationResult = Get-Content -LiteralPath $validationResultPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $functionalCheck = $validationResult.functional_check
+  }
 }
 
 $validationDir = Join-Path $workspace "validation"
@@ -70,6 +76,7 @@ Write-Utf8NoBom -Path (Join-Path $validationDir ($safeId + "_pipeline_result.jso
   context_pack = $pack
   mode = $(if ($RunAider) { "RunAider" } else { "DryRun" })
   validation = $validation
+  functional_check = $functionalCheck
 } | ConvertTo-Json -Depth 6)
 
 Write-Host ""

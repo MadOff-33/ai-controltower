@@ -155,12 +155,19 @@ try {
     if ($RunAider) { $fixArgs["RunAider"] = $true }
     if ($ValidateAfterDryRun) { $fixArgs["ValidateAfterDryRun"] = $true }
     & $fixPipeline @fixArgs
+    $ticketId = [System.IO.Path]::GetFileNameWithoutExtension($ticket)
+    $fixPipelineResultPath = Join-Path $workspace ("validation\" + $ticketId + "_pipeline_result.json")
+    $functionalCheck = $null
+    if (Test-Path -LiteralPath $fixPipelineResultPath) {
+      $fixPipelineResult = Get-Content -LiteralPath $fixPipelineResultPath -Raw -Encoding UTF8 | ConvertFrom-Json
+      $functionalCheck = $fixPipelineResult.functional_check
+    }
     $result = @{
       workspace_path = $workspace
       ticket_path = $ticket
       pipeline = "fix"
+      functional_check = $functionalCheck
     }
-    $ticketId = [System.IO.Path]::GetFileNameWithoutExtension($ticket)
     $status = Get-PipelineStatus -Workspace $workspace -ResultFileName ($ticketId + "_pipeline_result.json")
   } elseif ($Mode -eq "Creation") {
     if ([string]::IsNullOrWhiteSpace($ProjectName)) { throw "ProjectName est obligatoire en mode Creation." }
@@ -188,12 +195,19 @@ try {
     & $creationPipeline @creationArgs
     $workspace = Get-NewestDirectory -Path $WorkspaceRoot
     $config = Get-Content -LiteralPath (Join-Path $workspace "creation.config.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+    $creationResultPath = Join-Path $workspace "validation\creation_result.json"
+    $functionalCheck = $null
+    if (Test-Path -LiteralPath $creationResultPath) {
+      $creationResult = Get-Content -LiteralPath $creationResultPath -Raw -Encoding UTF8 | ConvertFrom-Json
+      $functionalCheck = $creationResult.functional_check
+    }
     $result = @{
       project_name = $ProjectName
       project_type = $ProjectType
       workspace_path = $workspace
       target_project_path = [string]$config.target_project_path
       pipeline = "creation"
+      functional_check = $functionalCheck
     }
     $status = Get-PipelineStatus -Workspace $workspace -ResultFileName "pipeline_result.json"
   } else {
