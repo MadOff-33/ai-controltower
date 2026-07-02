@@ -343,6 +343,15 @@ def build_commands(project_path):
             "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Get-HermesGuidance.ps1") + '"',
             "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Get-HermesGuidance.ps1")],
         },
+        "model_health_check": {
+            "label": "Verifier le service modele",
+            "group": "Modele",
+            "dangerous": False,
+            "template": False,
+            "description": "Envoie un prompt de controle au modele configure et verifie l'absence de boucle de repetition ou de reponse tronquee.",
+            "command": 'powershell -ExecutionPolicy Bypass -File "' + str(ROOT / "tools" / "Test-ModelServingHealth.ps1") + '"',
+            "args": ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools" / "Test-ModelServingHealth.ps1")],
+        },
         "git_status": {
             "label": "Git status",
             "group": "Git",

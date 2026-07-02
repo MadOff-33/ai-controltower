@@ -2,7 +2,7 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-$Root = "C:\AI_ControlTower"
+$Root = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 
 function Assert-True {
   param([bool]$Condition, [string]$Message)
@@ -194,6 +194,8 @@ Assert-True -Condition ($selfTest.commands.audit_dry_run.command.Contains("-Vali
 Assert-True -Condition ($selfTest.commands.audit_real.dangerous -eq $true) -Message "Real audit should be marked dangerous."
 Assert-True -Condition ($selfTest.commands.fix_dry_run.command.Contains("-Mode Fix")) -Message "Fix dry-run command missing."
 Assert-True -Condition ($selfTest.commands.aider_manual.command.Contains("ollama_chat/ornith:9b")) -Message "Manual Aider command missing Ornith."
+Assert-True -Condition ($selfTest.commands.PSObject.Properties.Name -contains "model_health_check") -Message "Model health check command missing."
+Assert-True -Condition ($selfTest.commands.model_health_check.dangerous -eq $false) -Message "Model health check should not require confirmation."
 Assert-True -Condition ($selfTest.github_url -eq "https://github.com/MadOff-33/ai-controltower") -Message "UI selftest did not expose GitHub URL."
 foreach ($commandProperty in $selfTest.commands.PSObject.Properties) {
   Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($commandProperty.Value.description)) -Message ("Command description missing: " + $commandProperty.Name)

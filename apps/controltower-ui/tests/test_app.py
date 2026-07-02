@@ -108,3 +108,13 @@ def test_creation_parent_is_persisted_in_state(client, tmp_path):
     assert saved.status_code == 200
     state = client.get("/api/state").get_json()
     assert state["creation_parent_path"] == str(parent)
+
+
+def test_state_endpoint_exposes_model_health_check_command(client):
+    state = client.get("/api/state")
+    assert state.status_code == 200
+    payload = state.get_json()
+    assert "model_health_check" in payload["commands"]
+    command = payload["commands"]["model_health_check"]
+    assert command["dangerous"] is False
+    assert "Test-ModelServingHealth.ps1" in command["command"]
