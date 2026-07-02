@@ -240,3 +240,9 @@ def test_screenshot_endpoint_rejects_unc_path(client):
     unc_path = "\\\\attacker-host\\share\\validation\\screenshot.png"
     response = client.get("/api/screenshot", query_string={"path": unc_path})
     assert response.status_code == 400
+
+
+def test_screenshot_endpoint_rejects_mixed_separator_unc_path(client):
+    mixed_path = "/\\attacker-host\\share\\validation\\screenshot.png"
+    response = client.get("/api/screenshot", query_string={"path": mixed_path})
+    assert response.status_code == 400

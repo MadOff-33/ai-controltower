@@ -1225,9 +1225,10 @@ def create_app(default_project=None):
         raw_path = request.args.get("path", "")
         if not raw_path:
             return jsonify({"error": "Chemin manquant."}), 400
-        if raw_path.startswith("\\\\") or raw_path.startswith("//"):
-            return jsonify({"error": "Chemin non autorise."}), 400
         screenshot_path = Path(raw_path)
+        drive = screenshot_path.drive
+        if drive and not re.match(r"^[A-Za-z]:$", drive):
+            return jsonify({"error": "Chemin non autorise."}), 400
         if screenshot_path.name != "screenshot.png" or screenshot_path.parent.name != "validation":
             return jsonify({"error": "Chemin non autorise."}), 400
         if not screenshot_path.exists():
