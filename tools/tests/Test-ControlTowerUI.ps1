@@ -180,6 +180,8 @@ $depsJson = & (Join-Path $Root "tools\Test-ControlTowerDependencies.ps1") -Proje
 $deps = $depsJson | ConvertFrom-Json
 Assert-True -Condition ($deps.git.available -eq $true) -Message "Git should be available."
 Assert-True -Condition ($deps.hermes.available -eq $true) -Message "Hermes should be initialized."
+Assert-True -Condition ($deps.serving_health.status -in @("ok", "warning", "unknown")) -Message "Serving health status missing or invalid."
+Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($deps.serving_health.message)) -Message "Serving health message should not be empty."
 
 $selfTestJson = & $python.Source @pythonArgs $appPath --self-test --project-path $Root
 Assert-True -Condition ($LASTEXITCODE -eq 0) -Message "Flask UI self-test failed."
