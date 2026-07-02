@@ -21,7 +21,7 @@ function Get-OptionalText {
 $workspace = (Resolve-Path -LiteralPath $WorkspacePath).ProviderPath
 $configPath = Join-Path $workspace "creation.config.json"
 if (-not (Test-Path -LiteralPath $configPath)) { throw "creation.config.json introuvable: $configPath" }
-$config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+$config = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $target = [string]$config.target_project_path
 $brief = [string]$config.brief_path
 $prompt = [string]$config.prompt_path

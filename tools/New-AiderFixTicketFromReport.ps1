@@ -35,7 +35,7 @@ if ([string]::IsNullOrWhiteSpace($ReportPath)) {
   $ReportPath = $reportFile.FullName
 }
 $report = (Resolve-Path -LiteralPath $ReportPath).ProviderPath
-$reportText = Get-Content -LiteralPath $report -Raw
+$reportText = Get-Content -LiteralPath $report -Raw -Encoding UTF8
 
 if ($EditableFiles.Count -eq 0) {
   $candidatePaths = @()

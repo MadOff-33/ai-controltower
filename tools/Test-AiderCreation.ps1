@@ -78,13 +78,13 @@ function Find-Mojibake {
 $workspace = (Resolve-Path -LiteralPath $WorkspacePath).ProviderPath
 $configPath = Join-Path $workspace "creation.config.json"
 if (-not (Test-Path -LiteralPath $configPath)) { throw "creation.config.json introuvable: $configPath" }
-$config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+$config = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $target = [string]$config.target_project_path
 $validationDir = Join-Path $workspace "validation"
 $baselinePath = Join-Path $validationDir "creation_baseline.json"
 if (-not (Test-Path -LiteralPath $baselinePath)) { throw "Baseline creation introuvable: $baselinePath" }
 
-$baseline = Get-Content -LiteralPath $baselinePath -Raw | ConvertFrom-Json
+$baseline = Get-Content -LiteralPath $baselinePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $baselineMap = @{}
 foreach ($item in @($baseline)) { $baselineMap[$item.path] = $item }
 

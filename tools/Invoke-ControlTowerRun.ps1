@@ -33,7 +33,7 @@ function Get-PipelineStatus {
   param([string]$Workspace, [string]$ResultFileName)
   $resultPath = Join-Path $Workspace ("validation\" + $ResultFileName)
   if (-not (Test-Path -LiteralPath $resultPath)) { return "passed" }
-  $pipelineResult = Get-Content -LiteralPath $resultPath -Raw | ConvertFrom-Json
+  $pipelineResult = Get-Content -LiteralPath $resultPath -Raw -Encoding UTF8 | ConvertFrom-Json
   $validation = [string]$pipelineResult.validation
   if ([string]::IsNullOrWhiteSpace($validation) -or $validation -eq "skipped") { return "prepared" }
   return $validation
@@ -184,7 +184,7 @@ try {
     if ($AllowExisting) { $creationArgs["AllowExisting"] = $true }
     & $creationPipeline @creationArgs
     $workspace = Get-NewestDirectory -Path $WorkspaceRoot
-    $config = Get-Content -LiteralPath (Join-Path $workspace "creation.config.json") -Raw | ConvertFrom-Json
+    $config = Get-Content -LiteralPath (Join-Path $workspace "creation.config.json") -Raw -Encoding UTF8 | ConvertFrom-Json
     $result = @{
       project_name = $ProjectName
       project_type = $ProjectType

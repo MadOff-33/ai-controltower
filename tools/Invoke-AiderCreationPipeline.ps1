@@ -88,7 +88,7 @@ if ($RunAider -or $ValidateAfterDryRun) {
   $validationStatus = $(if ($RunAider) { "passed" } else { "structure-passed" })
 }
 
-$config = Get-Content -LiteralPath (Join-Path $workspace "creation.config.json") -Raw | ConvertFrom-Json
+$config = Get-Content -LiteralPath (Join-Path $workspace "creation.config.json") -Raw -Encoding UTF8 | ConvertFrom-Json
 $validationDir = Join-Path $workspace "validation"
 New-Item -ItemType Directory -Path $validationDir -Force | Out-Null
 $result = [ordered]@{

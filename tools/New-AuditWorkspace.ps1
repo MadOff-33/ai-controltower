@@ -15,7 +15,7 @@ function Get-ProfileList {
   param([string]$Path, [string]$Key)
   $items = @()
   if (-not (Test-Path -LiteralPath $Path)) { return $items }
-  $lines = Get-Content -LiteralPath $Path
+  $lines = Get-Content -LiteralPath $Path -Encoding UTF8
   $inKey = $false
   foreach ($line in $lines) {
     if ($line -match "^\s*$([regex]::Escape($Key))\s*:") {

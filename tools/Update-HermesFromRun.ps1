@@ -11,7 +11,7 @@ $addScript = (Join-Path (Split-Path -Parent $PSScriptRoot) "tools\Add-HermesMemo
 if (-not (Test-Path -LiteralPath $addScript)) { throw "Add-HermesMemoryEntry.ps1 introuvable." }
 
 $runPath = (Resolve-Path -LiteralPath $RunResultPath).ProviderPath
-$run = Get-Content -LiteralPath $runPath -Raw | ConvertFrom-Json
+$run = Get-Content -LiteralPath $runPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $status = [string]$run.status
 if ([string]::IsNullOrWhiteSpace($status) -and $null -ne $run.passed) {
   $status = $(if ($run.passed) { "passed" } else { "failed" })

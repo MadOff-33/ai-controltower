@@ -85,7 +85,7 @@ $baselinePath = Join-Path $validationDir "baseline_files.json"
 if (-not (Test-Path -LiteralPath $baselinePath)) { throw "Baseline introuvable: $baselinePath" }
 if (-not (Test-UnderDirectory -Path $report -Directory $reportsDir)) { throw "Rapport hors dossier reports/: $report" }
 
-$baseline = Get-Content -LiteralPath $baselinePath -Raw | ConvertFrom-Json
+$baseline = Get-Content -LiteralPath $baselinePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $baselineMap = @{}
 foreach ($item in $baseline) { $baselineMap[$item.path] = $item }
 
@@ -132,12 +132,12 @@ $includedPaths = @()
 $omittedPaths = @()
 $includedContent = @{}
 if ($contextManifestPath) {
-  $contextManifest = Get-Content -LiteralPath $contextManifestPath -Raw | ConvertFrom-Json
+  $contextManifest = Get-Content -LiteralPath $contextManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
   $includedPaths = @($contextManifest.included | ForEach-Object { $_.path })
   $omittedPaths = @($contextManifest.omitted | ForEach-Object { $_.path })
   $configPathForSnapshot = Join-Path $workspace "audit.config.json"
   if (Test-Path -LiteralPath $configPathForSnapshot) {
-    $snapshotRoot = (Get-Content -LiteralPath $configPathForSnapshot -Raw | ConvertFrom-Json).snapshot_path
+    $snapshotRoot = (Get-Content -LiteralPath $configPathForSnapshot -Raw -Encoding UTF8 | ConvertFrom-Json).snapshot_path
     foreach ($path in $includedPaths) {
       $absolute = Join-Path $snapshotRoot ($path -replace "/", "\")
       if (Test-Path -LiteralPath $absolute -PathType Leaf) {
@@ -158,7 +158,7 @@ foreach ($marker in $ghostMarkers) {
 
 $configPath = Join-Path $workspace "audit.config.json"
 if (Test-Path -LiteralPath $configPath) {
-  $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+  $config = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
   if ($reportText.IndexOf($config.project_path, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
     $ghostFindings += "absolute project path"
   }

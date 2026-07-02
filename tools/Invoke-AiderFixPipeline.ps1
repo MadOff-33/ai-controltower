@@ -18,7 +18,7 @@ $ErrorActionPreference = "Stop"
 function Read-SimpleYaml {
   param([string]$Path)
   $data = @{}
-  foreach ($line in (Get-Content -LiteralPath $Path)) {
+  foreach ($line in (Get-Content -LiteralPath $Path -Encoding UTF8)) {
     if ($line -match "^id:\s*(.*?)\s*$") {
       $value = $Matches[1].Trim()
       if ($value.Length -ge 2 -and $value.StartsWith('"') -and $value.EndsWith('"')) {

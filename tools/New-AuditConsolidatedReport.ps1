@@ -34,7 +34,7 @@ function Add-PathItem {
 $workspace = (Resolve-Path -LiteralPath $WorkspacePath).ProviderPath
 $configPath = Join-Path $workspace "audit.config.json"
 if (-not (Test-Path -LiteralPath $configPath)) { throw "audit.config.json introuvable: $configPath" }
-$config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+$config = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
 $reportsDir = Join-Path $workspace "reports"
 $contextDir = Join-Path $workspace "context_packs"
@@ -50,7 +50,7 @@ $includedMap = @{}
 $knownMap = @{}
 $lotRows = @()
 foreach ($manifestFile in $manifests) {
-  $manifest = Get-Content -LiteralPath $manifestFile.FullName -Raw | ConvertFrom-Json
+  $manifest = Get-Content -LiteralPath $manifestFile.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
   $lotIncluded = @($manifest.included | ForEach-Object { $_.path } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
   $lotOmitted = @($manifest.omitted | ForEach-Object { $_.path } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
   foreach ($path in $lotIncluded) {

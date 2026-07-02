@@ -36,7 +36,7 @@ function Read-SimpleYaml {
     }
     return $text.Replace('\"', '"')
   }
-  foreach ($line in (Get-Content -LiteralPath $Path)) {
+  foreach ($line in (Get-Content -LiteralPath $Path -Encoding UTF8)) {
     if ($line -match "^([A-Za-z0-9_]+):\s*(.*?)\s*$") {
       $current = $Matches[1]
       $value = Convert-YamlValue -Value $Matches[2]

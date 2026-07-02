@@ -13,7 +13,7 @@ if (-not (Test-Path -LiteralPath $configPath)) {
   throw "audit.config.json introuvable: $configPath"
 }
 
-$config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+$config = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $snapshot = $config.snapshot_path
 if (-not (Test-Path -LiteralPath $snapshot)) {
   throw "Snapshot introuvable: $snapshot"

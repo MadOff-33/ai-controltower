@@ -21,7 +21,7 @@ if ([string]::IsNullOrWhiteSpace($OutputPath)) {
 
 $items = @()
 if (Test-Path -LiteralPath $entries) {
-  foreach ($line in (Get-Content -LiteralPath $entries)) {
+  foreach ($line in (Get-Content -LiteralPath $entries -Encoding UTF8)) {
     if ([string]::IsNullOrWhiteSpace($line)) { continue }
     $entry = $line | ConvertFrom-Json
     if ($entry.status -eq "archived") { continue }

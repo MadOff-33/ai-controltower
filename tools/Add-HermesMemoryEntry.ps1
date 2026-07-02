@@ -33,7 +33,7 @@ function Update-HermesIndex {
   $categories = @{}
   $count = 0
   if (Test-Path -LiteralPath $EntriesPath) {
-    foreach ($line in (Get-Content -LiteralPath $EntriesPath)) {
+    foreach ($line in (Get-Content -LiteralPath $EntriesPath -Encoding UTF8)) {
       if ([string]::IsNullOrWhiteSpace($line)) { continue }
       $entry = $line | ConvertFrom-Json
       $count++

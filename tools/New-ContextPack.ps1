@@ -20,7 +20,7 @@ $ErrorActionPreference = "Stop"
 function Get-ProfileScalar {
   param([string]$Path, [string]$Key)
   if (-not (Test-Path -LiteralPath $Path)) { return "" }
-  foreach ($line in (Get-Content -LiteralPath $Path)) {
+  foreach ($line in (Get-Content -LiteralPath $Path -Encoding UTF8)) {
     if ($line -match "^\s*$([regex]::Escape($Key))\s*:\s*(.+?)\s*$") {
       return $Matches[1].Trim().Trim('"').Trim("'")
     }
@@ -32,7 +32,7 @@ function Get-ProfileList {
   param([string]$Path, [string]$Key)
   $items = @()
   if (-not (Test-Path -LiteralPath $Path)) { return $items }
-  $lines = Get-Content -LiteralPath $Path
+  $lines = Get-Content -LiteralPath $Path -Encoding UTF8
   $inKey = $false
   foreach ($line in $lines) {
     if ($line -match "^\s*$([regex]::Escape($Key))\s*:") {
@@ -50,7 +50,7 @@ function Get-ProfileList {
 $workspace = (Resolve-Path -LiteralPath $WorkspacePath).ProviderPath
 $configPath = Join-Path $workspace "audit.config.json"
 if (-not (Test-Path -LiteralPath $configPath)) { throw "audit.config.json introuvable: $configPath" }
-$config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+$config = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $snapshot = $config.snapshot_path
 $profilePath = $config.profile_path
 
@@ -106,7 +106,7 @@ $header = @(
   "",
   "## Inventaire synthetique",
   "",
-  (Get-Content -LiteralPath (Join-Path $workspace "inventory\summary.md") -Raw),
+  (Get-Content -LiteralPath (Join-Path $workspace "inventory\summary.md") -Raw -Encoding UTF8),
   "",
   "## Fichiers inclus",
   ""
@@ -121,7 +121,7 @@ Get-ChildItem -LiteralPath $snapshot -Recurse -File -Force | Sort-Object FullNam
     $omitted += [ordered]@{ path = $relative; reason = "extension non incluse"; size_bytes = $_.Length }
     return
   }
-  $content = Get-Content -LiteralPath $_.FullName -Raw -ErrorAction SilentlyContinue
+  $content = Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
   if ($null -eq $content) { $content = "" }
   $block = @(
     "### $relative",

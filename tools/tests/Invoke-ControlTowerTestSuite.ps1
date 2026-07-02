@@ -7,6 +7,7 @@ $ErrorActionPreference = "Stop"
 
 $Root = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $Suites = @(
+  "Test-PowerShellEncodingLint.ps1",
   "Test-AiderReliabilityLayer.ps1",
   "Test-AiderFixReliability.ps1",
   "Test-AiderCreationReliability.ps1",

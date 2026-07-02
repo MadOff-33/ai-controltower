@@ -52,7 +52,7 @@ foreach ($scriptPath in @($contextScript, $startScript, $validateScript)) {
 }
 
 $previousManifestPath = Get-PreviousManifest -Workspace $workspace -Lot $PreviousLotName
-$previousManifest = Get-Content -LiteralPath $previousManifestPath -Raw | ConvertFrom-Json
+$previousManifest = Get-Content -LiteralPath $previousManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $omittedPaths = @($previousManifest.omitted | ForEach-Object { $_.path } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 if ($omittedPaths.Count -eq 0) {
   throw "Aucun fichier omis a reprendre. L'audit precedent est deja complet pour ce manifeste."

@@ -24,7 +24,7 @@ function Read-SimpleYaml {
     }
     return $text.Replace('\"', '"')
   }
-  foreach ($line in (Get-Content -LiteralPath $Path)) {
+  foreach ($line in (Get-Content -LiteralPath $Path -Encoding UTF8)) {
     if ($line -match "^\s*#") { continue }
     if ($line -match "^([A-Za-z0-9_]+):\s*(.*?)\s*$") {
       $current = $Matches[1]
@@ -58,7 +58,7 @@ New-Item -ItemType Directory -Path $contextDir -Force | Out-Null
 $packPath = Join-Path $contextDir ($safeId + "_pack.md")
 $manifestPath = Join-Path $contextDir ($safeId + "_manifest.json")
 
-$ticketText = Get-Content -LiteralPath $ticket -Raw
+$ticketText = Get-Content -LiteralPath $ticket -Raw -Encoding UTF8
 $sections = New-Object System.Collections.Generic.List[string]
 $header = @(
   "# Fix context pack - $safeId",
@@ -84,7 +84,7 @@ foreach ($relative in $allFiles) {
     $omitted += [pscustomobject][ordered]@{ path = $normalized; reason = "missing" }
     continue
   }
-  $content = Get-Content -LiteralPath $absolute -Raw
+  $content = Get-Content -LiteralPath $absolute -Raw -Encoding UTF8
   $block = @(
     "",
     "### $normalized",

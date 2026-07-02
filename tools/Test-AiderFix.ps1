@@ -25,7 +25,7 @@ function Read-SimpleYaml {
     }
     return $text.Replace('\"', '"')
   }
-  foreach ($line in (Get-Content -LiteralPath $Path)) {
+  foreach ($line in (Get-Content -LiteralPath $Path -Encoding UTF8)) {
     if ($line -match "^([A-Za-z0-9_]+):\s*(.*?)\s*$") {
       $current = $Matches[1]
       $value = Convert-YamlValue -Value $Matches[2]
@@ -54,7 +54,7 @@ $commands = @($data["verification_commands"] | Where-Object { -not [string]::IsN
 $baselinePath = Join-Path $validationDir ($safeId + "_baseline.json")
 if (-not (Test-Path -LiteralPath $baselinePath)) { throw "Baseline introuvable: $baselinePath" }
 
-$baseline = Get-Content -LiteralPath $baselinePath -Raw | ConvertFrom-Json
+$baseline = Get-Content -LiteralPath $baselinePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $baselineMap = @{}
 foreach ($item in $baseline) { $baselineMap[$item.path] = $item }
 
@@ -90,7 +90,7 @@ foreach ($change in $changes) {
   }
 }
 
-$contextText = Get-Content -LiteralPath $contextPack -Raw
+$contextText = Get-Content -LiteralPath $contextPack -Raw -Encoding UTF8
 $ghostMarkers = @("main()", "app.run()", "sys.exit(app.exec_())")
 $ghostFindings = @()
 foreach ($change in $changes) {
@@ -98,7 +98,7 @@ foreach ($change in $changes) {
   if ($change.change -eq "deleted") { continue }
   $absolute = Join-Path $snapshot ($change.path -replace "/", "\")
   if (-not (Test-Path -LiteralPath $absolute -PathType Leaf)) { continue }
-  $text = Get-Content -LiteralPath $absolute -Raw
+  $text = Get-Content -LiteralPath $absolute -Raw -Encoding UTF8
   foreach ($marker in $ghostMarkers) {
     if ($text.IndexOf($marker, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 -and $contextText.IndexOf($marker, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) {
       $ghostFindings += [pscustomobject][ordered]@{ path = $change.path; marker = $marker }
