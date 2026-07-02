@@ -88,7 +88,14 @@ function Test-WebappProject {
   } catch {
     return [ordered]@{ status = "not_verified"; summary = "La verification du navigateur n'a pas pu s'executer correctement."; checks = @() }
   }
-  return [ordered]@{ status = $parsed.status; summary = $parsed.summary; checks = $parsed.checks }
+  return [ordered]@{
+    status = $parsed.status
+    summary = $parsed.summary
+    checks = $parsed.checks
+    html_file = $parsed.html_file
+    script_files = $parsed.script_files
+    screenshot_path = $parsed.screenshot_path
+  }
 }
 
 function Get-AutoDetectedType {

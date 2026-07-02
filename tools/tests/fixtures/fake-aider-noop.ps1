@@ -1,0 +1,2 @@
+param()
+exit 0
