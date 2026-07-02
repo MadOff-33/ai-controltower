@@ -89,7 +89,7 @@ Assert-True -Condition ($firstRun.status -eq "structure-passed") -Message ("Dry-
 $firstManifest = Get-Content -LiteralPath (Join-Path $workspace "context_packs\lot1_config_manifest.json") -Raw | ConvertFrom-Json
 Assert-True -Condition ($firstManifest.coverage.status -eq "partial") -Message "Small audit pack should be partial before continuation."
 
-& $ContinueAuditScript -WorkspacePath $workspace -PreviousLotName "lot1_config" -LotName "lot2_continuation" -MaxChars 8000 -ValidateAfterDryRun | Out-Null
+& $ContinueAuditScript -WorkspacePath $workspace -PreviousLotName "lot1_config" -LotName "lot2_continuation" -MaxChars 8000 -HermesMemoryRoot $hermesRoot -ValidateAfterDryRun | Out-Null
 Assert-PathExists -Path (Join-Path $workspace "context_packs\lot2_continuation_pack.md")
 Assert-PathExists -Path (Join-Path $workspace "reports\lot2_continuation_report.md")
 $secondManifest = Get-Content -LiteralPath (Join-Path $workspace "context_packs\lot2_continuation_manifest.json") -Raw | ConvertFrom-Json
