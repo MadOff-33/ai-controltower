@@ -56,7 +56,10 @@ const els = {
   saveCreationParentButton: document.getElementById("saveCreationParentButton"),
   newProjectPreviewButton: document.getElementById("newProjectPreviewButton"),
   newProjectRunButton: document.getElementById("newProjectRunButton"),
-  newProjectPreview: document.getElementById("newProjectPreview")
+  newProjectPreview: document.getElementById("newProjectPreview"),
+  newProjectCorrectionBlock: document.getElementById("newProjectCorrectionBlock"),
+  newProjectCorrectionNotes: document.getElementById("newProjectCorrectionNotes"),
+  newProjectCorrectButton: document.getElementById("newProjectCorrectButton")
 };
 
 let state = null;
@@ -623,6 +626,34 @@ async function previewNewProject() {
   }
 }
 
+async function checkPreviousCreationStatus() {
+  if (!els.newProjectName || !els.newProjectParent) return;
+  const name = els.newProjectName.value.trim();
+  const parent = els.newProjectParent.value.trim();
+  if (!name || !parent) {
+    if (els.newProjectCorrectionBlock) els.newProjectCorrectionBlock.hidden = true;
+    if (els.newProjectCorrectButton) els.newProjectCorrectButton.hidden = true;
+    return;
+  }
+  try {
+    const params = new URLSearchParams({ project_name: name, parent_path: parent });
+    const payload = await requestJson("/api/new-project/status?" + params.toString(), { method: "GET" });
+    const shouldShowCorrection = payload.has_previous && payload.functional_status === "failed";
+    if (els.newProjectCorrectionBlock) els.newProjectCorrectionBlock.hidden = !shouldShowCorrection;
+    if (els.newProjectCorrectButton) els.newProjectCorrectButton.hidden = !shouldShowCorrection;
+    if (shouldShowCorrection && els.newProjectCorrectionNotes && !els.newProjectCorrectionNotes.value) {
+      const details = (payload.checks || [])
+        .filter((c) => c.status === "failed")
+        .map((c) => "- " + (c.detail || c.name))
+        .join("\n");
+      els.newProjectCorrectionNotes.value = details;
+    }
+  } catch (error) {
+    if (els.newProjectCorrectionBlock) els.newProjectCorrectionBlock.hidden = true;
+    if (els.newProjectCorrectButton) els.newProjectCorrectButton.hidden = true;
+  }
+}
+
 async function submitNewProject(runAider) {
   try {
     const payload = collectNewProjectPayload(runAider);
@@ -641,6 +672,29 @@ async function submitNewProject(runAider) {
     await refresh();
   } catch (error) {
     showError("Creation non lancee", friendlyError(error), error.message);
+  }
+}
+
+async function submitCreationCorrection() {
+  try {
+    const payload = {
+      ...collectNewProjectPayload(true),
+      allow_existing: true,
+      correction_notes: els.newProjectCorrectionNotes ? els.newProjectCorrectionNotes.value : ""
+    };
+    const accepted = await showConfirm(
+      "Corriger le projet avec Aider",
+      "ControlTower va relancer Aider/Ornith sur le projet existant avec les notes de correction, puis valider a nouveau."
+    );
+    if (!accepted) return;
+    await requestJson("/api/new-project", {
+      method: "POST",
+      body: JSON.stringify({ ...payload, confirmed: true })
+    });
+    startJobPolling();
+    await refresh();
+  } catch (error) {
+    showError("Correction non lancee", friendlyError(error), error.message);
   }
 }
 
@@ -697,6 +751,9 @@ if (els.newProjectBrowseParentButton) els.newProjectBrowseParentButton.addEventL
 if (els.saveCreationParentButton) els.saveCreationParentButton.addEventListener("click", saveCreationParent);
 if (els.newProjectPreviewButton) els.newProjectPreviewButton.addEventListener("click", previewNewProject);
 if (els.newProjectRunButton) els.newProjectRunButton.addEventListener("click", () => submitNewProject(true));
+if (els.newProjectCorrectButton) els.newProjectCorrectButton.addEventListener("click", submitCreationCorrection);
+if (els.newProjectName) els.newProjectName.addEventListener("blur", checkPreviousCreationStatus);
+if (els.newProjectParent) els.newProjectParent.addEventListener("blur", checkPreviousCreationStatus);
 
 if (els.commandCatalog) els.commandCatalog.addEventListener("click", async (event) => {
   const helpButton = event.target.closest("button[data-command-help]");
