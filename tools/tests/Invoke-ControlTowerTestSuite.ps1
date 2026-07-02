@@ -10,6 +10,7 @@ $Suites = @(
   "Test-PowerShellEncodingLint.ps1",
   "Test-ProjectFunctionalCheck.ps1",
   "Test-AutoCorrectionLoop.ps1",
+  "Test-HermesReinforcementAggregation.ps1",
   "Test-AiderReliabilityLayer.ps1",
   "Test-AiderFixReliability.ps1",
   "Test-AiderCreationReliability.ps1",

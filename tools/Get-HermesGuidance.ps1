@@ -44,6 +44,20 @@ if ($selected.Count -eq 0) {
   }
 }
 
+$correctionAttempts = @($items | Where-Object { $_.kind -eq "correction_attempt" } | Sort-Object created_at -Descending | Select-Object -First 50)
+if ($correctionAttempts.Count -gt 0) {
+  $lines.Add("") | Out-Null
+  $lines.Add("## Taux de reussite de la correction automatique (50 dernieres tentatives)") | Out-Null
+  $lines.Add("") | Out-Null
+  $byCategory = $correctionAttempts | Group-Object category
+  foreach ($group in $byCategory) {
+    $fixed = @($group.Group | Where-Object { $_.context.outcome -eq "fixed" }).Count
+    $total = $group.Group.Count
+    $percent = if ($total -gt 0) { [Math]::Round(($fixed * 100.0 / $total), 0) } else { 0 }
+    $lines.Add("- " + $group.Name + ": " + $fixed + "/" + $total + " (" + $percent + "%)") | Out-Null
+  }
+}
+
 Write-Utf8NoBom -Path $OutputPath -Content ($lines -join [Environment]::NewLine)
 Write-Host "=== Hermes guidance generated ==="
 Write-Host ("Guidance: " + $OutputPath)
