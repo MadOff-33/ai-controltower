@@ -44,6 +44,21 @@ Assert-True -Condition ($result.auto_correction.resolved -eq $false) -Message "E
 Assert-True -Condition ($result.auto_correction.attempts_used -eq 3) -Message ("Expected 3 attempts, got " + $result.auto_correction.attempts_used)
 Assert-True -Condition ($result.summary.Contains("Echec apres 3 tentatives")) -Message "Summary should mention exhaustion"
 
+Write-Host "=== Test-AutoCorrectionLoop: does not record false 'fixed' when recheck is not_verified ==="
+$fixture = New-Fixture -Name "breaks_verification"
+Set-Content -LiteralPath (Join-Path $fixture "index.html") -Value '<html><body><script src="app.js"></script></body></html>'
+Set-Content -LiteralPath (Join-Path $fixture "app.js") -Value "document.getElementById('app').textContent = 'ok';"
+$fakeAiderBreaks = Join-Path $Root "tools\tests\fixtures\fake-aider-breaks-verification.ps1"
+$json = & powershell -ExecutionPolicy Bypass -File $loopScript -ProjectPath $fixture -ProjectType "webapp" -HermesMemoryRoot $hermesFixture -MaxAttempts 1 -AiderExecutable $fakeAiderBreaks | Out-String
+$result = $json | ConvertFrom-Json
+Assert-True -Condition ($result.auto_correction.attempts_used -eq 1) -Message ("Expected 1 attempt, got " + $result.auto_correction.attempts_used)
+$hermesEntriesPath = Join-Path $hermesFixture "central\entries.jsonl"
+$entryLines = @(Get-Content -LiteralPath $hermesEntriesPath | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$correctionEntries = @($entryLines | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.kind -eq "correction_attempt" -and $_.category -eq "dom_reference_check" })
+$lastEntry = $correctionEntries | Select-Object -Last 1
+Assert-True -Condition ($null -ne $lastEntry) -Message "Expected a correction_attempt Hermes entry for dom_reference_check"
+Assert-True -Condition ($lastEntry.context.outcome -eq "not_fixed") -Message ("Expected outcome=not_fixed when recheck is not_verified with empty checks, got " + $lastEntry.context.outcome)
+
 Write-Host "=== Test-AutoCorrectionLoop: Get-TargetFileForCheck branches ==="
 . $loopScript -ProjectPath (New-Fixture -Name "target_file_probe") -ProjectType "other" -HermesMemoryRoot $hermesFixture -MaxAttempts 0 2>$null | Out-Null
 $domCheck = [pscustomobject]@{ name = "dom_reference_check"; status = "failed"; detail = "app.js: reference..." }

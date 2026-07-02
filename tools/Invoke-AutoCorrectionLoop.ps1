@@ -114,8 +114,8 @@ while ($attempt -lt $MaxAttempts) {
 
   $recheckOutput = & powershell -ExecutionPolicy Bypass -File $functionalScript -ProjectPath $ProjectPath -ProjectType $ProjectType | Out-String
   $recheckResult = $recheckOutput | ConvertFrom-Json
-  $stillFailingSameCheck = @($recheckResult.checks | Where-Object { $_.name -eq $failedCheck.name -and $_.status -eq "failed" }).Count -gt 0
-  $outcome = if ($stillFailingSameCheck) { "not_fixed" } else { "fixed" }
+  $targetCheckNowOk = @($recheckResult.checks | Where-Object { $_.name -eq $failedCheck.name -and $_.status -eq "ok" }).Count -gt 0
+  $outcome = if ($targetCheckNowOk) { "fixed" } else { "not_fixed" }
 
   $history += [ordered]@{ attempt = $attempt; check_name = $failedCheck.name; target_file = $targetFile; outcome = $outcome }
 
