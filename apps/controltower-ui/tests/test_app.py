@@ -118,3 +118,47 @@ def test_state_endpoint_exposes_model_health_check_command(client):
     command = payload["commands"]["model_health_check"]
     assert command["dangerous"] is False
     assert "Test-ModelServingHealth.ps1" in command["command"]
+
+
+def test_new_project_status_reports_no_previous_project(client, tmp_path):
+    parent = tmp_path / "status parent"
+    parent.mkdir()
+    response = client.get(
+        "/api/new-project/status",
+        query_string={"project_name": "Never Created", "parent_path": str(parent)},
+    )
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["has_previous"] is False
+    assert payload["functional_status"] is None
+
+
+def test_new_project_preview_allows_existing_when_flagged(client, tmp_path):
+    parent = tmp_path / "existing parent"
+    parent.mkdir()
+    target = parent / "Existing_Project"
+    target.mkdir()
+    (target / "placeholder.txt").write_text("deja present", encoding="utf-8")
+    rejected = client.post(
+        "/api/new-project/preview",
+        json={
+            "project_name": "Existing Project",
+            "parent_path": str(parent),
+            "project_type": "python-cli",
+            "brief": "Nouveau brief.",
+        },
+    )
+    assert rejected.status_code == 400
+
+    accepted = client.post(
+        "/api/new-project/preview",
+        json={
+            "project_name": "Existing Project",
+            "parent_path": str(parent),
+            "project_type": "python-cli",
+            "brief": "Nouveau brief.",
+            "allow_existing": True,
+        },
+    )
+    assert accepted.status_code == 200
+    assert "-AllowExisting" in accepted.get_json()["command_preview"]

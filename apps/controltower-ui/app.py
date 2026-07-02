@@ -57,7 +57,7 @@ def sanitize_project_name(name):
     return safe
 
 
-def validate_new_project_payload(payload):
+def validate_new_project_payload(payload, allow_existing=False):
     name = sanitize_project_name(payload.get("project_name") or payload.get("name"))
     parent = Path(str(payload.get("parent_path") or payload.get("parent_dir") or "")).expanduser()
     brief = str(payload.get("brief") or "").strip()
@@ -69,7 +69,7 @@ def validate_new_project_payload(payload):
     if not parent.exists() or not parent.is_dir():
         raise ValueError("Le dossier parent n'existe pas.")
     target = parent / name
-    if target.exists() and any(target.iterdir()):
+    if (not allow_existing) and target.exists() and any(target.iterdir()):
         raise ValueError("Le dossier projet existe deja et n'est pas vide.")
     return {
         "project_name": name,
@@ -90,10 +90,37 @@ def write_creation_brief_request(project_name, brief):
     return str(path)
 
 
-def build_new_project_command(payload, run_aider=False, persist_brief=False):
-    data = validate_new_project_payload(payload)
+def find_latest_creation_workspace(target_project_path):
+    workspace_root = ROOT / "creation_workspaces"
+    if not workspace_root.exists():
+        return None
+    candidates = sorted(
+        (p for p in workspace_root.iterdir() if p.is_dir() and (p / "creation.config.json").exists()),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    for candidate in candidates:
+        try:
+            config = json.loads((candidate / "creation.config.json").read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if str(config.get("target_project_path", "")) == str(target_project_path):
+            return candidate
+    return None
+
+
+def build_new_project_command(payload, run_aider=False, persist_brief=False, allow_existing=False, correction_notes=""):
+    data = validate_new_project_payload(payload, allow_existing=allow_existing)
     if persist_brief:
-        brief_path = write_creation_brief_request(data["project_name"], data["brief"])
+        brief_text = data["brief"]
+        if allow_existing and correction_notes.strip():
+            previous_workspace = find_latest_creation_workspace(data["target_project_path"])
+            if previous_workspace is not None:
+                previous_brief_path = previous_workspace / "project_brief.md"
+                if previous_brief_path.exists():
+                    brief_text = previous_brief_path.read_text(encoding="utf-8")
+            brief_text = brief_text + "\n\n## Correction requise\n\n" + correction_notes.strip() + "\n"
+        brief_path = write_creation_brief_request(data["project_name"], brief_text)
     else:
         brief_path = "<BRIEF_FILE_CREATED_ON_LAUNCH>"
     command = (
@@ -128,6 +155,9 @@ def build_new_project_command(payload, run_aider=False, persist_brief=False):
         "-WorkspaceRoot",
         str(ROOT / "creation_workspaces"),
     ]
+    if allow_existing:
+        command += " -AllowExisting"
+        args.append("-AllowExisting")
     if run_aider:
         command += " -RunAider"
         args.append("-RunAider")
@@ -790,7 +820,13 @@ def create_new_project_job(payload, confirmed=False):
     run_aider = bool(payload.get("run_aider"))
     if run_aider and not confirmed:
         raise PermissionError("Confirmation requise pour cette action.")
-    data, command, args = build_new_project_command(payload, run_aider=run_aider, persist_brief=True)
+    data, command, args = build_new_project_command(
+        payload,
+        run_aider=run_aider,
+        persist_brief=True,
+        allow_existing=bool(payload.get("allow_existing")),
+        correction_notes=str(payload.get("correction_notes") or ""),
+    )
     job_id = "job_" + uuid.uuid4().hex[:12]
     job = {
         "id": job_id,
@@ -871,6 +907,16 @@ def run_dynamic_job(job_id, label, command, args):
             job["finished_at"] = now_iso()
             job["return_code"] = return_code
             job["output"] = output
+            if job.get("command") == "new_project" and job.get("target_project_path"):
+                try:
+                    workspace = find_latest_creation_workspace(job["target_project_path"])
+                    if workspace is not None:
+                        result_path = workspace / "validation" / "creation_result.json"
+                        if result_path.exists():
+                            creation_result = json.loads(result_path.read_text(encoding="utf-8"))
+                            job["functional_check"] = creation_result.get("functional_check")
+                except Exception:
+                    pass
             job["log_entry"] = entry
     except Exception as exc:
         entry = add_log("error", "Job creation echoue", str(exc))
@@ -1092,10 +1138,45 @@ def create_app(default_project=None):
         if payload is None:
             return jsonify({"error": "JSON invalide."}), 400
         try:
-            data, command, _args = build_new_project_command(payload, run_aider=False)
+            data, command, _args = build_new_project_command(
+                payload,
+                run_aider=False,
+                allow_existing=bool(payload.get("allow_existing")),
+                correction_notes=str(payload.get("correction_notes") or ""),
+            )
             return jsonify({"ok": True, "project": data, "command_preview": command})
         except Exception as exc:
             return jsonify({"error": str(exc)}), 400
+
+    @app.route("/api/new-project/status")
+    def api_new_project_status():
+        project_name = request.args.get("project_name", "").strip()
+        parent_path = request.args.get("parent_path", "").strip()
+        if not project_name or not parent_path:
+            return jsonify({"has_previous": False, "functional_status": None, "checks": []})
+        try:
+            safe_name = sanitize_project_name(project_name)
+        except ValueError:
+            return jsonify({"has_previous": False, "functional_status": None, "checks": []})
+        target = str((Path(parent_path).expanduser() / safe_name))
+        workspace = find_latest_creation_workspace(target)
+        if workspace is None:
+            return jsonify({"has_previous": False, "functional_status": None, "checks": []})
+        result_path = workspace / "validation" / "creation_result.json"
+        if not result_path.exists():
+            return jsonify({"has_previous": True, "functional_status": None, "checks": []})
+        try:
+            result = json.loads(result_path.read_text(encoding="utf-8"))
+        except Exception:
+            return jsonify({"has_previous": True, "functional_status": None, "checks": []})
+        functional_check = result.get("functional_check") or {}
+        return jsonify(
+            {
+                "has_previous": True,
+                "functional_status": functional_check.get("status"),
+                "checks": functional_check.get("checks", []),
+            }
+        )
 
     @app.route("/api/new-project", methods=["POST"])
     def api_new_project():
