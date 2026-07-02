@@ -351,6 +351,20 @@ textarea {
   color: var(--bad);
 }
 
+.badge.warn {
+  background: #fdf0e3;
+  color: var(--warn);
+}
+
+.functional-summary {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.functional-summary .badge {
+  margin-right: 6px;
+}
+
 .command-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

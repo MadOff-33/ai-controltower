@@ -15,6 +15,7 @@ const els = {
   errorMessage: document.getElementById("errorMessage"),
   dismissErrorButton: document.getElementById("dismissErrorButton"),
   lastRunStatus: document.getElementById("lastRunStatus"),
+  lastRunFunctional: document.getElementById("lastRunFunctional"),
   artifactLinks: document.getElementById("artifactLinks"),
   reportActions: document.getElementById("reportActions"),
   readReportButton: document.getElementById("readReportButton"),
@@ -29,6 +30,7 @@ const els = {
   logPanel: document.getElementById("logPanel"),
   creationJobPanel: document.getElementById("creationJobPanel"),
   creationLogPanel: document.getElementById("creationLogPanel"),
+  creationFunctional: document.getElementById("creationFunctional"),
   chatForm: document.getElementById("chatForm"),
   chatInput: document.getElementById("chatInput"),
   modalPanel: document.getElementById("modalPanel"),
@@ -148,6 +150,19 @@ function statusBadge(ok) {
   return `<span class="badge ${ok ? "ok" : "bad"}">${ok ? "OK" : "Absent"}</span>`;
 }
 
+function renderFunctionalCheck(el, functionalCheck) {
+  if (!el) return;
+  if (!functionalCheck || !functionalCheck.status) {
+    el.hidden = true;
+    setHtml(el, "");
+    return;
+  }
+  const badgeClass = functionalCheck.status === "ok" ? "ok" : (functionalCheck.status === "failed" ? "bad" : "warn");
+  const badgeText = functionalCheck.status === "ok" ? "OK" : (functionalCheck.status === "failed" ? "Echec" : "Non verifie");
+  el.hidden = false;
+  setHtml(el, `<span class="badge ${badgeClass}">${badgeText}</span>${escapeHtml(functionalCheck.summary || "")}`);
+}
+
 function renderDependencies(deps) {
   if (!els.dependencyList) return;
   const items = [
@@ -203,6 +218,7 @@ function renderLastRun(lastRun) {
   if (!els.lastRunStatus && !els.artifactLinks) return;
   const info = lastRun || {};
   setText(els.lastRunStatus, info.label || "En attente");
+  renderFunctionalCheck(els.lastRunFunctional, info.functional_check);
   const artifacts = info.artifacts || {};
   const links = [
     ["Workspace", artifacts.workspace],
@@ -302,8 +318,10 @@ function renderCreationJobs(jobs) {
   const job = runningJob || creationJobs[creationJobs.length - 1];
   if (!job) {
     setHtml(els.creationJobPanel, "");
+    renderFunctionalCheck(els.creationFunctional, null);
     return;
   }
+  renderFunctionalCheck(els.creationFunctional, job.functional_check);
   const stalled = job.stalled || job.health === "stalled";
   const statusText = stalled
     ? `Aucune activite recente (${job.silence_seconds || 0}s)`
