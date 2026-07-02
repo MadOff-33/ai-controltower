@@ -21,6 +21,7 @@ async function main() {
   }
 
   const html = fs.readFileSync(htmlPath, 'utf8');
+  const htmlFileName = path.basename(htmlPath);
   const htmlIds = new Set([...html.matchAll(/\bid=["']([^"']+)["']/g)].map((m) => m[1]));
   const htmlClasses = new Set();
   for (const m of html.matchAll(/\bclass=["']([^"']+)["']/g)) {
@@ -57,7 +58,9 @@ async function main() {
     console.log(JSON.stringify({
       status: 'failed',
       summary: `Le code cherche un element "${first.name}" qui n'existe pas dans la page (${first.file}).`,
-      checks
+      checks,
+      html_file: htmlFileName,
+      script_files: scriptFiles
     }));
     return;
   }
@@ -70,12 +73,15 @@ async function main() {
     console.log(JSON.stringify({
       status: 'ok',
       summary: "Recoupement HTML/JS reussi. Le chargement dans un navigateur n'a pas pu etre verifie (Playwright non installe).",
-      checks
+      checks,
+      html_file: htmlFileName,
+      script_files: scriptFiles
     }));
     return;
   }
 
   const consoleErrors = [];
+  let screenshotPath = null;
   const browser = await playwright.chromium.launch();
   try {
     const page = await browser.newPage();
@@ -87,6 +93,12 @@ async function main() {
     });
     await page.goto(require('url').pathToFileURL(htmlPath).href);
     await page.waitForTimeout(3000);
+    if (consoleErrors.length > 0) {
+      const validationDir = path.join(projectPath, 'validation');
+      if (!fs.existsSync(validationDir)) fs.mkdirSync(validationDir, { recursive: true });
+      screenshotPath = path.join(validationDir, 'screenshot.png');
+      await page.screenshot({ path: screenshotPath });
+    }
   } finally {
     await browser.close();
   }
@@ -101,12 +113,21 @@ async function main() {
     console.log(JSON.stringify({
       status: 'failed',
       summary: `Le site plante des l'ouverture : ${consoleErrors[0]}`,
-      checks
+      checks,
+      html_file: htmlFileName,
+      script_files: scriptFiles,
+      screenshot_path: screenshotPath
     }));
     return;
   }
 
-  console.log(JSON.stringify({ status: 'ok', summary: 'La page se charge correctement, sans erreur.', checks }));
+  console.log(JSON.stringify({
+    status: 'ok',
+    summary: 'La page se charge correctement, sans erreur.',
+    checks,
+    html_file: htmlFileName,
+    script_files: scriptFiles
+  }));
 }
 
 main().catch((err) => {
