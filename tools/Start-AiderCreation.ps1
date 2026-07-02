@@ -3,6 +3,7 @@ param(
   [string]$WorkspacePath,
 
   [string]$Model = "ollama_chat/ornith:9b",
+  [string]$HermesMemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory"),
   [switch]$DryRun
 )
 
@@ -51,7 +52,7 @@ $llmHistoryPath = Join-Path $workspace "creation_aider_llm_history.md"
 $promptText = Get-Content -LiteralPath $prompt -Raw -Encoding UTF8
 $briefText = Get-Content -LiteralPath $brief -Raw -Encoding UTF8
 $guidanceText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\common\controltower_aider_guidance.md")
-$hermesText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory\central\guidance_cache.md")
+$hermesText = Get-OptionalText -Path (Join-Path $HermesMemoryRoot "central\guidance_cache.md")
 $message = @(
   "## ControlTower guidance",
   "",

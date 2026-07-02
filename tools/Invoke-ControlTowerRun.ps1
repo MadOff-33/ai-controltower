@@ -127,6 +127,7 @@ try {
       LotName = $LotName
       PromptPath = $PromptPath
       Model = $Model
+      HermesMemoryRoot = $HermesMemoryRoot
     }
     if ($MaxChars -gt 0) { $auditArgs["MaxChars"] = $MaxChars }
     if ($RunAider) { $auditArgs["RunAider"] = $true }
@@ -148,6 +149,7 @@ try {
       WorkspacePath = $workspace
       TicketPath = $ticket
       Model = $Model
+      HermesMemoryRoot = $HermesMemoryRoot
     }
     if ($MaxChars -gt 0) { $fixArgs["MaxChars"] = $MaxChars }
     if ($RunAider) { $fixArgs["RunAider"] = $true }
@@ -173,6 +175,7 @@ try {
       WorkspaceRoot = $WorkspaceRoot
       PromptPath = $PromptPath
       Model = $Model
+      HermesMemoryRoot = $HermesMemoryRoot
     }
     if (-not [string]::IsNullOrWhiteSpace($BriefPath)) {
       $creationArgs["BriefPath"] = $BriefPath

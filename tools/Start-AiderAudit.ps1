@@ -10,6 +10,7 @@ param(
 
   [string]$ReportName = "",
   [string]$Model = "ollama_chat/ornith:9b",
+  [string]$HermesMemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory"),
   [switch]$DryRun
 )
 
@@ -46,7 +47,7 @@ if (-not (Test-Path -LiteralPath $reportPath)) {
 
 $messagePath = Join-Path $promptsDir ($safeLot + "_aider_message.md")
 $guidanceText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\common\controltower_aider_guidance.md")
-$hermesText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory\central\guidance_cache.md")
+$hermesText = Get-OptionalText -Path (Join-Path $HermesMemoryRoot "central\guidance_cache.md")
 $message = @(
   "## ControlTower guidance",
   "",

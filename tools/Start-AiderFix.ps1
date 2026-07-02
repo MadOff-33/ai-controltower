@@ -9,6 +9,7 @@ param(
   [string]$ContextPackPath,
 
   [string]$Model = "ollama_chat/ornith:9b",
+  [string]$HermesMemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory"),
   [switch]$DryRun
 )
 
@@ -72,7 +73,7 @@ New-Item -ItemType Directory -Path $validationDir -Force | Out-Null
 $messagePath = Join-Path $runDir ($safeId + "_aider_message.md")
 $messageLines = New-Object System.Collections.Generic.List[string]
 $guidanceText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\common\controltower_aider_guidance.md")
-$hermesText = Get-OptionalText -Path (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory\central\guidance_cache.md")
+$hermesText = Get-OptionalText -Path (Join-Path $HermesMemoryRoot "central\guidance_cache.md")
 $relativePack = [System.IO.Path]::GetFullPath($contextPack).Substring([System.IO.Path]::GetFullPath($snapshot).TrimEnd("\").Length).TrimStart("\") -replace "\\", "/"
 if ($relativePack.StartsWith("..")) {
   $relativePack = $contextPack

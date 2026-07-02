@@ -7,6 +7,7 @@ param(
 
   [int]$MaxChars = 30000,
   [string]$Model = "ollama_chat/ornith:9b",
+  [string]$HermesMemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory"),
   [switch]$RunAider,
   [switch]$ValidateAfterDryRun
 )
@@ -49,6 +50,7 @@ $startArgs = @{
   TicketPath = $ticket
   ContextPackPath = $pack
   Model = $Model
+  HermesMemoryRoot = $HermesMemoryRoot
 }
 if (-not $RunAider) { $startArgs["DryRun"] = $true }
 & $startScript @startArgs

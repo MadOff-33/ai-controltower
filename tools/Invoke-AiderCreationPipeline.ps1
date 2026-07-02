@@ -12,6 +12,7 @@ param(
   [string]$WorkspaceRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "creation_workspaces"),
   [string]$PromptPath = (Join-Path (Split-Path -Parent $PSScriptRoot) "prompts\creation\new_project.md"),
   [string]$Model = "ollama_chat/ornith:9b",
+  [string]$HermesMemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory"),
   [switch]$RunAider,
   [switch]$ValidateAfterDryRun,
   [switch]$AllowExisting
@@ -71,6 +72,7 @@ $workspace = Get-NewestDirectory -Path $WorkspaceRoot
 $startArgs = @{
   WorkspacePath = $workspace
   Model = $Model
+  HermesMemoryRoot = $HermesMemoryRoot
 }
 if (-not $RunAider) { $startArgs["DryRun"] = $true }
 
