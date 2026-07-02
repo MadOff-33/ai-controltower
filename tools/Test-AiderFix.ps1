@@ -6,7 +6,9 @@ param(
   [string]$TicketPath,
 
   [Parameter(Mandatory = $true)]
-  [string]$ContextPackPath
+  [string]$ContextPackPath,
+
+  [string]$HermesMemoryRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory")
 )
 
 $ErrorActionPreference = "Stop"
@@ -134,6 +136,18 @@ if ($structurallyOk) {
       $functionalCheck = $functionalOutput | ConvertFrom-Json
     } catch {
       $functionalCheck = [ordered]@{ status = "not_verified"; summary = "La verification fonctionnelle n'a pas pu s'executer correctement."; checks = @() }
+    }
+    if ($functionalCheck.status -eq "failed") {
+      $loopScript = Join-Path $PSScriptRoot "Invoke-AutoCorrectionLoop.ps1"
+      if (Test-Path -LiteralPath $loopScript) {
+        $hermesRootForLoop = if ($HermesMemoryRoot) { $HermesMemoryRoot } else { Join-Path (Split-Path -Parent $PSScriptRoot) "hermes_memory" }
+        $loopOutput = & powershell -ExecutionPolicy Bypass -File $loopScript -ProjectPath $snapshot -HermesMemoryRoot $hermesRootForLoop | Out-String
+        try {
+          $functionalCheck = $loopOutput | ConvertFrom-Json
+        } catch {
+          # Keep the original failed $functionalCheck if the loop's own output can't be parsed.
+        }
+      }
     }
   }
 }
