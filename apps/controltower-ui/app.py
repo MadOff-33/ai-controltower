@@ -1220,6 +1220,18 @@ def create_app(default_project=None):
             mimetype="text/markdown; charset=utf-8",
         )
 
+    @app.route("/api/screenshot")
+    def api_screenshot():
+        raw_path = request.args.get("path", "")
+        if not raw_path:
+            return jsonify({"error": "Chemin manquant."}), 400
+        screenshot_path = Path(raw_path)
+        if screenshot_path.name != "screenshot.png" or screenshot_path.parent.name != "validation":
+            return jsonify({"error": "Chemin non autorise."}), 400
+        if not screenshot_path.exists():
+            return jsonify({"error": "Capture introuvable."}), 404
+        return send_file(str(screenshot_path), mimetype="image/png")
+
     @app.route("/api/run", methods=["POST"])
     def api_run():
         payload = request.get_json(silent=True)

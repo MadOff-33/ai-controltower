@@ -162,8 +162,11 @@ function renderFunctionalCheck(el, functionalCheck) {
   }
   const badgeClass = functionalCheck.status === "ok" ? "ok" : (functionalCheck.status === "failed" ? "bad" : "warn");
   const badgeText = functionalCheck.status === "ok" ? "OK" : (functionalCheck.status === "failed" ? "Echec" : "Non verifie");
+  const screenshotHtml = functionalCheck.screenshot_path
+    ? `<img class="functional-screenshot" src="/api/screenshot?path=${encodeURIComponent(functionalCheck.screenshot_path)}" alt="Capture d'ecran du plantage">`
+    : "";
   el.hidden = false;
-  setHtml(el, `<span class="badge ${badgeClass}">${badgeText}</span>${escapeHtml(functionalCheck.summary || "")}`);
+  setHtml(el, `<span class="badge ${badgeClass}">${badgeText}</span>${escapeHtml(functionalCheck.summary || "")}${screenshotHtml}`);
 }
 
 function renderDependencies(deps) {

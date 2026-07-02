@@ -208,3 +208,29 @@ def test_new_project_status_matches_resolved_non_canonical_parent_path(client, t
         assert payload["functional_status"] == "failed"
     finally:
         shutil.rmtree(workspace)
+
+
+def test_screenshot_endpoint_serves_existing_png(client, tmp_path):
+    validation_dir = tmp_path / "validation"
+    validation_dir.mkdir()
+    screenshot = validation_dir / "screenshot.png"
+    screenshot.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 16)
+    response = client.get("/api/screenshot", query_string={"path": str(screenshot)})
+    assert response.status_code == 200
+    assert response.mimetype == "image/png"
+    response.close()
+
+
+def test_screenshot_endpoint_rejects_missing_file(client, tmp_path):
+    validation_dir = tmp_path / "validation"
+    validation_dir.mkdir()
+    missing = validation_dir / "screenshot.png"
+    response = client.get("/api/screenshot", query_string={"path": str(missing)})
+    assert response.status_code == 404
+
+
+def test_screenshot_endpoint_rejects_path_outside_validation_shape(client, tmp_path):
+    stray = tmp_path / "screenshot.png"
+    stray.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 16)
+    response = client.get("/api/screenshot", query_string={"path": str(stray)})
+    assert response.status_code == 400

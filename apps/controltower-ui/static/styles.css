@@ -365,6 +365,14 @@ textarea {
   margin-right: 6px;
 }
 
+.functional-screenshot {
+  display: block;
+  max-width: 500px;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
 .correction-block textarea {
   width: 100%;
   font-family: inherit;
