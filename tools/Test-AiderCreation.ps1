@@ -159,7 +159,20 @@ foreach ($path in $currentMap.Keys) {
 $readmePath = Join-Path $target "README.md"
 $readmeOk = (Test-Path -LiteralPath $readmePath -PathType Leaf) -and ((Get-Item -LiteralPath $readmePath).Length -gt 40)
 $usefulChangeOk = ((-not $RequireUsefulChanges) -or ($usefulChanges.Count -gt 0))
-$passed = (($forbidden.Count -eq 0) -and ($suspiciousFiles.Count -eq 0) -and ($encodingFindings.Count -eq 0) -and $readmeOk -and ($currentMap.Keys.Count -gt 0) -and $usefulChangeOk)
+$structurallyOk = (($forbidden.Count -eq 0) -and ($suspiciousFiles.Count -eq 0) -and ($encodingFindings.Count -eq 0) -and $readmeOk -and ($currentMap.Keys.Count -gt 0) -and $usefulChangeOk)
+$functionalCheck = [ordered]@{ status = "not_verified"; summary = "Verification fonctionnelle non executee."; checks = @() }
+if ($structurallyOk) {
+  $functionalScript = Join-Path $PSScriptRoot "Test-ProjectFunctional.ps1"
+  if (Test-Path -LiteralPath $functionalScript) {
+    $functionalOutput = & powershell -ExecutionPolicy Bypass -File $functionalScript -ProjectPath $target -ProjectType ([string]$config.project_type) | Out-String
+    try {
+      $functionalCheck = $functionalOutput | ConvertFrom-Json
+    } catch {
+      $functionalCheck = [ordered]@{ status = "not_verified"; summary = "La verification fonctionnelle n'a pas pu s'executer correctement."; checks = @() }
+    }
+  }
+}
+$passed = $structurallyOk -and ($functionalCheck.status -ne "failed")
 
 $result = [ordered]@{
   checked_at = (Get-Date).ToString("o")
@@ -174,6 +187,7 @@ $result = [ordered]@{
   readme_ok = $readmeOk
   require_useful_changes = [bool]$RequireUsefulChanges
   useful_change_ok = $usefulChangeOk
+  functional_check = $functionalCheck
   passed = $passed
 }
 Write-Utf8NoBom -Path (Join-Path $validationDir "creation_result.json") -Content ($result | ConvertTo-Json -Depth 8)
@@ -206,6 +220,8 @@ if (-not $usefulChangeOk) {
   Write-Host ""
   Write-Host "No useful generated project changes were detected."
 }
+Write-Host ""
+Write-Host ("Functional check: " + $functionalCheck.status + " - " + $functionalCheck.summary)
 
 if ($passed) {
   Write-Host "Validation passed."

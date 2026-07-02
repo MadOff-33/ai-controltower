@@ -124,7 +124,20 @@ if (($unauthorized.Count -eq 0) -and ($ghostFindings.Count -eq 0)) {
 }
 
 $failedCommands = @($commandResults | Where-Object { $_.exit_code -ne 0 })
-$passed = (($unauthorized.Count -eq 0) -and ($ghostFindings.Count -eq 0) -and ($failedCommands.Count -eq 0))
+$structurallyOk = (($unauthorized.Count -eq 0) -and ($ghostFindings.Count -eq 0) -and ($failedCommands.Count -eq 0))
+$functionalCheck = [ordered]@{ status = "not_verified"; summary = "Verification fonctionnelle non executee."; checks = @() }
+if ($structurallyOk) {
+  $functionalScript = Join-Path $PSScriptRoot "Test-ProjectFunctional.ps1"
+  if (Test-Path -LiteralPath $functionalScript) {
+    $functionalOutput = & powershell -ExecutionPolicy Bypass -File $functionalScript -ProjectPath $snapshot | Out-String
+    try {
+      $functionalCheck = $functionalOutput | ConvertFrom-Json
+    } catch {
+      $functionalCheck = [ordered]@{ status = "not_verified"; summary = "La verification fonctionnelle n'a pas pu s'executer correctement."; checks = @() }
+    }
+  }
+}
+$passed = $structurallyOk -and ($functionalCheck.status -ne "failed")
 $result = [ordered]@{
   checked_at = (Get-Date).ToString("o")
   ticket = $safeId
@@ -132,6 +145,7 @@ $result = [ordered]@{
   unauthorized_changes = $unauthorized
   ghost_findings = $ghostFindings
   command_results = $commandResults
+  functional_check = $functionalCheck
   passed = $passed
 }
 Write-Utf8NoBom -Path (Join-Path $validationDir ($safeId + "_result.json")) -Content ($result | ConvertTo-Json -Depth 8)
@@ -151,6 +165,8 @@ if ($ghostFindings.Count -gt 0) {
   Write-Host "Ghost findings:"
   $ghostFindings | ForEach-Object { Write-Host ("- " + $_.path + ": " + $_.marker) }
 }
+Write-Host ""
+Write-Host ("Functional check: " + $functionalCheck.status + " - " + $functionalCheck.summary)
 
 if ($passed) {
   Write-Host "Validation passed."
