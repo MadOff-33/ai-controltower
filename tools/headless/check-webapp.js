@@ -85,7 +85,7 @@ async function main() {
     page.on('pageerror', (err) => {
       consoleErrors.push(err.message);
     });
-    await page.goto('file://' + htmlPath.replace(/\\/g, '/'));
+    await page.goto(require('url').pathToFileURL(htmlPath).href);
     await page.waitForTimeout(3000);
   } finally {
     await browser.close();

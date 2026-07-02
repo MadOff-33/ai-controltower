@@ -1,3 +1,4 @@
+import json
 import shutil
 from pathlib import Path
 
@@ -162,3 +163,43 @@ def test_new_project_preview_allows_existing_when_flagged(client, tmp_path):
     )
     assert accepted.status_code == 200
     assert "-AllowExisting" in accepted.get_json()["command_preview"]
+
+
+def test_new_project_status_matches_resolved_non_canonical_parent_path(client, tmp_path):
+    # The parent path is passed in a non-canonical form (trailing slash + a "." segment)
+    # to prove the match survives real resolution, not just a trivial already-resolved case.
+    parent = tmp_path / "status resolve parent"
+    parent.mkdir()
+    resolved_target = parent.resolve() / "Resolved_Project"
+    non_canonical_parent = str(parent) + "\\.\\"
+
+    workspace = ROOT / "creation_workspaces" / "20990101-000000_resolved_project_fixture"
+    validation_dir = workspace / "validation"
+    validation_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        (workspace / "creation.config.json").write_text(
+            json.dumps({"target_project_path": str(resolved_target)}),
+            encoding="utf-8",
+        )
+        (validation_dir / "creation_result.json").write_text(
+            json.dumps(
+                {
+                    "functional_check": {
+                        "status": "failed",
+                        "checks": [{"name": "browser_console", "status": "failed"}],
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        response = client.get(
+            "/api/new-project/status",
+            query_string={"project_name": "Resolved Project", "parent_path": non_canonical_parent},
+        )
+        assert response.status_code == 200
+        payload = response.get_json()
+        assert payload["has_previous"] is True
+        assert payload["functional_status"] == "failed"
+    finally:
+        shutil.rmtree(workspace)

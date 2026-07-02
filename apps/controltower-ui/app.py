@@ -68,7 +68,7 @@ def validate_new_project_payload(payload, allow_existing=False):
         raise ValueError("Brief projet obligatoire.")
     if not parent.exists() or not parent.is_dir():
         raise ValueError("Le dossier parent n'existe pas.")
-    target = parent / name
+    target = parent.resolve() / name
     if (not allow_existing) and target.exists() and any(target.iterdir()):
         raise ValueError("Le dossier projet existe deja et n'est pas vide.")
     return {
@@ -1158,7 +1158,7 @@ def create_app(default_project=None):
             safe_name = sanitize_project_name(project_name)
         except ValueError:
             return jsonify({"has_previous": False, "functional_status": None, "checks": []})
-        target = str((Path(parent_path).expanduser() / safe_name))
+        target = str((Path(parent_path).expanduser().resolve() / safe_name))
         workspace = find_latest_creation_workspace(target)
         if workspace is None:
             return jsonify({"has_previous": False, "functional_status": None, "checks": []})
