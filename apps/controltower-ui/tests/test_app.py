@@ -166,12 +166,17 @@ def test_new_project_preview_allows_existing_when_flagged(client, tmp_path):
 
 
 def test_new_project_status_matches_resolved_non_canonical_parent_path(client, tmp_path):
-    # The parent path is passed in a non-canonical form (trailing slash + a "." segment)
-    # to prove the match survives real resolution, not just a trivial already-resolved case.
+    # The parent path is passed in a non-canonical form (a "../<same dir>" traversal
+    # segment) to prove the match survives real resolution, not just a trivial
+    # already-resolved case. A trailing "\.\ " segment is collapsed by pathlib's `/`
+    # join *before* .resolve() is ever called, so unresolved and resolved forms are
+    # byte-identical for that input and it doesn't actually exercise resolution. A
+    # ".." traversal genuinely differs as a string between Path(x) and Path(x).resolve()
+    # while still pointing at the same real directory, so it does exercise the bug.
     parent = tmp_path / "status resolve parent"
     parent.mkdir()
     resolved_target = parent.resolve() / "Resolved_Project"
-    non_canonical_parent = str(parent) + "\\.\\"
+    non_canonical_parent = str(parent) + "\\..\\" + parent.name
 
     workspace = ROOT / "creation_workspaces" / "20990101-000000_resolved_project_fixture"
     validation_dir = workspace / "validation"
