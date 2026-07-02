@@ -49,6 +49,11 @@ foreach ($relative in @("tools\New-CreationWorkspace.ps1", "tools\Start-AiderCre
   Assert-True -Condition ($errors.Count -eq 0) -Message ("PowerShell parse errors in " + $path)
 }
 
+$hermesFixture = Join-Path $lab "hermes_memory"
+& (Join-Path $Root "tools\Initialize-HermesMemory.ps1") -MemoryRoot $hermesFixture | Out-Null
+& (Join-Path $Root "tools\Add-HermesMemoryEntry.ps1") -MemoryRoot $hermesFixture -Kind "test" -Category "fixture" -Summary "MARKER_CREATION_RELIABILITY_TEST" -Source "test" | Out-Null
+& (Join-Path $Root "tools\Get-HermesGuidance.ps1") -MemoryRoot $hermesFixture | Out-Null
+
 & (Join-Path $Root "tools\Invoke-AiderCreationPipeline.ps1") `
   -ProjectName "Demo Creation" `
   -ParentPath $parent `
@@ -56,6 +61,7 @@ foreach ($relative in @("tools\New-CreationWorkspace.ps1", "tools\Start-AiderCre
   -Brief "Créer une petite CLI Python qui additionne deux nombres avec un README et un test simple." `
   -ProjectType "python-cli" `
   -WorkspaceRoot $workspaces `
+  -HermesMemoryRoot $hermesFixture `
   -ValidateAfterDryRun
 Assert-True -Condition ($LASTEXITCODE -eq 0) -Message "Creation dry-run pipeline failed."
 
@@ -76,7 +82,7 @@ $result = Get-Content -LiteralPath (Join-Path $workspace.FullName "validation\cr
 Assert-True -Condition ($result.passed -eq $true) -Message "Dry-run creation validation should pass on seeded README."
 $creationMessage = Get-Content -LiteralPath (Join-Path $workspace.FullName "prompts\creation_aider_message.md") -Raw -Encoding UTF8
 Assert-True -Condition ($creationMessage.Contains("ControlTower Aider guidance")) -Message "Creation message should include shared ControlTower guidance."
-Assert-True -Condition ($creationMessage.Contains("Hermes central guidance")) -Message "Creation message should include Hermes guidance."
+Assert-True -Condition ($creationMessage.Contains("MARKER_CREATION_RELIABILITY_TEST")) -Message "Creation message should include the seeded Hermes guidance fixture."
 Assert-True -Condition ($creationMessage.Contains("Créer une petite CLI")) -Message "Creation message should preserve UTF-8 brief content."
 Assert-True -Condition (-not $creationMessage.Contains("CrÃ")) -Message "Creation message should not contain mojibake."
 

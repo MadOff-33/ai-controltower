@@ -144,10 +144,15 @@ Invoke-ExpectFailure -Name "report outside reports" -Command {
 }
 Remove-Item -LiteralPath $outsideReport -Force
 
-& (Join-Path $Root "tools\Start-AiderAudit.ps1") -WorkspacePath $workspace -LotName "lot1_config" -ContextPackPath $pack -DryRun | Out-Null
+$hermesFixture = Join-Path $testRoot "hermes_memory"
+& (Join-Path $Root "tools\Initialize-HermesMemory.ps1") -MemoryRoot $hermesFixture | Out-Null
+& (Join-Path $Root "tools\Add-HermesMemoryEntry.ps1") -MemoryRoot $hermesFixture -Kind "test" -Category "fixture" -Summary "MARKER_AUDIT_RELIABILITY_TEST" -Source "test" | Out-Null
+& (Join-Path $Root "tools\Get-HermesGuidance.ps1") -MemoryRoot $hermesFixture | Out-Null
+
+& (Join-Path $Root "tools\Start-AiderAudit.ps1") -WorkspacePath $workspace -LotName "lot1_config" -ContextPackPath $pack -HermesMemoryRoot $hermesFixture -DryRun | Out-Null
 $auditMessage = Get-Content -LiteralPath (Join-Path $workspace "prompts\lot1_config_aider_message.md") -Raw -Encoding UTF8
 Assert-True -Condition ($auditMessage.Contains("ControlTower Aider guidance")) -Message "Audit message should include shared ControlTower guidance."
-Assert-True -Condition ($auditMessage.Contains("Hermes central guidance")) -Message "Audit message should include Hermes guidance."
+Assert-True -Condition ($auditMessage.Contains("MARKER_AUDIT_RELIABILITY_TEST")) -Message "Audit message should include the seeded Hermes guidance fixture."
 $startAuditText = (Get-Content -LiteralPath (Join-Path $Root "tools\Start-AiderAudit.ps1") -Raw) `
   + (Get-Content -LiteralPath (Join-Path $Root "tools\lib\ControlTowerCommon.ps1") -Raw)
 Assert-True -Condition ($startAuditText.Contains('"--no-git"')) -Message "Aider audit must not attach to the ControlTower git repo."
