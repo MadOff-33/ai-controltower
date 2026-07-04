@@ -1,0 +1,63 @@
+# =====================================================================
+# project_manifest.yaml — ai-controltower
+# Source de vérité pour la synchro Notion (Notion_Knowledge_OS).
+# AUCUN SECRET ICI. Chaque entité a une "key" stable.
+# =====================================================================
+id: ai-controltower
+name: ai-controltower
+description: >
+  Centre local de fiabilisation pour développement assisté par IA avec
+  Aider, Ollama et le modèle ornith:9b. Cockpit Flask local, launchers
+  Windows, policies, prompts, skills et outils de pilotage.
+status: active
+owner: Michael Introligator
+category: ia
+tags: [aider, ollama, ia-locale, cockpit, windows]
+
+repo:
+  type: github
+  path: https://github.com/MadOff-33/ai-controltower
+  default_branch: main
+
+stack:
+  - Python
+  - Flask (cockpit UI)
+  - Aider
+  - Ollama (ornith:9b)
+  - Scripts CMD Windows
+
+launch_commands:
+  - ControlTower.cmd                # point d'entrée racine (cockpit Flask local)
+
+test_commands: []
+
+ai_modules:
+  - key: aider-ollama
+    name: Aider + Ollama local
+    role: Développement assisté par IA en local (modèle ornith:9b), policies et prompts versionnés
+    criticality: normal
+    config_files:
+      - policies
+      - prompts
+      - skills
+
+resume_prompt: |
+  Tu reprends ai-controltower (centre local de fiabilisation IA : Aider,
+  Ollama, ornith:9b, cockpit Flask).
+  Commencer en LECTURE SEULE. Lire README.md et le dossier policies/ avant
+  toute action. Ne jamais lancer de commande qui modifie un autre repo.
+  Jamais afficher de secret ou de clé API.
+  Proposer un plan court, modifier petit, montrer le diff, commit après validation.
+
+decisions: []
+
+risks: []
+
+sprints: []
+
+# Motifs de fichiers sensibles : PRÉSENCE détectée uniquement, contenu jamais lu.
+sensitive_files_hints:
+  - .env
+  - .env.bak_*
+  - "*.pem"
+  - "*.key"
