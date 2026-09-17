@@ -1,5 +1,5 @@
 {
-  "bundle_digest": "ff049d43f77833521c807843ad20359510b607f4647139ff69775ce75eae7a7e",
+  "bundle_digest": "344558522f87eb4ea9ae7159681bd2b7954c36c1d18feeea13df1aeef35887ed",
   "managed_files": {
     ".agents/skills/ask-matt/PHASE-BOUNDARIES.md": "a8aa20158609ef39e2b308b6ba0660c91066838d07a867202e63a7744a88a3ed",
     ".agents/skills/ask-matt/SKILL.md": "b25d86fb36b1d294eeead5d7db529f86135f9671f2afcd607579a63bb2213769",
@@ -2199,13 +2199,13 @@
     ".workflow/workflow-system/README.md": "26c3309e8ec95c53dc2492ef31d62b4cbd358365ea55cd73da2454a937822a05",
     ".workflow/workflow-system/ROUTER.md": "c572a6034c848537f314ac702e202d17452d39e129bd35fa0d33deca51518088",
     ".workflow/workflow-system/VERSION.lock": "bcc45ee075db012c9be25aad4f2b50123ab741871983721d143b77fb17db5a6b",
-    ".workflow/workflow-system/WORKFLOW.md": "ebc9c15bcc0d1e8a52a6dd39d9eab3650532320c461347930cf4abfbc0a0c1dc",
-    ".workflow/workflow-system/procedures/00-session-preflight.md": "930c16f85880299e84a0c63e2ace8f6a99a815b2df9eb198c3074d1edbae1ab2",
+    ".workflow/workflow-system/WORKFLOW.md": "dcc71ce2f2250698f5bc84167a87a9ce153300b02bf8fb1fcce11863e118846f",
+    ".workflow/workflow-system/procedures/00-session-preflight.md": "80856bff03b292d2ddfcfb17dc491fc6c064bea100c1e53e3e211ca8ff8f5b09",
     ".workflow/workflow-system/procedures/external-agent-handoff.md": "3b8808087fb765271bd0421db22e3b938f16673cd438dad532f92262130bb77b",
     ".workflow/workflow-system/procedures/git-integration-gate.md": "0908bcfe9e21682114027cd0b7bedda022f00a31053a9d99c82a214422ef5099",
     ".workflow/workflow-system/procedures/independent-review-gate.md": "f53621323a18d294e8a9e42e2e40fe5f732546b48c46e816911e9424a1b8eae3",
     ".workflow/workflow-system/scripts/verify-workflow.sh": "a3c0a7f7170d39804ea71124d88236766fdd99461cb6906255d95dc84b3d4977",
-    ".workflow/workflow-system/templates/AGENTS.md": "7321b1059f142e9b4fcc50d106fef69039d9bc036a8b0dfc22eb93818a4f77cb",
+    ".workflow/workflow-system/templates/AGENTS.md": "7d0ada1de73fba534f1b89088fab4381dd537c66fc3d0f320cf292e78583312b",
     ".workflow/workflow-system/templates/gitignore.workflow": "be4551828c93a6ca7f59a7c656be1ed41ffd87fbc797668da486d51213dd3218",
     ".workflow/workflow-system/templates/project-manifest.yaml": "cb0681fa6983d8f79f41abb42eca0f855a3742f6d875f4f34b405a355192040f",
     "_bmad/_bmad/_config/bmad-help.csv": "5bb9cc5c0ff39399a44ce6d5926e143c967e31dc851506be233762077b89d494",
@@ -2231,5 +2231,5 @@
     "_bmad/_bmad/tea/module-help.csv": "7014131eba852fd2017e0f55199abce0b450635738bc4359b41578c92cdda63f"
   },
   "schema": 1,
-  "updated_at": "2026-09-08T12:54:13.961424+00:00"
+  "updated_at": "2026-09-17T13:28:06.853143+00:00"
 }

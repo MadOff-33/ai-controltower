@@ -42,6 +42,15 @@ ai_modules:
       - skills
 
 resume_prompt: |
+  Tu reprends ai-controltower Ã  partir de son Ã©tat actuel.
+  Commence par .workflow/workflow-system/WORKFLOW.md et exÃ©cute
+  .workflow/workflow-system/procedures/00-session-preflight.md.
+  Suis .workflow/workflow-system/ROUTER.md, classe la demande R0 Ã  R5 et charge rÃ©ellement
+  les SKILL.md requis par la route avant toute action.
+  Lis ensuite CONTEXT.md et, si prÃ©sent, D:\CLAUDE\CLAUDE-COWORK\PROJETS\ai-controltower.
+  Indique oÃ¹ le projet s'est arrÃªtÃ©, la route et les skills chargÃ©s, les blocages et la prochaine Ã©tape.
+
+  Contexte de reprise dÃ©jÃ  dÃ©fini :
   Tu reprends ai-controltower (centre local de fiabilisation IA : Aider,
   Ollama, ornith:9b, cockpit Flask).
   Commencer en LECTURE SEULE. Lire README.md et le dossier policies/ avant

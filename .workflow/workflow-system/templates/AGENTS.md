@@ -4,15 +4,16 @@
 
 Avant toute tâche :
 
-1. lire ce fichier ;
-2. lire CONTEXT.md ;
-3. lire .workflow/project-manifest.yaml ;
-4. lire .workflow/state.yaml ;
-5. exécuter le preflight en lecture seule.
+1. lire `.workflow/workflow-system/WORKFLOW.md` ;
+2. charger `using-superpowers/SKILL.md` depuis le dossier de skills de l'agent ;
+3. exécuter `.workflow/workflow-system/procedures/00-session-preflight.md` ;
+4. suivre `.workflow/workflow-system/ROUTER.md` ;
+5. charger réellement les `SKILL.md` sélectionnés par la route ;
+6. lire `CONTEXT.md`, `.workflow/project-manifest.yaml` et `.workflow/state.yaml`.
 
 ## Workflow
 
-Le workflow maître se trouve dans .workflow/workflow-system/WORKFLOW.md.
+Le workflow maître se trouve dans `.workflow/workflow-system/WORKFLOW.md`.
 
 ## Stack
 

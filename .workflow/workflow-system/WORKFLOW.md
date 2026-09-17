@@ -10,10 +10,12 @@ Ce dossier définit le workflow universel du projet. Il ne remplace pas les règ
 2. Lire `ROUTER.md`.
 3. Lire `AGENTS.md` et `CLAUDE.md` s'ils existent.
 4. Lire `CONTEXT.md`, les ADR pertinentes et l'état du sprint.
-5. Exécuter le préflight en lecture seule.
-6. Classer la demande : R0, R1, R2, R3, R4 ou R5.
-7. Annoncer le workflow sélectionné et ses sorties attendues.
-8. Ne rien modifier avant le gate prévu.
+5. Charger d'abord `using-superpowers/SKILL.md` depuis le dossier de skills de l'agent (`.agents/skills/` ou `.claude/skills/`).
+6. Exécuter `procedures/00-session-preflight.md` en lecture seule.
+7. Classer ou confirmer la demande : R0, R1, R2, R3, R4 ou R5.
+8. Charger réellement les `SKILL.md` requis et conditionnels sélectionnés par la route avant toute action.
+9. Annoncer la route, les skills chargés, les sorties attendues et le gate suivant.
+10. Ne rien modifier avant le gate prévu.
 
 ## Répartition des responsabilités
 
@@ -31,4 +33,3 @@ Ce dossier définit le workflow universel du projet. Il ne remplace pas les règ
 - Toute déclaration de succès doit être accompagnée d'une commande exécutée et de son résultat.
 - Aucun push, merge, publication ou migration destructive sans validation explicite.
 - Une seule source de vérité pour la spec et une seule source de vérité pour l'état du travail.
-
