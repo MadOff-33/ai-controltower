@@ -42,6 +42,12 @@ ai_modules:
       - skills
 
 resume_prompt: |
+  Règles universelles de reprise :
+  - résous le worktree actif avant de lire le contexte métier ;
+  - dans le worktree retenu, reconstitue l'état réel depuis CONTEXT.md, .workflow/state.yaml et les sources de vérité pertinentes ;
+  - laisse le ROUTER, les skills chargés et les agents déterminer dynamiquement la suite logique ;
+  - présente la suite proposée et le gate applicable avant toute nouvelle action technique ;
+  - ne déduis jamais la fin d'un projet ou POC d'un livrable, commit, PR ou tests réussis : seule une déclaration explicite de l'utilisateur le clôt.
   Tu reprends ai-controltower Ã  partir de son Ã©tat actuel.
   Commence par .workflow/workflow-system/WORKFLOW.md et exÃ©cute
   .workflow/workflow-system/procedures/00-session-preflight.md.

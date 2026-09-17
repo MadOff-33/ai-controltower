@@ -1,5 +1,5 @@
 {
-  "bundle_digest": "344558522f87eb4ea9ae7159681bd2b7954c36c1d18feeea13df1aeef35887ed",
+  "bundle_digest": "58bd1e5611e8cce5752ea489234494e641ec469d04f603c66c72c4c947b69483",
   "managed_files": {
     ".agents/skills/ask-matt/PHASE-BOUNDARIES.md": "a8aa20158609ef39e2b308b6ba0660c91066838d07a867202e63a7744a88a3ed",
     ".agents/skills/ask-matt/SKILL.md": "b25d86fb36b1d294eeead5d7db529f86135f9671f2afcd607579a63bb2213769",
@@ -2178,7 +2178,7 @@
     ".workflow/workflow-system/00-pre-requis.md": "beab29675db177c7988f7a694164bc20a46b1c81e446a3f4f5755eb1765275ff",
     ".workflow/workflow-system/01-installation-socle.md": "5022b0630e391e93b2c2809ff42d7dfcc5122bc3705a1563d62b36ff0a007c32",
     ".workflow/workflow-system/02-initialisation-projet.md": "76070917a1719e5ddd05ff26ab17b7c39e01a2ef90e3d43663f3190655876e93",
-    ".workflow/workflow-system/03-workflow-universel.md": "bd1037e7dbd46c389f5cfdc4a7550b0e41577c8c3b7f364c1209f277f6d5f448",
+    ".workflow/workflow-system/03-workflow-universel.md": "324a864660f4ecf83f7adf0f5e42721235a7f7ec48580374ffb55de6abefdc1b",
     ".workflow/workflow-system/04-contracts/README.md": "0564e8a4e7ef1128cc3f925df0f058cb5da72065e3033c1aa9c009f56a2d24e3",
     ".workflow/workflow-system/04-contracts/evidence-bundle.md": "52b9b557a01227dbbbd056b0a7900e08eb886590ff0fab364a64238c48423e40",
     ".workflow/workflow-system/04-contracts/git-gate.md": "454e375cda2b8586fe6acc87cf1a9f2fa94a690104f8ef9bce00db6399bc8bd2",
@@ -2199,13 +2199,13 @@
     ".workflow/workflow-system/README.md": "26c3309e8ec95c53dc2492ef31d62b4cbd358365ea55cd73da2454a937822a05",
     ".workflow/workflow-system/ROUTER.md": "c572a6034c848537f314ac702e202d17452d39e129bd35fa0d33deca51518088",
     ".workflow/workflow-system/VERSION.lock": "bcc45ee075db012c9be25aad4f2b50123ab741871983721d143b77fb17db5a6b",
-    ".workflow/workflow-system/WORKFLOW.md": "dcc71ce2f2250698f5bc84167a87a9ce153300b02bf8fb1fcce11863e118846f",
-    ".workflow/workflow-system/procedures/00-session-preflight.md": "80856bff03b292d2ddfcfb17dc491fc6c064bea100c1e53e3e211ca8ff8f5b09",
+    ".workflow/workflow-system/WORKFLOW.md": "d2abc288db29f56b23b55a779fc377dd65d9aced7f34d117c054ff7103cec716",
+    ".workflow/workflow-system/procedures/00-session-preflight.md": "716f8dbe0d902e7ed3509dd7c993eabb5684ffe4b0628b29272cf4d0d442faa1",
     ".workflow/workflow-system/procedures/external-agent-handoff.md": "3b8808087fb765271bd0421db22e3b938f16673cd438dad532f92262130bb77b",
     ".workflow/workflow-system/procedures/git-integration-gate.md": "0908bcfe9e21682114027cd0b7bedda022f00a31053a9d99c82a214422ef5099",
     ".workflow/workflow-system/procedures/independent-review-gate.md": "f53621323a18d294e8a9e42e2e40fe5f732546b48c46e816911e9424a1b8eae3",
     ".workflow/workflow-system/scripts/verify-workflow.sh": "a3c0a7f7170d39804ea71124d88236766fdd99461cb6906255d95dc84b3d4977",
-    ".workflow/workflow-system/templates/AGENTS.md": "7d0ada1de73fba534f1b89088fab4381dd537c66fc3d0f320cf292e78583312b",
+    ".workflow/workflow-system/templates/AGENTS.md": "1083722e2109367ec8695d29c245cf9c63395e78a7cd5f2ca90f848c7d5942dc",
     ".workflow/workflow-system/templates/gitignore.workflow": "be4551828c93a6ca7f59a7c656be1ed41ffd87fbc797668da486d51213dd3218",
     ".workflow/workflow-system/templates/project-manifest.yaml": "cb0681fa6983d8f79f41abb42eca0f855a3742f6d875f4f34b405a355192040f",
     "_bmad/_bmad/_config/bmad-help.csv": "5bb9cc5c0ff39399a44ce6d5926e143c967e31dc851506be233762077b89d494",
@@ -2231,5 +2231,5 @@
     "_bmad/_bmad/tea/module-help.csv": "7014131eba852fd2017e0f55199abce0b450635738bc4359b41578c92cdda63f"
   },
   "schema": 1,
-  "updated_at": "2026-09-17T13:28:06.853143+00:00"
+  "updated_at": "2026-09-17T18:08:49.635545+00:00"
 }

@@ -6,14 +6,14 @@ Procédure du workflow : procedures/00-session-preflight.md.
 
 ~~~text
 Lire WORKFLOW.md
-→ lire MANIFEST.yaml
-→ lire ROUTER.md
-→ lire AGENTS.md / CLAUDE.md
-→ lire CONTEXT.md et ADR pertinentes
-→ git status
-→ identifier la baseline et la commande de test
-→ vérifier les tâches en cours
-→ classer la demande
+→ résoudre le worktree actif
+→ lire MANIFEST.yaml / ROUTER.md / AGENTS.md / CLAUDE.md
+→ lire le contexte et les sources de vérité pertinentes
+→ reconstituer l'état réel si la demande est une reprise
+→ git status et baseline
+→ classer ou confirmer la demande
+→ charger les skills de la route
+→ laisser le workflow proposer dynamiquement la suite
 ~~~
 
 Sortie obligatoire :
@@ -22,10 +22,12 @@ Sortie obligatoire :
 Type de demande:
 Niveau de risque:
 Route sélectionnée:
-Fichiers lus:
+Contexte repris:
+État actuel reconstitué:
 Fichiers sensibles exclus:
 Branche de travail:
-Skills requis:
+Skills chargés:
+Suite proposée par le workflow:
 Sorties attendues:
 Gate suivant:
 ~~~
