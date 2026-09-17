@@ -136,8 +136,35 @@ class Notion:
         res = r.json().get("results", [])
         return res[0]["id"] if res else None
 
+    def _replace_children(self, page_id: str, children: list) -> None:
+        """Replace generated page body while leaving unrelated pages untouched."""
+        block_ids = []
+        cursor = None
+        while True:
+            params = {"page_size": 100}
+            if cursor:
+                params["start_cursor"] = cursor
+            r = self.session.get(
+                f"{API}/blocks/{page_id}/children",
+                headers=self.headers, params=params, timeout=30)
+            r.raise_for_status()
+            payload = r.json()
+            block_ids.extend(item["id"] for item in payload.get("results", []))
+            if not payload.get("has_more"):
+                break
+            cursor = payload.get("next_cursor")
+        for block_id in block_ids:
+            r = self.session.delete(
+                f"{API}/blocks/{block_id}", headers=self.headers, timeout=30)
+            r.raise_for_status()
+        r = self.session.patch(
+            f"{API}/blocks/{page_id}/children",
+            headers=self.headers, json={"children": children}, timeout=30)
+        r.raise_for_status()
+
     def upsert(self, db_key: str, key: str, props: dict,
-               create_only: dict | None = None, children: list | None = None) -> str:
+               create_only: dict | None = None, children: list | None = None,
+               replace_children: bool = False) -> str:
         """Crée ou met à jour une page identifiée par sa Clé. Retourne l'ID."""
         db_id = self.dbs[db_key]
         props = dict(props)
@@ -154,6 +181,8 @@ class Notion:
                 f"{API}/pages/{page_id}",
                 headers=self.headers, json={"properties": props}, timeout=30)
             r.raise_for_status()
+            if replace_children and children is not None:
+                self._replace_children(page_id, children)
             print(f"  [MAJ] {db_key:<10} {key}")
             return page_id
         # CREATE (avec les champs create-only + contenu)
@@ -260,7 +289,7 @@ def main() -> int:
                      "Type": p_select("prompt"), "Criticité": p_select("critique")}
             props, _ = security.sanitize(props)
             n.upsert("procedures", f"{pid}::prompt:resume", props,
-                     children=[para(m["resume_prompt"])])
+                     children=[para(m["resume_prompt"])], replace_children=True)
 
         # ---- Sprints --------------------------------------------------------
         for s in m.get("sprints", []):

@@ -1,0 +1,93 @@
+workflow:
+  name: ai-workflow-universel
+  version: "1.0.0"
+  language: fr
+  entrypoint: WORKFLOW.md
+  router: ROUTER.md
+  source_of_truth:
+    requirements: "_bmad-output/ ou docs/specs/"
+    implementation: git
+    status: "_bmad-output/implementation-artifacts/sprint-status.yaml ou .workflow/state.yaml"
+    evidence: "_workflow-artifacts/evidence/"
+
+agents:
+  orchestrator:
+    name: codex
+    permissions: [read, plan, delegate, verify, git-control]
+    forbidden: [unplanned-code-edit, self-approval]
+  implementer:
+    name: glm
+    permissions: [read, write-on-feature-branch, test]
+    forbidden: [self-approval, merge, push-to-main]
+  reviewer:
+    name: claude
+    permissions: [read, review, report]
+    forbidden: [write-on-implementation-branch, merge, approval-of-own-work]
+
+install:
+  bmad:
+    channel: stable
+    modules: [bmm]
+    optional_modules: [tea]
+  matt_pocock:
+    repository: https://github.com/mattpocock/skills
+  superpowers:
+    repository: https://github.com/obra/superpowers
+
+integrations:
+  github_notion:
+    status: existing
+    local_repos_root: "D:/REPO CLONES"
+    code_source_of_truth: github
+    notion_role: documentation_and_project_status_sync
+    workflow_files:
+      - ".ci/notion_sync/"
+      - ".github/workflows/notion-sync.yml"
+      - "project_manifest.yaml"
+    secret_storage: "GitHub Actions secret NOTION_TOKEN only"
+    forbidden: [token-in-repository, secret-in-workflow-folder, automatic-push]
+
+skills:
+  required:
+    - superpowers:using-superpowers
+    - superpowers:verification-before-completion
+    - matt:to-spec
+    - matt:to-tickets
+    - matt:implement
+    - matt:code-review
+    - matt:tdd
+    - bmad:bmad-project-context
+    - bmad:bmad-sprint-planning
+    - bmad:bmad-build
+    - bmad:bmad-review
+  conditional:
+    - matt:grill-with-docs
+    - matt:grilling
+    - matt:domain-modeling
+    - matt:codebase-design
+    - matt:diagnosing-bugs
+    - matt:research
+    - matt:wayfinder
+    - matt:prototype
+    - superpowers:brainstorming
+    - superpowers:writing-plans
+    - superpowers:using-git-worktrees
+    - superpowers:test-driven-development
+    - superpowers:systematic-debugging
+    - superpowers:receiving-code-review
+    - superpowers:finishing-a-development-branch
+    - bmad:bmad-deep-recon
+    - bmad:bmad-product-brief
+    - bmad:bmad-prd
+    - bmad:bmad-spec
+    - bmad:bmad-ux
+    - bmad:bmad-architecture
+    - bmad:bmad-create-epics-and-stories
+    - tea:test-design
+    - tea:framework
+    - tea:ci
+    - tea:atdd
+    - tea:automate
+    - tea:test-review
+    - tea:trace
+    - tea:nfr-assess
