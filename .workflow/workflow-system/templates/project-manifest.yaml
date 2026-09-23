@@ -1,0 +1,39 @@
+project:
+  name: "<nom-projet>"
+  repository: "<url-ou-local>"
+  canonical_root: "/home/mike/workspace/<nom-projet>"
+  primary_branch: main
+  language: fr
+
+stack:
+  language: "<python|typescript|...>"
+  framework: "<framework>"
+  runtime: "<version>"
+  package_manager: "<npm|pnpm|poetry|uv|...>"
+
+commands:
+  install: "<commande exacte>"
+  test_targeted: "<commande exacte>"
+  test_all: "<commande exacte>"
+  build: "<commande exacte ou null>"
+  lint: "<commande exacte ou null>"
+
+security:
+  data_classification: "<public|internal|confidential|sensitive>"
+  network_default: denied
+  secrets_paths:
+    - .env
+    - .env.*
+    - secrets/
+    - credentials/
+  production_mutation: forbidden
+
+workflow:
+  source_of_truth: git
+  requirements_path: "_bmad-output/ ou docs/specs/"
+  evidence_path: _workflow-artifacts/evidence/
+  review_required: true
+  independent_reviewer: claude
+  implementer: glm
+  orchestrator: codex
+

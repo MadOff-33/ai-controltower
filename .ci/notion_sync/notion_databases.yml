@@ -1,0 +1,10 @@
+# Identifiants des bases Notion du "Knowledge OS".
+# Ce ne sont PAS des secrets (juste des IDs de bases). Le secret est le
+# NOTION_TOKEN, fourni séparément via les GitHub Secrets.
+projects:   "213a8f57d3d94097badfdb6acfef1609"
+decisions:  "028c6e9f87ee47b78b26a8a14fb5a743"
+risks:      "0a77347ff2194c0f806fa48e93cbe873"
+sprints:    "8a57dd53866243fd8cfac59aae867444"
+procedures: "c0545722827e4b32818556246a045a6a"
+access:     "80605fa13e8146e3aafc43ab8431d780"
+journal:    "19c5fe3708b848e496c73c376812103a"

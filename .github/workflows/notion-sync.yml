@@ -1,0 +1,41 @@
+name: Notion Knowledge Sync
+
+# Synchronise ai-controltower vers Notion (Knowledge OS).
+# Tourne chez GitHub â€” indÃ©pendant du PC de Michael.
+
+on:
+  push:
+    branches: [main]          # Ã  chaque arrivÃ©e de code sur main
+  schedule:
+    - cron: "0 6 * * *"       # filet quotidien : 06:00 UTC (~08:00 Paris)
+  workflow_dispatch: {}        # bouton "Run workflow" (dÃ©clenchement manuel)
+
+# Une seule synchro Ã  la fois ; on garde la plus rÃ©cente.
+concurrency:
+  group: notion-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install --quiet pyyaml requests
+
+      - name: Sync to Notion
+        working-directory: .ci/notion_sync
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          DRY_RUN: "false"
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: python sync.py

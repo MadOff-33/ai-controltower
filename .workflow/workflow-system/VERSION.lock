@@ -1,0 +1,23 @@
+# Versions de référence au moment de la rédaction.
+# Mettre à jour ce fichier lors d'une montée de version et relancer 07-verification-installation.md.
+
+workflow_schema: "1.0"
+bmad:
+  package: "bmad-method"
+  channel: "stable"
+  minimum_node: ">=20.12.0"
+  module: "BMM"
+  tea: "optional"
+matt_pocock:
+  repository: "mattpocock/skills"
+  install: "npx skills@latest add mattpocock/skills"
+  setup_command: "/setup-matt-pocock-skills"
+superpowers:
+  repository: "obra/superpowers"
+  role: "process discipline"
+agents:
+  coordinator: "Codex"
+  implementer: "GLM"
+  reviewer: "Claude"
+  optional: "Aider"
+
