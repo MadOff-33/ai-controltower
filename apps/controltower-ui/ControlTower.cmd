@@ -1,6 +1,6 @@
 @echo off
 setlocal
-set "ROOT=C:\AI_ControlTower"
+for %%I in ("%~dp0..\..") do set "ROOT=%%~fI"
 set "APP=%ROOT%\apps\controltower-ui"
 set "VENV=%APP%\.venv"
 

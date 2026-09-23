@@ -1,4 +1,5 @@
 @echo off
 setlocal
-set "ROOT=C:\AI_ControlTower"
+set "ROOT=%~dp0"
+set "ROOT=%ROOT:~0,-1%"
 call "%ROOT%\apps\controltower-ui\ControlTower.cmd"
