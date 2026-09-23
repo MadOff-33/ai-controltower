@@ -88,6 +88,9 @@ $firstRun = Get-Content -LiteralPath $firstLog.FullName -Raw | ConvertFrom-Json
 Assert-True -Condition ($firstRun.status -eq "structure-passed") -Message ("Dry-run audit should be logged as structure-passed, got: " + $firstRun.status)
 $firstManifest = Get-Content -LiteralPath (Join-Path $workspace "context_packs\lot1_config_manifest.json") -Raw | ConvertFrom-Json
 Assert-True -Condition ($firstManifest.coverage.status -eq "partial") -Message "Small audit pack should be partial before continuation."
+$firstPack = Get-Content -LiteralPath (Join-Path $workspace "context_packs\lot1_config_pack.md") -Raw
+Assert-True -Condition ($firstPack.Length -le 1800) -Message ("Small audit pack should respect MaxChars, got: " + $firstPack.Length)
+Assert-True -Condition ($firstPack.Contains("## Fichiers omis")) -Message "Partial audit pack should explicitly list omitted files."
 
 & $ContinueAuditScript -WorkspacePath $workspace -PreviousLotName "lot1_config" -LotName "lot2_continuation" -MaxChars 8000 -HermesMemoryRoot $hermesRoot -ValidateAfterDryRun | Out-Null
 Assert-PathExists -Path (Join-Path $workspace "context_packs\lot2_continuation_pack.md")

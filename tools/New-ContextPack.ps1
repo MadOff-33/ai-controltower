@@ -111,6 +111,15 @@ $header = @(
   "## Fichiers inclus",
   ""
 ) -join [Environment]::NewLine
+$mandatoryFooter = @(
+  "",
+  "## Fichiers omis",
+  ""
+) -join [Environment]::NewLine
+$contentBudget = $MaxChars - $mandatoryFooter.Length
+if ($header.Length -gt $contentBudget) {
+  throw "L'en-tete et le pied obligatoires depassent la limite de caracteres: $($header.Length + $mandatoryFooter.Length) / $MaxChars"
+}
 $current = $header.Length
 
 Get-ChildItem -LiteralPath $snapshot -Recurse -File -Force | Sort-Object FullName | ForEach-Object {
@@ -131,12 +140,13 @@ Get-ChildItem -LiteralPath $snapshot -Recurse -File -Force | Sort-Object FullNam
     '```',
     ""
   ) -join [Environment]::NewLine
-  if (($current + $block.Length) -gt $MaxChars) {
+  $separatorLength = if ($sections.Count -gt 0) { [Environment]::NewLine.Length } else { 0 }
+  if (($current + $separatorLength + $block.Length) -gt $contentBudget) {
     $omitted += [ordered]@{ path = $relative; reason = "limite de caracteres"; size_bytes = $_.Length }
     return
   }
   $sections.Add($block) | Out-Null
-  $current += $block.Length
+  $current += $separatorLength + $block.Length
   $included += [ordered]@{ path = $relative; size_bytes = $_.Length; chars = $block.Length }
 }
 
